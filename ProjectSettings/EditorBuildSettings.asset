@@ -6,15 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/remi.unity
-    guid: 7500c20de91a84495966f36ba8557b57
-  - enabled: 1
-    path: Assets/Scenes/manos.unity
-    guid: c027f118f9ccd4979b8795eb3900db70
-  - enabled: 1
-    path: Assets/Scenes/obj.unity
-    guid: 3a31eaa79b06d4544aba768327dc83a4
-  - enabled: 0
-    path: Assets/External/MagicLeap/Examples/Scenes/Placement.unity
-    guid: 5c1e1e5921209a54999bd6a01c411b14
+    path: Assets/Scenes/main.unity
+    guid: 17a04d1e6515d45eb8b671465e11c9ab
   m_configObjects: {}

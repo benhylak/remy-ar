@@ -1,0 +1,829 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="6bec75ce-41d9-432b-8872-927f2963e202" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Assets/BensToolBox/AR/Prefabs/ImageTrackingManager.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/remi.unity" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/remi.unity.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileEditorManager">
+    <splitter split-orientation="horizontal" split-proportion="0.4785601">
+      <split-first>
+        <leaf>
+          <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/Assets/External/SimpleFirebaseUnity/Sample/SampleScript.cs">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="640">
+                  <caret line="210" column="76" selection-start-line="209" selection-start-column="8" selection-end-line="210" selection-end-column="76" />
+                  <folding>
+                    <marker date="1533123302000" expanded="false" signature="46:197" ph="..." />
+                    <marker date="1533123302000" expanded="true" signature="241:10635" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="373:446" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="509:932" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="836:926" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="993:1121" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="1184:1261" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="1322:1449" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="1515:1595" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="1659:1789" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="1852:1929" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="1990:2117" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="2181:2259" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="2321:2449" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="2517:2620" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="2686:2784" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="2847:3123" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="3154:3304" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="3214:3298" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="3339:3496" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="3406:3490" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="3529:3684" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="3594:3678" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="3709:9614" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="3957:4255" ph="/* Inits Firebase using Firebase Secret Key as Auth ... */" />
+                    <marker date="1533123302000" expanded="true" signature="5387:5494" ph="{...}" />
+                    <marker date="1533123302000" expanded="true" signature="6295:6413" ph="/* Test ##1: Test all firebase commands, using FirebaseQueueManager ... */" />
+                    <marker date="1533123302000" expanded="true" signature="7486:7609" ph="/* Test ##2: Calls without using FirebaseQueueManager ... */" />
+                    <marker date="1533123302000" expanded="true" signature="7953:8150" ph="/* Please note that orderBy &quot;rating&quot; is possible because I already defined the index on the Rule. ... */" />
+                    <marker date="1533123302000" expanded="true" signature="8530:8779" ph="/* We need to clear the queue as the queue is left with one error command (the one we deliberately inserted last  ... */" />
+                    <marker date="1533123302000" expanded="true" signature="9669:10633" ph="{...}" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-first>
+      <split-second>
+        <leaf>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/Assets/Scripts/RemyFirebaseManager.cs">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="225">
+                  <caret line="16" column="1" lean-forward="true" selection-start-line="16" selection-start-column="1" selection-end-line="16" selection-end-column="1" />
+                  <folding>
+                    <marker date="1548956799655" expanded="false" signature="6:45" ph="..." />
+                    <marker date="1548956799655" expanded="true" signature="95:491" ph="{...}" />
+                    <marker date="1548956799655" expanded="true" signature="114:489" ph="{...}" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/Assets/Scripts/Secrets.cs">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="120">
+                  <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+                  <folding>
+                    <marker date="1548956786104" expanded="false" signature="6:78" ph="..." />
+                    <marker date="1548956786104" expanded="true" signature="107:289" ph="{...}" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/Assets/External/SimpleFirebaseUnity/Scripts/Firebase.cs">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="677">
+                  <caret line="496" column="37" selection-start-line="496" selection-start-column="37" selection-end-line="496" selection-end-column="37" />
+                  <folding>
+                    <marker date="1533123299000" expanded="true" signature="0:1250" ph="/* Class: Firebase.cs ... */" />
+                    <marker date="1533123299000" expanded="false" signature="1258:1381" ph="..." />
+                    <marker date="1533123299000" expanded="true" signature="1412:45958" ph="{...}" />
+                    <marker date="1533123299000" expanded="false" signature="1425:1480" ph="..." />
+                    <marker date="1533123299000" expanded="true" signature="1539:45956" ph="{...}" />
+                    <marker date="1533123299000" expanded="false" signature="2391:4077" ph="JSON PARSE THREADING" />
+                    <marker date="1533123299000" expanded="true" signature="2450:3049" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="2665:2906" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="2930:3039" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="3173:3420" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="3456:4056" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="3676:3912" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="3936:4046" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="4087:7555" ph="GET-SET" />
+                    <marker date="1533123299000" expanded="true" signature="4112:4212" ph="/// Parent of current firebase pointer ... " />
+                    <marker date="1533123299000" expanded="true" signature="4243:4338" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="4269:4328" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="4348:4434" ph="/// Root firebase pointer of the endpoint ... " />
+                    <marker date="1533123299000" expanded="true" signature="4463:4556" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="4489:4546" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="4566:4660" ph="/// Returns .json endpoint to this Firebase point ... " />
+                    <marker date="1533123299000" expanded="true" signature="4699:4826" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="4725:4816" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="4836:4914" ph="/// Returns main host of Firebase ... " />
+                    <marker date="1533123299000" expanded="true" signature="4949:5047" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="4975:5037" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="5057:5165" ph="/// Returns full key path to current pointer from root endpoint ... " />
+                    <marker date="1533123299000" expanded="true" signature="5195:5291" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="5221:5281" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="5301:5380" ph="/// Returns key of current pointer ... " />
+                    <marker date="1533123299000" expanded="true" signature="5406:5498" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="5432:5488" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="5508:5624" ph="/// Credential for auth parameter. If no credential set to empty string ... " />
+                    <marker date="1533123299000" expanded="true" signature="5665:5855" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="5691:5759" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="5776:5845" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="5865:5985" ph="/// Gets the rules endpoint. ... " />
+                    <marker date="1533123299000" expanded="true" signature="6029:6136" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="6055:6126" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="6180:6540" ph="/// Create new Firebase endpoint ... " />
+                    <marker date="1533123299000" expanded="true" signature="6647:7402" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="6822:7392" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="7431:7535" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="7565:9821" ph="BASIC FUNCTIONS" />
+                    <marker date="1533123299000" expanded="true" signature="7598:7818" ph="/// Get Firebase child from given key ... " />
+                    <marker date="1533123299000" expanded="true" signature="7891:7979" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="7989:8128" ph="/// Get Firebase childs from given keys ... " />
+                    <marker date="1533123299000" expanded="true" signature="8185:8368" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="8378:8518" ph="/// Get Firebase childs from given keys ... " />
+                    <marker date="1533123299000" expanded="true" signature="8571:8755" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="8765:8944" ph="/// Get a fresh copy of this Firebase object ... " />
+                    <marker date="1533123299000" expanded="true" signature="9003:9801" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="9215:9765" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="9831:41765" ph="REST FUNCTIONS" />
+                    <marker date="1533123299000" expanded="true" signature="9886:10351" ph="/// Fetch data from Firebase. Calls OnGetSuccess on success, OnGetFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="10399:10467" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="10477:10882" ph="/// Fetch data from Firebase. Calls OnGetSuccess on success, OnGetFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="10932:11740" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="10958:11421" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="11010:11117" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="11460:11577" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="11610:11729" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="11773:12252" ph="/// Set value of a key on Firebase. Calls OnSetSuccess on success, OnSetFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="12315:13658" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="12341:13339" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="12393:12500" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="13378:13495" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="13528:13647" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="13668:14240" ph="/// Set value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="14313:14394" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="14404:14964" ph="/// Set value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="15039:15227" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="15237:15709" ph="/// Set value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="15769:15842" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="15852:16318" ph="/// Set value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="16380:16481" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="16491:17016" ph="/// Set value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="17092:17175" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="17185:17704" ph="/// Set value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="17782:18062" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="18099:18596" ph="/// Update value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="18665:20037" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="18691:19706" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="18743:18850" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="19745:19868" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="19901:20026" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="20047:20531" ph="/// Update value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="20614:20690" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="20700:21178" ph="/// Update value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="21263:21372" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="21382:21870" ph="/// Update value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="21937:22017" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="22027:22505" ph="/// Update value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="22578:23009" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="22642:22918" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="23019:23503" ph="/// Update value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="23574:23656" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="23690:24199" ph="/// Push a value (with random new key) on a key in Firebase. Calls OnPushSuccess on success, OnPushFailed on fail ... " />
+                    <marker date="1533123299000" expanded="true" signature="24258:25229" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="24284:24907" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="24335:24442" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="24946:25065" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="25098:25219" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="25240:25830" ph="/// Push a value (with random new key) on a key in Firebase. Calls OnPushSuccess on success, OnPushFailed on fail ... " />
+                    <marker date="1533123299000" expanded="true" signature="25899:25976" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="25986:26570" ph="/// Push a value (with random new key) on a key in Firebase. Calls OnPushSuccess on success, OnPushFailed on fail ... " />
+                    <marker date="1533123299000" expanded="true" signature="26641:26821" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="26831:27327" ph="/// Push a value (with random new key) on a key in Firebase. Calls OnPushSuccess on success, OnPushFailed on fail ... " />
+                    <marker date="1533123299000" expanded="true" signature="27383:27452" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="27462:27952" ph="/// Push a value (with random new key) on a key in Firebase. Calls OnPushSuccess on success, OnPushFailed on fail ... " />
+                    <marker date="1533123299000" expanded="true" signature="28010:28107" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="28117:28666" ph="/// Push a value (with random new key) on a key in Firebase. Calls OnPushSuccess on success, OnPushFailed on fail ... " />
+                    <marker date="1533123299000" expanded="true" signature="28738:28817" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="28827:29370" ph="/// Push a value (with random new key) on a key in Firebase. Calls OnPushSuccess on success, OnPushFailed on fail ... " />
+                    <marker date="1533123299000" expanded="true" signature="29444:29720" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="29757:30175" ph="/// Delete a key in Firebase. Calls OnDeleteSuccess on success, OnDeleteFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="30223:31617" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="30249:31287" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="30301:30408" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="31326:31449" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="31482:31607" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="31627:32051" ph="/// Delete a key in Firebase. Calls OnDeleteSuccess on success, OnDeleteFailed on failed. ... " />
+                    <marker date="1533123299000" expanded="true" signature="32097:32163" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="32201:32431" ph="/// Sets the priority of the node. ... " />
+                    <marker date="1533123299000" expanded="true" signature="32498:32579" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="32589:32813" ph="/// Sets the priority of the node. ... " />
+                    <marker date="1533123299000" expanded="true" signature="32882:32972" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="32982:33340" ph="/// Sets the priority of the node. ... " />
+                    <marker date="1533123299000" expanded="true" signature="33491:33593" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="33603:33955" ph="/// Sets the priority of the node. ... " />
+                    <marker date="1533123299000" expanded="true" signature="34108:34318" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="34367:34651" ph="/// Sets the time stamp with the time since UNIX epoch by server value (in milliseconds). ... " />
+                    <marker date="1533123299000" expanded="true" signature="34719:34800" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="34810:35088" ph="/// Sets the time stamp with the time since UNIX epoch by server value (in milliseconds). ... " />
+                    <marker date="1533123299000" expanded="true" signature="35158:35264" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="35274:35686" ph="/// Sets the time stamp with the time since UNIX epoch by server value (in milliseconds). ... " />
+                    <marker date="1533123299000" expanded="true" signature="35838:35940" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="35950:36356" ph="/// Sets the time stamp with the time since UNIX epoch by server value (in milliseconds). ... " />
+                    <marker date="1533123299000" expanded="true" signature="36510:36736" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="36772:37268" ph="/// Gets Firebase Rules. Returned value is treated the same as returned value on Get request, packaged in DataSna ... " />
+                    <marker date="1533123299000" expanded="true" signature="37401:38133" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="37427:37827" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="37491:37631" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="37866:37977" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="38010:38123" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="38143:38695" ph="/// Sets Firebase Rules. Returned value is treated the same as returned value on Set request, packaged in DataSna ... " />
+                    <marker date="1533123299000" expanded="true" signature="38841:39937" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="38867:39631" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="38931:39071" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="39670:39781" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="39814:39927" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="39947:40286" ph="/// Sets Firebase Rules silently. Please note that FIREBASE_SECRET is required. If secret parameter is not set, i ... " />
+                    <marker date="1533123299000" expanded="true" signature="40348:40416" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="40426:40921" ph="/// Sets Firebase Rules silently. Please note that FIREBASE_SECRET is required. If secret parameter is not set, i ... " />
+                    <marker date="1533123299000" expanded="true" signature="41088:41182" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="41192:41577" ph="/// Sets Firebase Rules silently. Please note that FIREBASE_SECRET is required. If secret parameter is not set, i ... " />
+                    <marker date="1533123299000" expanded="true" signature="41660:41745" ph="{...}" />
+                    <marker date="1533123299000" expanded="false" signature="41775:44831" ph="REQUEST COROUTINE" />
+                    <marker date="1533123299000" expanded="true" signature="41997:44819" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="42150:44809" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="42293:44433" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="42512:42886" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="42992:43133" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="43133:43792" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="43237:43688" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="43328:43662" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="43743:43770" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="43837:44281" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="44045:44179" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="44454:44795" ph="{...}" />
+                    <marker date="1533123299000" expanded="false" signature="44833:45949" ph="STATIC FUNCTIONS" />
+                    <marker date="1533123299000" expanded="true" signature="44867:45156" ph="/// Creates new Firebase pointer at a valid Firebase url ... " />
+                    <marker date="1533123299000" expanded="true" signature="45234:45425" ph="{...}" />
+                    <marker date="1533123299000" expanded="true" signature="45435:45642" ph="/// Converts unix time stamp into DateTime ... " />
+                    <marker date="1533123299000" expanded="true" signature="45713:45935" ph="{...}" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/Assets/External/SimpleFirebaseUnity/Scripts/FirebaseManager.cs">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="525">
+                  <caret line="35" column="17" selection-start-line="35" selection-start-column="17" selection-end-line="35" selection-end-column="17" />
+                  <folding>
+                    <marker date="1533123300000" expanded="true" signature="0:1258" ph="/* Class: FirebaseManager.cs ... */" />
+                    <marker date="1533123300000" expanded="true" signature="1309:4430" ph="{...}" />
+                    <marker date="1533123300000" expanded="true" signature="1360:4428" ph="{...}" />
+                    <marker date="1533123300000" expanded="true" signature="1479:4420" ph="INSTANCE_LOGICS" />
+                    <marker date="1533123300000" expanded="false" signature="1549:3466" ph="{...}" />
+                    <marker date="1533123300000" expanded="true" signature="1575:3456" ph="{...}" />
+                    <marker date="1533123300000" expanded="true" signature="1632:1875" ph="{...}" />
+                    <marker date="1533123300000" expanded="true" signature="1966:3385" ph="{...}" />
+                    <marker date="1533123300000" expanded="true" signature="2210:2566" ph="{...}" />
+                    <marker date="1533123300000" expanded="true" signature="2614:3128" ph="{...}" />
+                    <marker date="1533123300000" expanded="true" signature="3157:3363" ph="{...}" />
+                    <marker date="1533123300000" expanded="true" signature="3488:3695" ph="{...}" />
+                    <marker date="1533123300000" expanded="true" signature="3584:3685" ph="{...}" />
+                    <marker date="1533123300000" expanded="true" signature="3765:4263" ph="/// When Unity quits, it destroys objects in a random order. ... " />
+                    <marker date="1533123300000" expanded="true" signature="4295:4400" ph="{...}" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-second>
+    </splitter>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>RequestCo</find>
+      <find>Push</find>
+    </findStrings>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/RemyFirebaseManager.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Secrets.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/External/SimpleFirebaseUnity/Scripts/FirebaseObserver.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/External/SimpleFirebaseUnity/Sample/SampleScript.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/External/SimpleFirebaseUnity/Scripts/FirebaseRoot.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/External/SimpleFirebaseUnity/Scripts/FirebaseManager.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/External/SimpleFirebaseUnity/Scripts/Firebase.cs" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/Assets/Scripts/FirebaseManager.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Secrets.cs.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Secrets.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/RemyFirebaseManager.cs" />
+      </list>
+    </option>
+  </component>
+  <component name="InvalidFacetManager">
+    <ignored-facets>
+      <facet id="riderModule/invalid/Default Android Facet" />
+    </ignored-facets>
+  </component>
+  <component name="ProjectFrameBounds" fullScreen="true">
+    <option name="width" value="2560" />
+    <option name="height" value="1440" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectView">
+    <navigator currentView="UnityExplorer" proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="FileSystemExplorer" />
+      <pane id="SolutionExplorer">
+        <option name="show-all-files" value="false" />
+      </pane>
+      <pane id="UnityExplorer">
+        <subPane>
+          <expand>
+            <path>
+              <item name="Project" type="e068e287:UnityExplorerRootNode" />
+              <item name="Assets" type="48f920db:UnityExplorerNode$AssetsRoot" />
+            </path>
+            <path>
+              <item name="Project" type="e068e287:UnityExplorerRootNode" />
+              <item name="Assets" type="48f920db:UnityExplorerNode$AssetsRoot" />
+              <item name="External" type="1045f7f1:UnityExplorerNode" />
+            </path>
+            <path>
+              <item name="Project" type="e068e287:UnityExplorerRootNode" />
+              <item name="Assets" type="48f920db:UnityExplorerNode$AssetsRoot" />
+              <item name="Scripts" type="1045f7f1:UnityExplorerNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+        <option name="show-hidden-items" value="false" />
+      </pane>
+      <pane id="AssemblyExplorer" />
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="Rider.DefaultBreakpoints.AreToggled" value="true" />
+    <property name="Rider.ProjectViewActivator.IsNotFirstRun" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="Attach to Unity Editor.Attach to Unity Editor">
+    <configuration name="Attach to Unity Editor &amp; Play" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="UNITY_ATTACH_AND_PLAY" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost">
+      <option name="allowRunningInParallel" value="false" />
+      <option name="listenPortForConnections" value="false" />
+      <option name="pid" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost">
+      <option name="allowRunningInParallel" value="false" />
+      <option name="listenPortForConnections" value="false" />
+      <option name="pid" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="6bec75ce-41d9-432b-8872-927f2963e202" name="Default Changelist" comment="" />
+      <created>1548952457858</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1548952457858</updated>
+      <workItem from="1548954231058" duration="2026000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="2026000" />
+  </component>
+  <component name="TodoView">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="0" y="0" width="2560" height="1440" extended-state="0" />
+    <editor active="true" />
+    <layout>
+      <window_info id="Image Layers" />
+      <window_info id="Capture Tool" />
+      <window_info id="Favorites" side_tool="true" />
+      <window_info id="Captures" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.10127085" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info anchor="bottom" id="Terminal" />
+      <window_info anchor="bottom" id="Android Profiler" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Docker" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Event Log" side_tool="true" />
+      <window_info anchor="bottom" id="NuGet" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Logcat" />
+      <window_info anchor="bottom" id="Unit Tests" />
+      <window_info anchor="bottom" id="Database Changes" />
+      <window_info anchor="bottom" id="Version Control" />
+      <window_info anchor="bottom" id="Unity" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="right" id="Capture Analysis" />
+      <window_info anchor="right" id="Device File Explorer" side_tool="true" />
+      <window_info anchor="right" id="Database" />
+      <window_info anchor="right" id="Errors In Solution" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+    </layout>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="UnityProjectConfiguration" hasMinimizedUI="true" />
+  <component name="UnityUnitTestConfiguration" currentTestLauncher="NUnit" />
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" suspend="NONE" type="DotNet Exception Breakpoints">
+          <properties exception="System.Threading.ThreadAbortException" displayValue="System.Threading.ThreadAbortException" />
+          <option name="timeStamp" value="1" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/Assets/External/SimpleFirebaseUnity/Sample/SampleScript.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="640">
+          <caret line="210" column="76" selection-start-line="209" selection-start-column="8" selection-end-line="210" selection-end-column="76" />
+          <folding>
+            <marker date="1533123302000" expanded="false" signature="46:197" ph="..." />
+            <marker date="1533123302000" expanded="true" signature="241:10635" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="373:446" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="509:932" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="836:926" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="993:1121" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="1184:1261" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="1322:1449" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="1515:1595" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="1659:1789" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="1852:1929" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="1990:2117" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="2181:2259" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="2321:2449" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="2517:2620" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="2686:2784" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="2847:3123" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="3154:3304" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="3214:3298" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="3339:3496" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="3406:3490" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="3529:3684" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="3594:3678" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="3709:9614" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="3957:4255" ph="/* Inits Firebase using Firebase Secret Key as Auth ... */" />
+            <marker date="1533123302000" expanded="true" signature="5387:5494" ph="{...}" />
+            <marker date="1533123302000" expanded="true" signature="6295:6413" ph="/* Test ##1: Test all firebase commands, using FirebaseQueueManager ... */" />
+            <marker date="1533123302000" expanded="true" signature="7486:7609" ph="/* Test ##2: Calls without using FirebaseQueueManager ... */" />
+            <marker date="1533123302000" expanded="true" signature="7953:8150" ph="/* Please note that orderBy &quot;rating&quot; is possible because I already defined the index on the Rule. ... */" />
+            <marker date="1533123302000" expanded="true" signature="8530:8779" ph="/* We need to clear the queue as the queue is left with one error command (the one we deliberately inserted last  ... */" />
+            <marker date="1533123302000" expanded="true" signature="9669:10633" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Assets/External/SimpleFirebaseUnity/Scripts/FirebaseManager.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="525">
+          <caret line="35" column="17" selection-start-line="35" selection-start-column="17" selection-end-line="35" selection-end-column="17" />
+          <folding>
+            <marker date="1533123300000" expanded="true" signature="0:1258" ph="/* Class: FirebaseManager.cs ... */" />
+            <marker date="1533123300000" expanded="true" signature="1309:4430" ph="{...}" />
+            <marker date="1533123300000" expanded="true" signature="1360:4428" ph="{...}" />
+            <marker date="1533123300000" expanded="true" signature="1479:4420" ph="INSTANCE_LOGICS" />
+            <marker date="1533123300000" expanded="false" signature="1549:3466" ph="{...}" />
+            <marker date="1533123300000" expanded="true" signature="1575:3456" ph="{...}" />
+            <marker date="1533123300000" expanded="true" signature="1632:1875" ph="{...}" />
+            <marker date="1533123300000" expanded="true" signature="1966:3385" ph="{...}" />
+            <marker date="1533123300000" expanded="true" signature="2210:2566" ph="{...}" />
+            <marker date="1533123300000" expanded="true" signature="2614:3128" ph="{...}" />
+            <marker date="1533123300000" expanded="true" signature="3157:3363" ph="{...}" />
+            <marker date="1533123300000" expanded="true" signature="3488:3695" ph="{...}" />
+            <marker date="1533123300000" expanded="true" signature="3584:3685" ph="{...}" />
+            <marker date="1533123300000" expanded="true" signature="3765:4263" ph="/// When Unity quits, it destroys objects in a random order. ... " />
+            <marker date="1533123300000" expanded="true" signature="4295:4400" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Assets/External/SimpleFirebaseUnity/Scripts/FirebaseRoot.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="911">
+          <caret line="130" column="16" lean-forward="true" selection-start-line="130" selection-start-column="16" selection-end-line="130" selection-end-column="16" />
+          <folding>
+            <marker date="1533123305000" expanded="true" signature="0:1255" ph="/* Class: FirebaseRoot.cs ... */" />
+            <marker date="1533123305000" expanded="false" signature="1263:1380" ph="..." />
+            <marker date="1533123305000" expanded="true" signature="1411:4240" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="1456:4238" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="1591:1685" ph="/// Returns .json endpoint to this Firebase point ... " />
+            <marker date="1533123305000" expanded="true" signature="1725:1847" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="1751:1837" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="1857:1935" ph="/// Credential for auth parameter ... " />
+            <marker date="1533123305000" expanded="true" signature="1977:2145" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="2003:2060" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="2077:2135" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="2155:2245" ph="/// Returns .json endpoint to Firebase Rules. ... " />
+            <marker date="1533123305000" expanded="true" signature="2290:2428" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="2317:2418" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="2438:2506" ph="/// Copy this instance. ... " />
+            <marker date="1533123305000" expanded="true" signature="2541:2611" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="2621:2849" ph="/// Initializes a new instance of the &lt;see cref=&quot;SimpleFirebaseUnity.FirebaseRoot&quot;/&gt; class. ... " />
+            <marker date="1533123305000" expanded="true" signature="2910:3228" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="2956:3140" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="3238:3316" ph="/// Returns main host of Firebase ... " />
+            <marker date="1533123305000" expanded="true" signature="3352:3445" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="3378:3435" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="3604:3695" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="3705:3826" ph="/// Starts the coroutine. ... " />
+            <marker date="1533123305000" expanded="true" signature="3882:3965" ph="{...}" />
+            <marker date="1533123305000" expanded="true" signature="3975:4095" ph="/// Stops the coroutine. ... " />
+            <marker date="1533123305000" expanded="true" signature="4150:4232" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Assets/External/SimpleFirebaseUnity/Scripts/FirebaseObserver.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1145">
+          <folding>
+            <marker date="1533123304000" expanded="true" signature="0:1259" ph="/* Class: FirebaseObserver.cs ... */" />
+            <marker date="1533123304000" expanded="false" signature="1267:1319" ph="..." />
+            <marker date="1533123304000" expanded="true" signature="1350:4200" ph="{...}" />
+            <marker date="1533123304000" expanded="true" signature="1385:4198" ph="{...}" />
+            <marker date="1533123304000" expanded="true" signature="1691:3046" ph="CONSTRUCTORS" />
+            <marker date="1533123304000" expanded="true" signature="1715:2104" ph="/// Creates an Observer that calls GetValue request at the given refresh rate (in seconds) and checks whether the ... " />
+            <marker date="1533123304000" expanded="true" signature="2193:2375" ph="{...}" />
+            <marker date="1533123304000" expanded="true" signature="2379:2768" ph="/// Creates an Observer that calls GetValue request at the given refresh rate (in seconds) and checks whether the ... " />
+            <marker date="1533123304000" expanded="true" signature="2859:3032" ph="{...}" />
+            <marker date="1533123304000" expanded="true" signature="3050:4194" ph="OBSERVER FUNCTIONS" />
+            <marker date="1533123304000" expanded="true" signature="3080:3136" ph="/// Start the observer. ... " />
+            <marker date="1533123304000" expanded="true" signature="3158:3367" ph="{...}" />
+            <marker date="1533123304000" expanded="true" signature="3371:3426" ph="/// Stop the observer. ... " />
+            <marker date="1533123304000" expanded="true" signature="3447:3639" ph="{...}" />
+            <marker date="1533123304000" expanded="true" signature="3563:3630" ph="{...}" />
+            <marker date="1533123304000" expanded="true" signature="3674:3782" ph="{...}" />
+            <marker date="1533123304000" expanded="true" signature="3697:3778" ph="{...}" />
+            <marker date="1533123304000" expanded="true" signature="3856:4180" ph="{...}" />
+            <marker date="1533123304000" expanded="true" signature="3879:3949" ph="{...}" />
+            <marker date="1533123304000" expanded="true" signature="4079:4147" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Assets/External/SimpleFirebaseUnity/Scripts/Firebase.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="677">
+          <caret line="496" column="37" selection-start-line="496" selection-start-column="37" selection-end-line="496" selection-end-column="37" />
+          <folding>
+            <marker date="1533123299000" expanded="true" signature="0:1250" ph="/* Class: Firebase.cs ... */" />
+            <marker date="1533123299000" expanded="false" signature="1258:1381" ph="..." />
+            <marker date="1533123299000" expanded="true" signature="1412:45958" ph="{...}" />
+            <marker date="1533123299000" expanded="false" signature="1425:1480" ph="..." />
+            <marker date="1533123299000" expanded="true" signature="1539:45956" ph="{...}" />
+            <marker date="1533123299000" expanded="false" signature="2391:4077" ph="JSON PARSE THREADING" />
+            <marker date="1533123299000" expanded="true" signature="2450:3049" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="2665:2906" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="2930:3039" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="3173:3420" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="3456:4056" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="3676:3912" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="3936:4046" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="4087:7555" ph="GET-SET" />
+            <marker date="1533123299000" expanded="true" signature="4112:4212" ph="/// Parent of current firebase pointer ... " />
+            <marker date="1533123299000" expanded="true" signature="4243:4338" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="4269:4328" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="4348:4434" ph="/// Root firebase pointer of the endpoint ... " />
+            <marker date="1533123299000" expanded="true" signature="4463:4556" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="4489:4546" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="4566:4660" ph="/// Returns .json endpoint to this Firebase point ... " />
+            <marker date="1533123299000" expanded="true" signature="4699:4826" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="4725:4816" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="4836:4914" ph="/// Returns main host of Firebase ... " />
+            <marker date="1533123299000" expanded="true" signature="4949:5047" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="4975:5037" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="5057:5165" ph="/// Returns full key path to current pointer from root endpoint ... " />
+            <marker date="1533123299000" expanded="true" signature="5195:5291" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="5221:5281" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="5301:5380" ph="/// Returns key of current pointer ... " />
+            <marker date="1533123299000" expanded="true" signature="5406:5498" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="5432:5488" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="5508:5624" ph="/// Credential for auth parameter. If no credential set to empty string ... " />
+            <marker date="1533123299000" expanded="true" signature="5665:5855" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="5691:5759" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="5776:5845" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="5865:5985" ph="/// Gets the rules endpoint. ... " />
+            <marker date="1533123299000" expanded="true" signature="6029:6136" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="6055:6126" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="6180:6540" ph="/// Create new Firebase endpoint ... " />
+            <marker date="1533123299000" expanded="true" signature="6647:7402" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="6822:7392" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="7431:7535" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="7565:9821" ph="BASIC FUNCTIONS" />
+            <marker date="1533123299000" expanded="true" signature="7598:7818" ph="/// Get Firebase child from given key ... " />
+            <marker date="1533123299000" expanded="true" signature="7891:7979" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="7989:8128" ph="/// Get Firebase childs from given keys ... " />
+            <marker date="1533123299000" expanded="true" signature="8185:8368" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="8378:8518" ph="/// Get Firebase childs from given keys ... " />
+            <marker date="1533123299000" expanded="true" signature="8571:8755" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="8765:8944" ph="/// Get a fresh copy of this Firebase object ... " />
+            <marker date="1533123299000" expanded="true" signature="9003:9801" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="9215:9765" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="9831:41765" ph="REST FUNCTIONS" />
+            <marker date="1533123299000" expanded="true" signature="9886:10351" ph="/// Fetch data from Firebase. Calls OnGetSuccess on success, OnGetFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="10399:10467" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="10477:10882" ph="/// Fetch data from Firebase. Calls OnGetSuccess on success, OnGetFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="10932:11740" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="10958:11421" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="11010:11117" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="11460:11577" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="11610:11729" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="11773:12252" ph="/// Set value of a key on Firebase. Calls OnSetSuccess on success, OnSetFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="12315:13658" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="12341:13339" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="12393:12500" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="13378:13495" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="13528:13647" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="13668:14240" ph="/// Set value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="14313:14394" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="14404:14964" ph="/// Set value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="15039:15227" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="15237:15709" ph="/// Set value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="15769:15842" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="15852:16318" ph="/// Set value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="16380:16481" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="16491:17016" ph="/// Set value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="17092:17175" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="17185:17704" ph="/// Set value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="17782:18062" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="18099:18596" ph="/// Update value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="18665:20037" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="18691:19706" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="18743:18850" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="19745:19868" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="19901:20026" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="20047:20531" ph="/// Update value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="20614:20690" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="20700:21178" ph="/// Update value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="21263:21372" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="21382:21870" ph="/// Update value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="21937:22017" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="22027:22505" ph="/// Update value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="22578:23009" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="22642:22918" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="23019:23503" ph="/// Update value of a key on Firebase. Calls OnUpdateSuccess on success, OnUpdateFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="23574:23656" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="23690:24199" ph="/// Push a value (with random new key) on a key in Firebase. Calls OnPushSuccess on success, OnPushFailed on fail ... " />
+            <marker date="1533123299000" expanded="true" signature="24258:25229" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="24284:24907" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="24335:24442" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="24946:25065" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="25098:25219" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="25240:25830" ph="/// Push a value (with random new key) on a key in Firebase. Calls OnPushSuccess on success, OnPushFailed on fail ... " />
+            <marker date="1533123299000" expanded="true" signature="25899:25976" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="25986:26570" ph="/// Push a value (with random new key) on a key in Firebase. Calls OnPushSuccess on success, OnPushFailed on fail ... " />
+            <marker date="1533123299000" expanded="true" signature="26641:26821" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="26831:27327" ph="/// Push a value (with random new key) on a key in Firebase. Calls OnPushSuccess on success, OnPushFailed on fail ... " />
+            <marker date="1533123299000" expanded="true" signature="27383:27452" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="27462:27952" ph="/// Push a value (with random new key) on a key in Firebase. Calls OnPushSuccess on success, OnPushFailed on fail ... " />
+            <marker date="1533123299000" expanded="true" signature="28010:28107" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="28117:28666" ph="/// Push a value (with random new key) on a key in Firebase. Calls OnPushSuccess on success, OnPushFailed on fail ... " />
+            <marker date="1533123299000" expanded="true" signature="28738:28817" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="28827:29370" ph="/// Push a value (with random new key) on a key in Firebase. Calls OnPushSuccess on success, OnPushFailed on fail ... " />
+            <marker date="1533123299000" expanded="true" signature="29444:29720" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="29757:30175" ph="/// Delete a key in Firebase. Calls OnDeleteSuccess on success, OnDeleteFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="30223:31617" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="30249:31287" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="30301:30408" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="31326:31449" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="31482:31607" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="31627:32051" ph="/// Delete a key in Firebase. Calls OnDeleteSuccess on success, OnDeleteFailed on failed. ... " />
+            <marker date="1533123299000" expanded="true" signature="32097:32163" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="32201:32431" ph="/// Sets the priority of the node. ... " />
+            <marker date="1533123299000" expanded="true" signature="32498:32579" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="32589:32813" ph="/// Sets the priority of the node. ... " />
+            <marker date="1533123299000" expanded="true" signature="32882:32972" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="32982:33340" ph="/// Sets the priority of the node. ... " />
+            <marker date="1533123299000" expanded="true" signature="33491:33593" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="33603:33955" ph="/// Sets the priority of the node. ... " />
+            <marker date="1533123299000" expanded="true" signature="34108:34318" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="34367:34651" ph="/// Sets the time stamp with the time since UNIX epoch by server value (in milliseconds). ... " />
+            <marker date="1533123299000" expanded="true" signature="34719:34800" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="34810:35088" ph="/// Sets the time stamp with the time since UNIX epoch by server value (in milliseconds). ... " />
+            <marker date="1533123299000" expanded="true" signature="35158:35264" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="35274:35686" ph="/// Sets the time stamp with the time since UNIX epoch by server value (in milliseconds). ... " />
+            <marker date="1533123299000" expanded="true" signature="35838:35940" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="35950:36356" ph="/// Sets the time stamp with the time since UNIX epoch by server value (in milliseconds). ... " />
+            <marker date="1533123299000" expanded="true" signature="36510:36736" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="36772:37268" ph="/// Gets Firebase Rules. Returned value is treated the same as returned value on Get request, packaged in DataSna ... " />
+            <marker date="1533123299000" expanded="true" signature="37401:38133" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="37427:37827" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="37491:37631" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="37866:37977" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="38010:38123" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="38143:38695" ph="/// Sets Firebase Rules. Returned value is treated the same as returned value on Set request, packaged in DataSna ... " />
+            <marker date="1533123299000" expanded="true" signature="38841:39937" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="38867:39631" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="38931:39071" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="39670:39781" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="39814:39927" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="39947:40286" ph="/// Sets Firebase Rules silently. Please note that FIREBASE_SECRET is required. If secret parameter is not set, i ... " />
+            <marker date="1533123299000" expanded="true" signature="40348:40416" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="40426:40921" ph="/// Sets Firebase Rules silently. Please note that FIREBASE_SECRET is required. If secret parameter is not set, i ... " />
+            <marker date="1533123299000" expanded="true" signature="41088:41182" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="41192:41577" ph="/// Sets Firebase Rules silently. Please note that FIREBASE_SECRET is required. If secret parameter is not set, i ... " />
+            <marker date="1533123299000" expanded="true" signature="41660:41745" ph="{...}" />
+            <marker date="1533123299000" expanded="false" signature="41775:44831" ph="REQUEST COROUTINE" />
+            <marker date="1533123299000" expanded="true" signature="41997:44819" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="42150:44809" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="42293:44433" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="42512:42886" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="42992:43133" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="43133:43792" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="43237:43688" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="43328:43662" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="43743:43770" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="43837:44281" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="44045:44179" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="44454:44795" ph="{...}" />
+            <marker date="1533123299000" expanded="false" signature="44833:45949" ph="STATIC FUNCTIONS" />
+            <marker date="1533123299000" expanded="true" signature="44867:45156" ph="/// Creates new Firebase pointer at a valid Firebase url ... " />
+            <marker date="1533123299000" expanded="true" signature="45234:45425" ph="{...}" />
+            <marker date="1533123299000" expanded="true" signature="45435:45642" ph="/// Converts unix time stamp into DateTime ... " />
+            <marker date="1533123299000" expanded="true" signature="45713:45935" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Assets/Scripts/RemyFirebaseManager.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="16" column="1" lean-forward="true" selection-start-line="16" selection-start-column="1" selection-end-line="16" selection-end-column="1" />
+          <folding>
+            <marker date="1548956799655" expanded="false" signature="6:45" ph="..." />
+            <marker date="1548956799655" expanded="true" signature="95:491" ph="{...}" />
+            <marker date="1548956799655" expanded="true" signature="114:489" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Assets/Scripts/Secrets.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+          <folding>
+            <marker date="1548956786104" expanded="false" signature="6:78" ph="..." />
+            <marker date="1548956786104" expanded="true" signature="107:289" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>

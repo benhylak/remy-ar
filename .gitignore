@@ -5,6 +5,9 @@
 [Bb]uilds/
 Assets/AssetStoreTools*
 
+# Shhhhh... secrets
+Assets/Scripts/Secrets.cs
+
 # Visual Studio cache directory
 .vs/
 
