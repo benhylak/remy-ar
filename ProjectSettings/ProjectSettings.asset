@@ -692,6 +692,8 @@ PlayerSettings:
   - CameraCapture
   - VoiceInput
   - AudioCaptureMic
+  - AudioRecognizer
+  - LocalAreaNetwork
   luminMinimumPlatformAPILevel: 3
   facebookSdkVersion: 7.9.4
   apiCompatibilityLevel: 3

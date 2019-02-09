@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 89cb772ecde9b40c197cb0d08146ecb8
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Chivo Light
+  fontNames:
+  - Chivo Light
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 110f486b8fe444f9a88b3a941845b6d9, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
