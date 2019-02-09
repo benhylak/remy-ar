@@ -3,6 +3,7 @@
   <component name="ContentModelStore">
     <e p="$PROJECT_DIR$" t="IncludeRecursive">
       <e p="Assembly-CSharp-Editor.csproj" t="IncludeRecursive" />
+      <e p="Assembly-CSharp-firstpass.csproj" t="IncludeRecursive" />
       <e p="Assembly-CSharp.csproj" t="IncludeRecursive" />
       <e p="Assets" t="Include">
         <e p="BensToolBox" t="Include">
@@ -428,6 +429,11 @@
               </e>
             </e>
           </e>
+          <e p="Fonts" t="Include">
+            <e p="Chivo" t="Include">
+              <e p="OFL.txt" t="Include" />
+            </e>
+          </e>
         </e>
         <e p="External" t="Include">
           <e p="Demigiant" t="Include">
@@ -749,17 +755,45 @@
             </e>
           </e>
         </e>
+        <e p="Plugins" t="Include">
+          <e p="AsyncAwaitUtil" t="Include">
+            <e p="Source" t="Include">
+              <e p="Awaiters.cs" t="Include" />
+              <e p="AwaitExtensions.cs" t="Include" />
+              <e p="IEnumeratorAwaitExtensions.cs" t="Include" />
+              <e p="Internal" t="Include">
+                <e p="AsyncCoroutineRunner.cs" t="Include" />
+                <e p="SyncContextUtil.cs" t="Include" />
+              </e>
+              <e p="TaskExtensions.cs" t="Include" />
+              <e p="WaitForBackgroundThread.cs" t="Include" />
+              <e p="WaitForUpdate.cs" t="Include" />
+            </e>
+            <e p="Tests" t="Include">
+              <e p="AsyncUtilTests.cs" t="Include" />
+              <e p="Util" t="Include">
+                <e p="TestButtonHandler.cs" t="Include" />
+              </e>
+            </e>
+          </e>
+        </e>
         <e p="Scripts" t="Include">
           <e p="BurnerBehaviour.cs" t="Include" />
           <e p="FingerRaycast.cs" t="Include" />
           <e p="HandwritingManager.cs" t="Include" />
+          <e p="Model" t="Include">
+            <e p="Burner.cs" t="Include" />
+            <e p="Stove.cs" t="Include" />
+          </e>
           <e p="RemyFirebaseManager.cs" t="Include" />
           <e p="Secrets.cs" t="Include" />
           <e p="StoveManager.cs" t="Include" />
           <e p="Totem.cs" t="Include" />
         </e>
         <e p="Shaders" t="Include">
+          <e p="adaptive_transparency.shader" t="Include" />
           <e p="glow.shader" t="Include" />
+          <e p="listening_ring.shader" t="Include" />
         </e>
       </e>
       <e p="Library" t="ExcludeRecursive" />

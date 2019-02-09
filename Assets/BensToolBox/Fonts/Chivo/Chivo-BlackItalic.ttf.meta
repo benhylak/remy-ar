@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: c9e1861e807b94a40a67fa8fa2ebd54c
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Chivo Black
+  fontNames:
+  - Chivo Black
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: bdb7f403752454016b32dccbcf00e2bd, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
