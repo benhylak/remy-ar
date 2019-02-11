@@ -142,7 +142,8 @@ public class StoveManager : MonoBehaviour
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void Update ()
+	{
 
 		if (marker.IsTracking)
 		{

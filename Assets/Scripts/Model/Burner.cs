@@ -1,4 +1,9 @@
 
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using System.Reflection;
+using UniRx;
 using UnityEngine;
 
 public class Burner
@@ -11,12 +16,11 @@ public class Burner
         UPPER_RIGHT
     }
     
-    public string name
+    string _name
     {
-        get { return position.ToString().ToLower(); }
         set
         {
-            var parseSuccess = BurnerPosition.TryParse(value.ToUpper(), out position);
+            var parseSuccess = BurnerPosition.TryParse(value.ToUpper(), out Position);
 
             if (!parseSuccess)
             {
@@ -24,16 +28,88 @@ public class Burner
             }
         }
     }
-    
-    public bool on;
-    public double temp;
-    public bool pot_detected;
-    public bool boiling;
 
-    public BurnerPosition position;
+    public static BurnerPosition ParsePosition(string s)
+    {
+        BurnerPosition pos;
+        var parseSuccess = BurnerPosition.TryParse(s.ToUpper(), out pos);
+        
+        if(!parseSuccess) Debug.Log("Big fail");
+        
+        return pos;
+    }
+
+    public Burner()
+    {
+        IsOn = new ReactiveProperty<bool>();
+        IsPotDetected = new ReactiveProperty<bool>();
+        IsBoiling = new ReactiveProperty<bool>();
+        Temperature = new ReactiveProperty<double>();
+    }
+    
+    public ReactiveProperty<bool> IsOn { get; private set; }
+    
+    public ReactiveProperty<bool> IsPotDetected { get; private set; }
+    
+    public ReactiveProperty<bool> IsBoiling { get; private set; }
+    public ReactiveProperty<double> Temperature { get; private set; }
+    
+    public BurnerPosition Position;
 
     public override string ToString()
     {
-        return string.Format("Position: {0} On: {1} Temp: {2}", position, on, temp);
+        return string.Format("Position: {0} On: {1} Temp: {2}", Position, IsOn.Value,Temperature.Value);
+    }
+
+    public void MapFromDict(IDictionary<string, object> source)
+    {
+        foreach (var item in source)
+        {
+            switch (item.Key)
+            {
+                case "on":
+                    IsOn.Value = (bool) item.Value;
+                    break;
+                
+                case "pot_detected":
+                    IsPotDetected.Value = (bool) item.Value;
+                    break;
+                
+                case "boiling":
+                    IsBoiling.Value = (bool) item.Value;
+                    break;
+                
+                case "temp":
+                    Temperature.Value = (double) item.Value;
+                    break;
+                
+                case "name":
+                    _name = (string) item.Value;
+                    break;
+                
+                default:
+                    Debug.Log("Could not map key: " + item.Key);
+                    break;
+                    
+            }
+        }
+    }
+    
+    public static Burner CreateFromDict(IDictionary<string, object> source)
+    {
+        var burner = new Burner();
+
+        burner.MapFromDict(source);
+
+        return burner;
+    }
+
+    public IDictionary<string, object> AsDictionary(BindingFlags bindingAttr = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
+    {
+        return GetType().GetProperties(bindingAttr).ToDictionary
+        (
+            propInfo => propInfo.Name,
+            propInfo => propInfo.GetValue(this, null)
+        );
     }
 }

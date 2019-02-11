@@ -136,20 +136,16 @@ namespace SimpleFirebaseUnity
             }
         }
 
-        public string GetValueForKey<T>(string key)
+        public T GetValueForKey<T>(string key)
         {
             try
             {
                 object obj = val_dict[key];
-
-                return obj.GetType().ToString();
-//                return (T)obj;
+                return (T)obj;
             }
             catch {
-              //  return default(T);
+                return default(T);
             }
-
-            return null;
         }
     }
 }

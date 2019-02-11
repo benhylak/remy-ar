@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace DefaultNamespace
+namespace BensToolBox.AR.Scripts
 {
     public static class Extensions
     {

@@ -7,7 +7,7 @@ Assets/AssetStoreTools*
 
 # Shhhhh... secrets
 Assets/Scripts/Secrets.cs
-
+**/.DS_Store
 # Visual Studio cache directory
 .vs/
 

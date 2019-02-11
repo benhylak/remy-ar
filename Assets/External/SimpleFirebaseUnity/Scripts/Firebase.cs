@@ -404,8 +404,6 @@ namespace SimpleFirebaseUnity
                 if (param != "")
                     url += "?" + param;
                 
-                Debug.Log("start request coroutine...");
-
                 return await RequestCoroutine(url, null, query.HttpHeader, OnGetSuccess, OnGetFailed);
             }
             catch (WebException webEx)
@@ -1094,19 +1092,14 @@ namespace SimpleFirebaseUnity
 
         protected async Task<DataSnapshot> RequestCoroutine(string url, byte[] postData, Dictionary<string, string> headers, Action<Firebase, DataSnapshot> OnSuccess, Action<Firebase, FirebaseError> OnFailed)
         {
-            Debug.Log("Enters Request Coroutine");
 
             WWW www = (headers != null) ? new WWW(url, postData, headers) :
                 (postData != null) ? new WWW(url, postData) : new WWW(url);
 
             await www;
-            
-            Debug.Log("Done");
 
             if (!string.IsNullOrEmpty(www.error))
             {
-                Debug.Log("Request");
-                
                 HttpStatusCode status = 0;
                 string errMessage = "";
 
