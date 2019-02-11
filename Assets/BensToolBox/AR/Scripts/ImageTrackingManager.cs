@@ -10,13 +10,10 @@
 // ---------------------------------------------------------------------
 // %BANNER_END%
 
-using System;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.XR.MagicLeap;
-using System.Collections.Generic;
 
-namespace BensToolBox.MagicLeap
+namespace BensToolBox.AR.Scripts
 {
 
     public class ImageTrackingManager : MonoBehaviour

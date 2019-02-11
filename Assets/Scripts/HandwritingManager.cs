@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using DefaultNamespace;
+using BensToolBox.AR.Scripts;
 using DG;
 using DG.Tweening;
 using UnityEngine;
