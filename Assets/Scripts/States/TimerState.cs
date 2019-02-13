@@ -1,6 +1,8 @@
 
 using System.Collections.Generic;
+using System.Timers;
 using UnityEngine;
+using UnityEngine.Experimental.PlayerLoop;
 
 public abstract class TimerState
 {
@@ -27,11 +29,42 @@ public abstract class TimerState
             {
                 if (burner._model.IsPotDetected.Value)
                 {
-                    return new ProactiveState(burner);
+                    return new BufferState(burner);
                 }
             }
             
             return null;
+        }
+    }
+
+    public class BufferState : TimerState
+    {
+        //buffers a PotDetected value, makes sure that it lasts
+        
+        public BurnerBehaviour _burner;
+
+        readonly float WAIT_TIME = 2f;
+        float _startTime;
+        public BufferState(BurnerBehaviour burner)
+        {
+            _burner = burner;
+            _startTime = Time.time;
+        }
+
+        public override TimerState Update()
+        {
+            if (_burner._model.IsPotDetected.Value == false)
+            {
+                return new MonitoringState();
+            }
+            else if (Time.time - _startTime > WAIT_TIME)
+            {
+                return new ProactiveState(_burner);
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 
@@ -42,7 +75,7 @@ public abstract class TimerState
         public ProactiveState(BurnerBehaviour burner)
         {
             this._burner = burner;
-            this._burner.SuggestTimer();
+            this._burner.ShowProactiveTimer();
             
             Debug.Log("Entering Proactive State...");
         }
@@ -51,6 +84,8 @@ public abstract class TimerState
         {
             if (this._burner._model.IsPotDetected.Value == false)
             {
+                _burner.HideProactiveTimer();
+                
                 return new MonitoringState();
             }
             else if (this._burner.IsLookedAt)
@@ -65,8 +100,8 @@ public abstract class TimerState
     public class VoiceInputState : TimerState
     {
         public BurnerBehaviour _burner;
-        
-        public float _lastLookedAt = 0;
+
+        public float _lastLookedAt;
         public float _timeOut = 10;
         
         public VoiceInputState(BurnerBehaviour burner)

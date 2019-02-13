@@ -77,6 +77,7 @@ public class Burner
                 
                 case "boiling":
                     IsBoiling.Value = (bool) item.Value;
+                    if((bool)item.Value == true) Debug.Log("Boiling: " + item.Value);
                     break;
                 
                 case "temp":
