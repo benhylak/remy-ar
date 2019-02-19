@@ -38,7 +38,7 @@ public class StoveManager : MonoBehaviour
 
 	private Vector3 defaultScale;
 
-	public ExampleStreaming streamer;
+	public SpeechRecognizer streamer;
 
 	private bool recognizing = false;
 

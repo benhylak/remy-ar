@@ -1,9 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using BensToolBox;
 using UniRx;
 using UnityEngine;
 using UnityEngine.XR.MagicLeap;
+using System.Linq;
+using UnityEngine.Serialization;
 
 public class BigKahuna: Singleton<BigKahuna>
 {
@@ -15,7 +20,9 @@ public class BigKahuna: Singleton<BigKahuna>
     private TimerState _timerState;
     public MLImageTrackerBehavior _stoveTracker;
     public GameObject burners;
-    public bool setup = true;
+    public SpeechRecognizer speechRecognizer;
+    private bool isSetup = true;
+    public IEnumerable<GameObject> _debugObjects;
     
     public void Start()
     {
@@ -42,12 +49,23 @@ public class BigKahuna: Singleton<BigKahuna>
         {
             if (button == MLInputControllerButton.Bumper)
             {
-                Debug.Log("Button Down!");
-                setup = !setup;
+                ToggleSetup();
             }
+
+            ;
         }; //toggle setup mode.
-//        
-   
+
+        MLInput.OnTriggerDown += (_, __) =>
+        {
+            _burnerBehaviours.ForEach(x => x.IsLookedAt = true);
+        };
+        
+        MLInput.OnTriggerUp += (_, __) =>
+        {
+            _burnerBehaviours.ForEach(x => x.IsLookedAt = false);
+        };
+
+        _debugObjects = GameObject.FindGameObjectsWithTag("Debug");
     }
 
     public void Update()
@@ -58,10 +76,28 @@ public class BigKahuna: Singleton<BigKahuna>
             _timerState = resultState ?? _timerState;
         }
 
-        if (setup && _stoveTracker.IsTracking && _stoveTracker.TrackingStatus == MLImageTargetTrackingStatus.Tracked)
+        if (isSetup && _stoveTracker.IsTracking && _stoveTracker.TrackingStatus == MLImageTargetTrackingStatus.Tracked)
         {
             burners.transform.position = Vector3.Lerp(burners.transform.position, _stoveTracker.transform.position, Time.deltaTime);
             burners.transform.rotation = Quaternion.Slerp(burners.transform.rotation, _stoveTracker.transform.rotation, Time.deltaTime);
+        }    
+    }
+
+    public void ToggleSetup()
+    {       
+        isSetup = !isSetup;
+        
+        foreach (var debugObj in _debugObjects)
+        {
+            debugObj.SetActive(isSetup);
+            
+            #if !UNITY_EDITOR
+                if (isSetup)
+                {
+                    MLImageTracker.Enable();
+                }
+                else MLImageTracker.Disable();
+            #endif         
         }
     }
 }

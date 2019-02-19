@@ -7,6 +7,7 @@ TagManager:
   - sceneObject
   - Hand
   - Indicator
+  - Debug
   layers:
   - Default
   - TransparentFX

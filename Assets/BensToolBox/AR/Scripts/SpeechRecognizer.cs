@@ -24,7 +24,7 @@ using IBM.Watson.DeveloperCloud.DataTypes;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
-public class ExampleStreaming : MonoBehaviour
+public class SpeechRecognizer : MonoBehaviour
 {
     #region PLEASE SET THESE VARIABLES IN THE INSPECTOR
     [Space(10)]
@@ -48,8 +48,6 @@ public class ExampleStreaming : MonoBehaviour
     [SerializeField]
     private string _iamUrl;
 
-    [SerializeField] private StoveManager _stoveManager;
-
     [Header("Parameters")]
     // https://www.ibm.com/watson/developercloud/speech-to-text/api/v1/curl.html?curl#get-model
     [Tooltip("The Model to use. This defaults to en-US_BroadbandModel")]
@@ -63,6 +61,10 @@ public class ExampleStreaming : MonoBehaviour
     private AudioClip _recording = null;
     private int _recordingBufferSize = 1;
     private int _recordingHZ = 22050;
+    public bool finalized;
+    
+    public float audioLevel;
+    public string recognizedText;
 
     private SpeechToText _service;
 
@@ -198,9 +200,10 @@ public class ExampleStreaming : MonoBehaviour
                 _recording.GetData(samples, bFirstBlock ? 0 : midPoint);
 
                 AudioData record = new AudioData();
+
 				record.MaxLevel = Mathf.Max(Mathf.Abs(Mathf.Min(samples)), Mathf.Max(samples));
                 record.Clip = AudioClip.Create("Recording", midPoint, _recording.channels, _recordingHZ, false);
-                record.Clip.SetData(samples, 0);
+                record.Clip.SetData(samples, 0);          
 
                 _service.OnListen(record);
 
@@ -208,9 +211,31 @@ public class ExampleStreaming : MonoBehaviour
             }
             else
             {
+                var _sampleWindow = 15;
+                
+                float levelMax = 0;
+                
+                var waveData = new float[_sampleWindow];
+                int micPosition = Microphone.GetPosition(null)-(_sampleWindow+1); // null means the first microphone
+                if (micPosition < 0) continue;
+                
+                _recording.GetData(waveData, micPosition);
+                // Getting a peak on the last 128 samples
+                for (int i = 0; i < _sampleWindow; i++)
+                {
+                    var thisLevel = waveData[i];
+                    
+                    if (thisLevel > levelMax) levelMax = thisLevel;
+                }
+
+                audioLevel = levelMax;
+                
                 // calculate the number of samples remaining until we ready for a block of audio, 
                 // and wait that amount of time it will take to record.
                 int remaining = bFirstBlock ? (midPoint - writePos) : (_recording.samples - writePos);
+
+                if (remaining > _sampleWindow) remaining = _sampleWindow;
+                
                 float timeRemaining = (float)remaining / (float)_recordingHZ;
 
                 yield return new WaitForSeconds(timeRemaining);
@@ -231,12 +256,14 @@ public class ExampleStreaming : MonoBehaviour
                 {
                     string text = string.Format("{0} ({1}, {2:0.00})\n", alt.transcript, res.final ? "Final" : "Interim", alt.confidence);
                     Log.Debug("ExampleStreaming.OnRecognize()", text);
-                    ResultsField.text = alt.transcript;
-                    
-                    if(_stoveManager != null)
+
+                    if (ResultsField != null)
                     {
-                        _stoveManager.RecognizedText = alt.transcript;
+                        ResultsField.text = alt.transcript;
                     }
+
+                    recognizedText = alt.transcript;
+                    finalized = res.final;
                     
                     Debug.Log(text);
                 }

@@ -1,5 +1,9 @@
 
+using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Timers;
 using UnityEngine;
 using UnityEngine.Experimental.PlayerLoop;
@@ -43,7 +47,7 @@ public abstract class TimerState
         
         public BurnerBehaviour _burner;
 
-        readonly float WAIT_TIME = 2f;
+        readonly float WAIT_TIME = 1f;
         float _startTime;
         public BufferState(BurnerBehaviour burner)
         {
@@ -102,27 +106,70 @@ public abstract class TimerState
         public BurnerBehaviour _burner;
 
         public float _lastLookedAt;
-        public float _timeOut = 10;
+        public float _timeOut = 1.8f;
+        
+        public static Regex rx = new Regex(@"(?<minutes>\d+(?=\sminutes))|(?<seconds>\d+(?=\sseconds))",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        //(?P<minutes>\d+(?=\sminutes))|(?P<seconds>\d+(?=\sseconds))
+        
         
         public VoiceInputState(BurnerBehaviour burner)
         {
             this._burner = burner;
+            Debug.Log("Voice input state");
             _burner.ShowInputPrompt();
         }
-
+        
         public override TimerState Update()
-        {
+        {                    
             if (_burner.IsLookedAt)
             {
                 _lastLookedAt = Time.time;
 
-            }           
+            }         
             else if (Time.time - _lastLookedAt > _timeOut)
             {
                 return new ProactiveState(_burner);
             }
             
+            _burner.SetInputLevel(BigKahuna.Instance.speechRecognizer.audioLevel);
+
+            if (BigKahuna.Instance.speechRecognizer.finalized)
+            {
+                MatchCollection matches = rx.Matches(BigKahuna.Instance.speechRecognizer.recognizedText);
+
+                if (matches.Count > 0)
+                {               
+                    TimeSpan ts = new TimeSpan();
+                    
+                    foreach (Match m in matches)
+                    {
+                        GroupCollection groups = m.Groups;
+                    
+                        Debug.Log(m.Value);
+
+                        Group minutes = groups["minutes"];            
+                        Group seconds = groups["seconds"];
+                    
+                        var minutesVal = minutes.Success ? int.Parse(minutes.Value) : 0;       
+                        var secondsVal = seconds.Success ? int.Parse(seconds.Value) : 0;
+                        
+                        ts = ts.Add(new TimeSpan(0, minutesVal, secondsVal));
+                    }
+                    
+                    Debug.Log(ts.ToString());
+                    
+                    _burner.HideProactiveTimer();
+                    _burner.SetTimer(ts);
+                }
+                
+                BigKahuna.Instance.speechRecognizer.recognizedText = "";
+                BigKahuna.Instance.speechRecognizer.finalized = false;
+            }
+
             return null;
         }
+
     }    
 }

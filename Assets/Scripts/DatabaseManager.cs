@@ -21,7 +21,7 @@ public class DatabaseManager : Singleton<DatabaseManager>
     {
         _firebase = Firebase.CreateNew(Secrets.FIREBASE_URL,
             Secrets.FIREBASE_CREDENTIAL);
-        
+
         _burners = new ReactiveCollection<Burner>();
     }
 
