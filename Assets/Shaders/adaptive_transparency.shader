@@ -37,8 +37,6 @@ Shader "Custom/adaptive_transparency" {
         float _RimPower;
         float _Radius;
 
-
-
 		// Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
 		// See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
 		// #pragma instancing_options assumeuniformscaling
@@ -68,7 +66,7 @@ Shader "Custom/adaptive_transparency" {
 			float lerpVal = 1 - abs(distance(closestObjectPoint, IN.worldPos)) / (2*_Radius); 
 			
 			o.Albedo = float3(1, 1, 1);//lerp(float3(0, 0, 1), float3(1, 0, 0), lerpVal);
-			o.Alpha = lerpVal - .02;
+			o.Alpha = lerpVal - .015;
 			
 			half rim = 1.0 - saturate(dot(normalize(IN.viewDir), o.Normal));
             o.Emission = _RimColor.rgba * pow(rim, _RimPower);
