@@ -9,19 +9,11 @@ using UnityEngine;
 using UnityEngine.Experimental.PlayerLoop;
 
 public abstract class TimerState
-{
-    protected TimerState()
-    {
-        
-    }
-    
+{   
     public abstract TimerState Update();
     
     public class MonitoringState : TimerState
     {
-        //get from singleton
-        //private List<BurnerBehaviour> _burnerBehaviours;
-
         public MonitoringState()
         {          
             Debug.Log("Entering Monitoring State...");
@@ -63,7 +55,7 @@ public abstract class TimerState
             }
             else if (Time.time - _startTime > WAIT_TIME)
             {
-                return new ProactiveState(_burner);
+                return new ProactiveState(_burner, this);
             }
             else
             {
@@ -76,10 +68,19 @@ public abstract class TimerState
     {
         public BurnerBehaviour _burner;
         
-        public ProactiveState(BurnerBehaviour burner)
+        public ProactiveState(BurnerBehaviour burner, TimerState state)
         {
             this._burner = burner;
-            this._burner.ShowProactiveTimer();
+            //this._burner.ShowProactiveTimer();
+
+            if (state is BufferState || state is MonitoringState)
+            {
+                _burner.HiddenToProactive();
+            }
+            else if (state is VoiceInputState)
+            {
+                _burner.InputToProactive();
+            }
             
             Debug.Log("Entering Proactive State...");
         }
@@ -130,7 +131,7 @@ public abstract class TimerState
             }         
             else if (Time.time - _lastLookedAt > _timeOut)
             {
-                return new ProactiveState(_burner);
+                return new ProactiveState(_burner, this);
             }
             
             _burner.SetInputLevel(BigKahuna.Instance.speechRecognizer.audioLevel);

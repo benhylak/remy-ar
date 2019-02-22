@@ -23,6 +23,7 @@ public class BigKahuna: Singleton<BigKahuna>
     public SpeechRecognizer speechRecognizer;
     private bool isSetup = true;
     public IEnumerable<GameObject> _debugObjects;
+    private NotificationManager _notificationManager;
     
     public void Start()
     {
@@ -64,7 +65,13 @@ public class BigKahuna: Singleton<BigKahuna>
         {
             _burnerBehaviours.ForEach(x => x.IsLookedAt = false);
         };
+        
+        _burnerBehaviours.ForEach(b => b.OnBurnerNotification += 
+            notif => _notificationManager.AddNotification(notif)
+        );
 
+        _notificationManager = GetComponent<NotificationManager>();
+        
         _debugObjects = GameObject.FindGameObjectsWithTag("Debug");
     }
 

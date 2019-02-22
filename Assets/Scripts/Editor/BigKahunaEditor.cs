@@ -1,3 +1,4 @@
+using System.Timers;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,6 +13,12 @@ public class BigKahunaEditor : Editor
         if(GUILayout.Button("Toggle Setup Mode"))
         {
             kahuna.ToggleSetup();
+        }
+        
+        if(GUILayout.Button("Say \"10 Seconds\""))
+        {
+            kahuna.speechRecognizer.recognizedText = "10 Seconds";
+            kahuna.speechRecognizer.finalized = true;
         }
     }
 }

@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using BensToolBox.AR.Scripts;
 using DefaultNamespace;
 using UnityEngine;
 using DG.Tweening;
 using DG.Tweening.Core.Easing;
 using UnityEngine.UI;
+using UnityAsyncAwaitUtil;
+using static IEnumeratorAwaitExtensions;
 
 public class BurnerTimer : MonoBehaviour
 {
@@ -25,21 +28,26 @@ public class BurnerTimer : MonoBehaviour
 
 	public GameObject _pillLabel;
 
-	private Text _labelText;
+	public Text _labelText;
 
 	public GameObject torus;
 
 	private float ringTransparency;
 	private float pillTransparency;
-	
+
+	private float _progress;
 	private float RING_END_TRANSPARENCY = .05f;
-	
+
+	public bool isSet => _timerGoal != TimeSpan.Zero;
+
+	public bool isComplete => _progress >= 1;
+
+	private Sequence _timerDoneSequence;
+
 	// Use this for initialization
 	void Start ()
 	{	
-		_lineRenderer.SetTransparency(1.2f);
-
-		_labelText = _pillLabel.GetComponentInChildren<Text>();
+		//_lineRenderer.SetTransparency(1.2f);
 		
 		SetPillTransparency(0);
 	}
@@ -69,7 +77,8 @@ public class BurnerTimer : MonoBehaviour
 		SetPillTransparency(val);
 
 		ringTransparency = val;
-		
+
+		_labelText.CrossFadeAlpha(val, 0, true);
 		torus.GetComponent<MeshRenderer>().material.SetTransparency(Mathf.Lerp(0f, RING_END_TRANSPARENCY, val));
 		_lineRenderer.SetTransparency(val);
 		
@@ -111,17 +120,17 @@ public class BurnerTimer : MonoBehaviour
 		_pillLabel.transform.rotation = Quaternion.Slerp(_pillLabel.transform.rotation, lookRot, 4*Time.deltaTime);
 		
 		if(_timerGoal == TimeSpan.Zero) return;
-		
-		TimeSpan remaining = new TimeSpan(0, 0, (int)(_timerGoal.TotalSeconds - (Time.time - _setTime)));
 
 		string timeToStr = "";
 		
-		if (remaining.TotalSeconds <= 0)
+		if (_progress >= 1)
 		{
 			timeToStr = "Done";
 		}
 		else
-		{		
+		{				
+			TimeSpan remaining = new TimeSpan(0, 0, (int)(_timerGoal.TotalSeconds - (Time.time - _setTime)));
+
 			var minutePrefix = remaining.Minutes < 10 ? "0" : "";
 			var secondPrefix = remaining.Seconds < 10 ? "0" : "";
 			
@@ -132,22 +141,22 @@ public class BurnerTimer : MonoBehaviour
 	}
 	void Update ()
 	{
-		float progress = (Time.time - _setTime) / (float)_timerGoal.TotalSeconds;
+		_progress = (Time.time - _setTime)*1000 / (float)_timerGoal.TotalMilliseconds;
 		
 		UpdatePill();
 		
-		if (_timerGoal == TimeSpan.Zero || progress <= 0) return;
+		if (_timerGoal == TimeSpan.Zero || _progress <= 0) return;
 		
-		if (progress >= 1)
+		if (_progress >= 1 && _timerDoneSequence == null)
 		{
 			//timer is done. Congrats!
-			var transitionSeq = DOTween.Sequence();
+			_timerDoneSequence = DOTween.Sequence();
 
-			transitionSeq.Append(
+			_timerDoneSequence.Append(
 				DOTween.To(_lineRenderer.GetTransparency, _lineRenderer.SetTransparency,
 					0f, 0.3f));
 
-			transitionSeq.Append(
+			_timerDoneSequence.Append(
 				_lineRenderer
 					.material
 					.DOColor(
@@ -159,16 +168,16 @@ public class BurnerTimer : MonoBehaviour
 						}
 					));
 
-			transitionSeq.Append(
+			_timerDoneSequence.Append(
 				DOTween.To(_lineRenderer.GetTransparency, _lineRenderer.SetTransparency,
 					1f, 0.35f)
 					.SetEase(Ease.InQuad)
 			);
 			
 			
-			transitionSeq.AppendInterval(0.35f);
+			_timerDoneSequence.AppendInterval(0.35f);
 
-			transitionSeq.OnComplete(() =>
+			_timerDoneSequence.OnComplete(() =>
 			{
 
 				var finishedSequence = DOTween.Sequence();
@@ -186,13 +195,11 @@ public class BurnerTimer : MonoBehaviour
 			}
 			);
 
-			transitionSeq.Play();
-							
-			_timerGoal = TimeSpan.Zero;
+			_timerDoneSequence.Play();
 		}
 		else
 		{
-			_circleRenderer.SetPercentFilled(progress);
+			_circleRenderer.SetPercentFilled(_progress);
 		}
 	}
 
@@ -207,8 +214,17 @@ public class BurnerTimer : MonoBehaviour
 		return glow;
 	}
 
-	public void Reset()
+	public IEnumerator WaitForKill()
 	{
+		yield return _timerDoneSequence.WaitForKill();
+	}
+
+	public async Task Reset()
+	{
+		_timerDoneSequence.Kill(true);
+
+		await WaitForKill();
+		
 		_circleRenderer.SetPercentFilled(0);
 		_timerGoal = TimeSpan.Zero;
 	}

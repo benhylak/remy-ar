@@ -36,6 +36,7 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4260606152181060}
+  - component: {fileID: 114733323089780032}
   - component: {fileID: 33303332484932390}
   - component: {fileID: 23444402192283480}
   - component: {fileID: 64790380878779610}
@@ -674,6 +675,7 @@ MonoBehaviour:
   _lineRenderer: {fileID: 120015916408705586}
   _seconds: 10
   _pillLabel: {fileID: 1190104638560334}
+  _labelText: {fileID: 114170117265141226}
   torus: {fileID: 1487768433747732}
 --- !u!114 &114087072961982690
 MonoBehaviour:
@@ -689,13 +691,9 @@ MonoBehaviour:
   _position: 0
   _Timer: {fileID: 114010814459039858}
   burnerMesh: {fileID: 1380640003187302}
-  ring: {fileID: 1099408902772278}
-  RING_RADIUS: 0.1
+  ring: {fileID: 114733323089780032}
   IsLookedAt: 0
   FloatingLabel: {fileID: 114490862750933650}
-  VoiceInputMat: {fileID: 2100000, guid: 8d1472ea352f54be0a9c9fd2cc38c2ff, type: 2}
-  WhiteProactive: {fileID: 2100000, guid: 5e6c5d545120540e0bba7677c28f76d4, type: 2}
-  WAVE_AMPLITUDE: 0.005
 --- !u!114 &114170117265141226
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -708,7 +706,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.38679248, g: 0.38679248, b: 0.38679248, a: 1}
+  m_Color: {r: 0.20754719, g: 0.2065682, b: 0.2065682, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -811,6 +809,21 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
+--- !u!114 &114733323089780032
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1099408902772278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 775ea448673e446fa04dca6c4092ec6b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  VoiceInputMat: {fileID: 2100000, guid: 8d1472ea352f54be0a9c9fd2cc38c2ff, type: 2}
+  WhiteProactive: {fileID: 2100000, guid: 5e6c5d545120540e0bba7677c28f76d4, type: 2}
+  WAVE_AMPLITUDE: 0.005
+  RING_RADIUS: 0.1
 --- !u!114 &114746611747178922
 MonoBehaviour:
   m_ObjectHideFlags: 1
