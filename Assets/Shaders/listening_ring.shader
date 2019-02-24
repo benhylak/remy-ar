@@ -79,7 +79,7 @@ Shader "Custom/listening_ring" {
 		    
 		    float3 closestObjectPoint = objectOrigin - normalize(flattened) * _Radius;
 			
-			o.Alpha = 1 - abs(distance(closestObjectPoint, IN.worldPos)) / (2*_Radius); 
+			o.Alpha = (1 - abs(distance(closestObjectPoint, IN.worldPos)) / (2*_Radius)) - .015;; 
 			
 			//calculate rim power
 			half rim = 1.0 - saturate(dot(normalize(IN.viewDir), o.Normal));

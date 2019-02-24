@@ -7,6 +7,7 @@ public class BurnerRingController : MonoBehaviour
 {
     public Material VoiceInputMat;
     public Material WhiteProactive;
+    public Material BoilingWaitMaterial;
 
     private Color voicePrimaryColor;
     private Color voiceSecondaryColor;
@@ -31,6 +32,18 @@ public class BurnerRingController : MonoBehaviour
         voiceSecondaryColor = VoiceInputMat.GetColor(SECONDARY_COLOR_VOICE);
         _renderer = GetComponent<Renderer>();
     }
+
+    public Tween Show(float duration = 0.3f)
+    {
+        return DOTween.To(GetAlpha, SetAlpha, 1f, duration)
+            .SetEase(Ease.InSine);
+    }
+    
+    public Tween Hide(float duration = 0.3f)
+    {
+        return DOTween.To(GetAlpha, SetAlpha, 0f, duration)
+            .SetEase(Ease.OutSine);
+    }
     
     public void SetWaveAmplitude(float amt)
     {
@@ -51,7 +64,17 @@ public class BurnerRingController : MonoBehaviour
     {
         _renderer.material = VoiceInputMat;
     }
+    public void SetMaterialToBoiling()
+    {
+        _renderer.material = BoilingWaitMaterial;
+    }
 
+    public void SetColor(Color c)
+    {
+        _renderer.material.SetColor("_Color", c);
+        _renderer.material.SetColor("_RimColor", c);
+    }
+    
     public void SetInputLevel(float level)
     {
         //catch exceptions here 
@@ -65,10 +88,36 @@ public class BurnerRingController : MonoBehaviour
                 Mathf.Lerp(currentLevel, (float) volumeMapped, 0.08f));
         }
     }
+
+    /**
+     * Set Alpha. Only has an effect if the material has an alpha property
+     */
+    public void SetAlpha(float a)
+    {
+        if (_renderer.material.HasProperty("_Alpha"))
+        {
+            _renderer.material.SetFloat("_Alpha", a);
+        }
+    }
+
+    /*
+    * Get Alpha. Returns -1 if the material does not have an alpha property
+    */
+    public float GetAlpha()
+    {
+        if (_renderer.material.HasProperty("_Alpha"))
+        {
+            return _renderer.material.GetFloat("_Alpha");
+        }
+
+        return -1;
+    }
 	
 	
     public void SetRingRadius(float radius)
     {
+        if (_renderer == null) _renderer = GetComponent<Renderer>();
+        
         _renderer.material.SetFloat("_Radius", radius);
     }
 	

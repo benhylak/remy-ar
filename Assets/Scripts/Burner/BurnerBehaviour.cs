@@ -28,28 +28,25 @@ public class BurnerBehaviour : MonoBehaviour
 
 	private bool isMonitorBoiling;
 
-	private bool hasNotifiedForTimer = false;
-	private bool hasNotifiedForBoiling = false;
-
 	public NotificationManager.NotificationEventHandler OnBurnerNotification;
 
+	public State _state;
+	
 	public void Start()
 	{
 		FloatingLabel.DOFade(0, 0);
+		
+		_state = new BurnerStateMachine.WaitingState(this);
 	}
 
 	public void SetTimer(TimeSpan ts)
+	{  
+		_state = new BurnerStateMachine.WaitingForTimerState(ts, this);
+	}
+	
+	public void WaitForBoil()
 	{
-		_Timer.gameObject.SetActive(true);
-		_Timer.SetTimer(ts);
-		_Timer.SetRingTransparency(0);
-
-		Task.Delay(900).ContinueWith(_ =>
-			{
-				DOTween.To(_Timer.GetRingTransparency, _Timer.SetRingTransparency, 1f, 1.4f)
-					.SetEase(Ease.InSine);
-			}
-		);
+		_state = new BurnerStateMachine.WaitingForBoilState(this);
 	}
 	
 	// Update is called once per frame
@@ -59,63 +56,49 @@ public class BurnerBehaviour : MonoBehaviour
 			FloatingLabel.transform.rotation =
 				Quaternion.LookRotation(FloatingLabel.transform.position - Camera.main.transform.position);
 		}
-		
-		CheckForNotifications();
+
+		var resultState = _state.Update();
+		_state = resultState ?? _state;
 	}
 
-	//TODO: notification CSM in big kahuna to handle all this!
-	
-	private void CheckForNotifications()
-	{
-		if (_Timer.isSet && _Timer.isComplete && !hasNotifiedForTimer)
-		{
-			hasNotifiedForTimer = true;
-			
-			Debug.LogWarning("Notifying...");
-			
-			OnBurnerNotification(new NotificationManager.Notification(
-				"Your timer has finished.", 
-				this,
-				DismissTimer));
-			//notify
-		}
+	//wait -- these functions don't make any sense. at least not to be called from the notification itself
+	//dismissing notification wouldn't dismiss the state. but the state could change...
+	// like if the state == boiling
+	// if pot removed = false, dismiss the state
 
-		if (isMonitorBoiling && _model.IsBoiling.Value && hasNotifiedForBoiling)
+	public void SetLabel(string text, float duration = 0.35f)
+	{
+		if (FloatingLabel.gameObject.activeInHierarchy)
 		{
-			hasNotifiedForBoiling = true;
-			
-			OnBurnerNotification(new NotificationManager.Notification(
-				"Your water is boiling.", 
-				this,
-				DismissBoiling)			
-			);
+			FloatingLabel
+				.DOFade(0, duration)
+				.SetEase(Ease.OutSine)
+				.OnComplete(() =>
+				{
+					FloatingLabel.text = text;
+					FloatingLabel.DOFade(1, duration).SetEase(Ease.InSine);
+				});
+		}
+		else
+		{
+			FloatingLabel.gameObject.SetActive(true);
+			FloatingLabel.text = text;
+			FloatingLabel.DOFade(1, duration);
 		}
 	}
 
-	private void DismissBoiling()
-	{
-		hasNotifiedForBoiling = false;
-	}
+	#region Display Functions -- (they don't handle state)
 
-	private async void DismissTimer()
+	public Tween HideLabel(float duration = 0.3f)
 	{
-		hasNotifiedForTimer = false;
-		await _Timer.Reset();
-	}
-	
-	private void SetLabel(string text)
-	{
-		FloatingLabel
-			.DOFade(0, 0.3f)
+		return FloatingLabel
+			.DOFade(0, duration)
+			.SetEase(Ease.OutSine)
 			.OnComplete(() =>
 			{
-				
-				FloatingLabel.text = text;
-				FloatingLabel.DOFade(1, 0.3f);
+				FloatingLabel.gameObject.SetActive(false);
 			});
 	}
-
-	#region Timer Prompt Functions
 	
 	public void ShowInputPrompt()
 	{
@@ -126,15 +109,15 @@ public class BurnerBehaviour : MonoBehaviour
 				
 		ring.SetWaveAmplitude(0f);
 
-		DOTween.To(ring.GetVoiceLerp, ring.SetVoiceLerp, 1f, 0.3f);
-		DOTween.To(ring.GetWaveAmplitude, ring.SetWaveAmplitude, ring.WAVE_AMPLITUDE, 1.5f);
+		DOTween.To(ring.GetVoiceLerp, ring.SetVoiceLerp, 1f, 0.3f).SetEase(Ease.InSine);
+		DOTween.To(ring.GetWaveAmplitude, ring.SetWaveAmplitude, ring.WAVE_AMPLITUDE, 1f)
+			.SetEase(Ease.InSine);
 	}
 
 	public void SetInputLevel(float volume)
 	{
 		ring.SetInputLevel(volume);
 	}
-	
 
 	public void HiddenToProactive()
 	{
@@ -176,16 +159,22 @@ public class BurnerBehaviour : MonoBehaviour
 		Debug.Log("Waiting for Input -> Proactive Timer");
 	}
 
-	public void HideProactiveTimer()
+	public Tween HideProactiveTimer()
 	{
-		FloatingLabel.DOFade(0, 1f);
+		float duration = 1f;
+		
+		FloatingLabel.DOFade(0, duration);
 
-		DOTween.To(ring.GetRingRadius, ring.SetRingRadius, 0f, 1f)
-			.SetEase(Ease.OutSine)
-			.OnComplete(() =>
-			{
-				FloatingLabel.gameObject.SetActive(false);
-			});
+		var tween = DOTween.To(ring.GetRingRadius, ring.SetRingRadius, 0f, duration)
+			.SetEase(Ease.OutSine);
+			
+		tween.OnComplete(() =>
+		{
+			FloatingLabel.gameObject.SetActive(false);
+		});
+
+		return tween;
 	}
+	
 	#endregion
 }
