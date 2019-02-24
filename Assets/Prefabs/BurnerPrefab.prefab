@@ -822,6 +822,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   VoiceInputMat: {fileID: 2100000, guid: 8d1472ea352f54be0a9c9fd2cc38c2ff, type: 2}
   WhiteProactive: {fileID: 2100000, guid: 5e6c5d545120540e0bba7677c28f76d4, type: 2}
+  BoilingWaitMaterial: {fileID: 2100000, guid: 16db0ea1ea9064f9e860dba37f9f291f, type: 2}
   WAVE_AMPLITUDE: 0.005
   RING_RADIUS: 0.1
 --- !u!114 &114746611747178922

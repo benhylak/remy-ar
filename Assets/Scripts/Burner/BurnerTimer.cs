@@ -72,7 +72,7 @@ public class BurnerTimer : MonoBehaviour
 		//DOTween.To(GetPillTransparency, SetPillTransparency, 1f, 0.3f);
 	}
 
-	public void SetRingTransparency(float val)
+	public void SetTransparency(float val)
 	{
 		SetPillTransparency(val);
 
@@ -90,7 +90,7 @@ public class BurnerTimer : MonoBehaviour
 	}
 	
 	
-	public float GetRingTransparency()
+	public float GetTransparency()
 	{
 		return ringTransparency;
 		//	return 
@@ -139,14 +139,21 @@ public class BurnerTimer : MonoBehaviour
 
 		_labelText.text = timeToStr;
 	}
+
+	public bool isDone()
+	{
+		return isSet && isComplete;
+	}
+	
 	void Update ()
 	{
-		_progress = (Time.time - _setTime)*1000 / (float)_timerGoal.TotalMilliseconds;
+		if (_timerGoal == TimeSpan.Zero) return;
 		
+		_progress = (Time.time - _setTime)*1000 / (float)_timerGoal.TotalMilliseconds;
 		UpdatePill();
 		
-		if (_timerGoal == TimeSpan.Zero || _progress <= 0) return;
-		
+		if( _progress <= 0) return;
+			
 		if (_progress >= 1 && _timerDoneSequence == null)
 		{
 			//timer is done. Congrats!
@@ -182,10 +189,10 @@ public class BurnerTimer : MonoBehaviour
 
 				var finishedSequence = DOTween.Sequence();
 
-				finishedSequence.AppendInterval(0.35f);
+				finishedSequence.AppendInterval(0.2f);
 				finishedSequence.Append(
 					DOTween.To(_lineRenderer.GetTransparency, _lineRenderer.SetTransparency,
-						0.3f, 0.6f)
+						0.15f, 0.6f)
 						.SetEase(Ease.InQuad)
 					);
 
@@ -197,7 +204,7 @@ public class BurnerTimer : MonoBehaviour
 
 			_timerDoneSequence.Play();
 		}
-		else
+		else if (_progress <= 1)
 		{
 			_circleRenderer.SetPercentFilled(_progress);
 		}
@@ -227,6 +234,7 @@ public class BurnerTimer : MonoBehaviour
 		
 		_circleRenderer.SetPercentFilled(0);
 		_timerGoal = TimeSpan.Zero;
+		_progress = 0;
 	}
 	
 	// Update is called once per frame

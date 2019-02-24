@@ -17,7 +17,7 @@ public class BigKahuna: Singleton<BigKahuna>
     
     public DatabaseManager _db;
     public List<BurnerBehaviour> _burnerBehaviours;
-    private TimerState _timerState;
+    private State _timerState;
     public MLImageTrackerBehavior _stoveTracker;
     public GameObject burners;
     public SpeechRecognizer speechRecognizer;
@@ -42,7 +42,7 @@ public class BigKahuna: Singleton<BigKahuna>
             .Subscribe(_ =>
                 {
                     Debug.Log("Monitoring...");
-                    _timerState = new TimerState.MonitoringState();
+                    _timerState = SetTimerStateMachine.GetInitialState();
                 }
             );
      

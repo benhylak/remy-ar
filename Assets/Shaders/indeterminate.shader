@@ -7,6 +7,7 @@ Shader "Ring/indeterminate" {
 		_RimColor("Rim Color", Color) = (1, 1, 1, 1)
         _RimPower("Rim Power", Range(0.1, 6.0)) = 3.0
         _Radius("Radius", Range(0.0, 1.0)) = 0.2
+        _Alpha("Alpha", Range(0.0, 1.0)) = 1.0
 	}
 	SubShader {
 		Tags { "RenderType"="Transparent" }
@@ -29,6 +30,7 @@ Shader "Ring/indeterminate" {
 		fixed4 _SecondaryColor;
 		float _RimPower;
 		float _Radius;
+		float _Alpha;
 		
 		float map(float value, float min1, float max1, float min2, float max2)
 		{
@@ -77,7 +79,7 @@ Shader "Ring/indeterminate" {
 			//o.Alpha = (map(sin(_Time.y*2), -1, 1, 0, 1) + .1) * (1 - abs(distance(closestObjectPoint, IN.worldPos)) / (2*_Radius)); 
 		   
 		    float val = abs(sin(angleDist));//map(sin(angleDist), -1, 1, 0, 1); 
-		    o.Alpha = val * val * val * val * val * val * (1-abs(distance(closestObjectPoint, IN.worldPos)) / (4*_Radius));    
+		    o.Alpha = _Alpha * val * val * val * val * val * val * (1-abs(distance(closestObjectPoint, IN.worldPos)) / (3*_Radius)); 
 			
 			//calculate rim power
 			half rim = 1.0 - saturate(dot(normalize(IN.viewDir), o.Normal));

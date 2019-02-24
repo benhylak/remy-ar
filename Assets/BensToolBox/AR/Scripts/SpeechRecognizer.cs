@@ -106,8 +106,8 @@ public class SpeechRecognizer : MonoBehaviour
         _service = new SpeechToText(credentials);
         _service.StreamMultipart = true;
 
-        Active = true;
-        StartRecording();
+        //Active = true;
+        //StartRecording();
     }
 
     public bool Active
@@ -130,11 +130,13 @@ public class SpeechRecognizer : MonoBehaviour
                 _service.SmartFormatting = true;
                 _service.SpeakerLabels = false;
                 _service.WordAlternativesThreshold = null;
+                StartRecording();
                 _service.StartListening(OnRecognize, OnRecognizeSpeaker);
             }
             else if (!value && _service.IsListening)
             {
                 _service.StopListening();
+                StopRecording();
             }
         }
     }

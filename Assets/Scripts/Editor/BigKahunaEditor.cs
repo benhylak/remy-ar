@@ -20,5 +20,11 @@ public class BigKahunaEditor : Editor
             kahuna.speechRecognizer.recognizedText = "10 Seconds";
             kahuna.speechRecognizer.finalized = true;
         }
+        
+        if(GUILayout.Button("Say \"Boil\""))
+        {
+            kahuna.speechRecognizer.recognizedText = "Boil";
+            kahuna.speechRecognizer.finalized = true;
+        }
     }
 }

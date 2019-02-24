@@ -8,13 +8,16 @@ public class NotificationManager : MonoBehaviour
     {
         public readonly string message;
         public readonly BurnerBehaviour source;
-        public readonly Action Dismiss;
         
-        public Notification(string message, BurnerBehaviour source, Action dismiss)
+        public Notification(string message, BurnerBehaviour source)
         {
             this.message = message;
             this.source = source;
-            this.Dismiss = dismiss;
+        }
+
+        public Notification Copy()
+        {
+            return new Notification(message, source);
         }
     }
     

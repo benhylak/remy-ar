@@ -18,5 +18,7 @@ public class HeadsUpNotification : NotificationBehaviour
         //show for x seconds, then hide
         //if looked at, show
         //if 
+
+       // _notificationModel.Dismiss.Invoke();
     }
 }
