@@ -70,7 +70,7 @@ public static class SetTimerStateMachine
                 
                 return new MonitoringState();
             }
-            else if (this._burner.IsLookedAt)
+            else if (this._burner._gazeReceiver.isLookedAt)
             {
                 return new VoiceInputState(_burner);
             }
@@ -106,12 +106,7 @@ public static class SetTimerStateMachine
         
         public override State Update()
         {                    
-            if (_burner.IsLookedAt)
-            {
-                _lastLookedAt = Time.time;
-
-            }         
-            else if (Time.time - _lastLookedAt > _timeOut)
+            if (_burner._gazeReceiver.timeSinceLastGaze > _timeOut)
             {
                 BigKahuna.Instance.speechRecognizer.Active = false;
                 return new ProactiveState(_burner, this);

@@ -20,7 +20,6 @@ public class BurnerBehaviour : MonoBehaviour
 	public GameObject burnerMesh;
 	public BurnerRingController ring;
 
-	public bool IsLookedAt;
 	public Text FloatingLabel;
 	
 	private bool IsLabelVisible = false;	
@@ -31,12 +30,14 @@ public class BurnerBehaviour : MonoBehaviour
 	public NotificationManager.NotificationEventHandler OnBurnerNotification;
 
 	public State _state;
+	public GazeReceiver _gazeReceiver;
 	
 	public void Start()
 	{
 		FloatingLabel.DOFade(0, 0);
 		
 		_state = new BurnerStateMachine.WaitingState(this);
+		_gazeReceiver = GetComponent<GazeReceiver>();
 	}
 
 	public void SetTimer(TimeSpan ts)
@@ -65,7 +66,6 @@ public class BurnerBehaviour : MonoBehaviour
 	//dismissing notification wouldn't dismiss the state. but the state could change...
 	// like if the state == boiling
 	// if pot removed = false, dismiss the state
-
 	public void SetLabel(string text, float duration = 0.35f)
 	{
 		if (FloatingLabel.gameObject.activeInHierarchy)

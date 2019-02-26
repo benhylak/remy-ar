@@ -1,24 +1,70 @@
-using static NotificationManager;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using BensToolBox.AR.Scripts;
+using DG.Tweening;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class HeadsUpNotification : NotificationBehaviour
 {
-    public HeadsUpNotification(NotificationManager.Notification n) : base(n)
+    private static readonly float END_X = 0.202f;
+    private static readonly float START_X = 0.68f;
+    private static readonly float MID_X = 0.4f;
+  
+
+    public Text label;
+
+
+    
+    public override async void Launch()
     {
-        Launch();   
+        transform.SetLocalPosX(START_X);
+        label.DOFade(1, 0);
+        await Task.Delay(1000);
+        
+        _state = new NotificationBehaviour.ShowState(this);
     }
 
-    public void Launch()
+    private void Start()
     {
-        //set text
-        //fade in
+        transform.SetLocalPosX(START_X);
+        base.Start();
+    }
+
+    public override void ShowToDiminish()
+    {
+        label.DOFade(0, 0.6f).SetEase(Ease.OutCubic);
+
+        transform
+            .DOLocalMoveX(MID_X, 0.6f)
+            .SetEase(Ease.OutCubic);
+    }
+
+    public override void DiminishToShow()
+    {
+        label.DOFade(1, 0.6f).SetEase(Ease.OutCubic);
+        transform
+            .DOLocalMoveX(END_X, 0.7f)
+            .SetEase(Ease.OutCubic);
+    }
+
+    public override void HideToShow()
+    {
+        transform
+            .DOLocalMoveX(END_X, 0.7f)
+            .SetEase(Ease.OutCubic);
+    }
+    
+    public override Tween Hide()
+    {
+        return transform
+            .DOLocalMoveX(START_X, 0.6f)
+            .SetEase(Ease.OutQuad);
     }
 
     public void Update()
     {
-        //show for x seconds, then hide
-        //if looked at, show
-        //if 
-
-       // _notificationModel.Dismiss.Invoke();
+        if(_state != null)
+            _state = _state.Update() ?? _state;
     }
 }
