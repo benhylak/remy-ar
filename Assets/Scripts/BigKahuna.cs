@@ -58,12 +58,12 @@ public class BigKahuna: Singleton<BigKahuna>
 
         MLInput.OnTriggerDown += (_, __) =>
         {
-            _burnerBehaviours.ForEach(x => x.IsLookedAt = true);
+         //   _burnerBehaviours.ForEach(x => x.IsLookedAt = true);
         };
         
         MLInput.OnTriggerUp += (_, __) =>
         {
-            _burnerBehaviours.ForEach(x => x.IsLookedAt = false);
+           // _burnerBehaviours.ForEach(x => x.IsLookedAt = false);
         };
         
         _burnerBehaviours.ForEach(b => b.OnBurnerNotification += 

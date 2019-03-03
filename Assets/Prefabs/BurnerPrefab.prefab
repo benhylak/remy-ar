@@ -20,6 +20,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4708301060163486}
   - component: {fileID: 114087072961982690}
+  - component: {fileID: 114479113208470068}
   - component: {fileID: 136683903966364478}
   m_Layer: 0
   m_Name: BurnerPrefab
@@ -692,8 +693,8 @@ MonoBehaviour:
   _Timer: {fileID: 114010814459039858}
   burnerMesh: {fileID: 1380640003187302}
   ring: {fileID: 114733323089780032}
-  IsLookedAt: 0
   FloatingLabel: {fileID: 114490862750933650}
+  _gazeReceiver: {fileID: 0}
 --- !u!114 &114170117265141226
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -739,6 +740,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _lineRenderer: {fileID: 120015916408705586}
+--- !u!114 &114479113208470068
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1016013941662872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 001e7402323184845ab099a7bf89d05c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isLookedAtThreshold: 0.15
+  hasBeenLookedAt: 0
 --- !u!114 &114490862750933650
 MonoBehaviour:
   m_ObjectHideFlags: 1

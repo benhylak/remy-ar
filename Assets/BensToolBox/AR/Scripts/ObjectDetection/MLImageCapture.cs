@@ -26,8 +26,7 @@ public class MLImageCapture : MonoBehaviour
 
     [SerializeField, Space, Tooltip("ControllerConnectionHandler reference.")]
     private ControllerConnectionHandler _controllerConnectionHandler;
-
-
+    
     private bool _isCameraConnected = false;
     private bool _isCapturing = false;
     private bool _hasStarted = false;
