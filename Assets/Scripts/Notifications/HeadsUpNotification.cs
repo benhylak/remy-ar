@@ -16,11 +16,11 @@ public class HeadsUpNotification : NotificationBehaviour
 
 
     
-    public override async void Launch()
+    public override async void Launch(int delay = 1000)
     {
         transform.SetLocalPosX(START_X);
         label.DOFade(1, 0);
-        await Task.Delay(1000);
+        await Task.Delay(delay);
         
         _state = new NotificationBehaviour.ShowState(this);
     }

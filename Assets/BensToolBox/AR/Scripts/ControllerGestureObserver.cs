@@ -26,7 +26,7 @@ namespace BensToolBox.AR.Scripts
 
         void Update()
         {
-            if (raiseTime != null && raiseTime <= Time.realtimeSinceStartup)
+            if (raiseTime != null && raiseTime <= Time.time)
             {
                 onLongTriggerDown?.OnNext(Unit.Default);
                 raiseTime = null;

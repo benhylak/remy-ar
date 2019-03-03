@@ -754,7 +754,7 @@ namespace SimpleFirebaseUnity
         public async void Push(string val, bool isJson, FirebaseParam query)
         {
             if (isJson)
-                PushJson(val, query);
+                await PushJson(val, query);
             else
                 await JsonSerializeRoutine(val, query, PushJson);
         }
@@ -767,9 +767,9 @@ namespace SimpleFirebaseUnity
         /// <param name="val">Push value</param>
         /// <param name="param">REST call parameters on a string. Example: "auth=ASDF123"</param>
         /// <returns></returns>
-        public void Push(object val, string param = "")
+        public async Task Push(object val, string param = "")
         {
-            Push(val, new FirebaseParam(param));
+            await Push(val, new FirebaseParam(param));
         }
 
         /// <summary>
@@ -794,9 +794,9 @@ namespace SimpleFirebaseUnity
         /// <param name="priority">Priority.</param>
         /// <param name="param">REST call parameters on a string. Example: "auth=ASDF123"</param>
         /// <returns></returns>
-        public void Push(object val, float priority, string param = "")
+        public async Task Push(object val, float priority, string param = "")
         {
-            Push(val, priority, new FirebaseParam(param));
+            await Push(val, priority, new FirebaseParam(param));
         }
 
         /// <summary>
@@ -807,7 +807,7 @@ namespace SimpleFirebaseUnity
         /// <param name="val">Push value</param>
         /// <param name="priority">Priority.</param>
         /// <param name="query">REST call parameters wrapped in FirebaseQuery class</param>
-        /// <returns></returns>
+        /// <returns></re turns>
         public async Task Push(object val, float priority, FirebaseParam query)
         {
             Dictionary<string, object> tempDict = new Dictionary<string, object>();

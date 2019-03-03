@@ -12,7 +12,7 @@ public class DatabaseManager : Singleton<DatabaseManager>
     private bool hasRun = false;
     private Firebase _firebase;
 
-    public float DATABASE_UPDATE_DELAY = 0.25f;
+    public float DATABASE_UPDATE_DELAY = 0.15f;
     private float LAST_UPDATE_TIME;
     private ReactiveCollection<Burner> _burners;
     private bool burnerUpdateFinished = true;

@@ -693,8 +693,8 @@ MonoBehaviour:
   _Timer: {fileID: 114010814459039858}
   burnerMesh: {fileID: 1380640003187302}
   ring: {fileID: 114733323089780032}
-  IsLookedAt: 0
   FloatingLabel: {fileID: 114490862750933650}
+  _gazeReceiver: {fileID: 0}
 --- !u!114 &114170117265141226
 MonoBehaviour:
   m_ObjectHideFlags: 1

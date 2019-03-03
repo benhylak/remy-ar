@@ -134,7 +134,7 @@ namespace UnityEngine.XR.MagicLeap
             if (_isReady)
             {
                 _isReady = false;
-
+      
                 _raycastParams.Position = Position;
                 _raycastParams.Direction = Direction;
                 _raycastParams.UpVector = Up;

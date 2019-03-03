@@ -15,7 +15,7 @@ public abstract class NotificationBehaviour : MonoBehaviour
 //        this._notificationModel = n;
 //    }
 
-    public abstract void Launch();
+    public abstract void Launch(int delay = 1000);
     
 
     protected void Start()
@@ -27,6 +27,11 @@ public abstract class NotificationBehaviour : MonoBehaviour
     public abstract void DiminishToShow();
 
     public abstract void HideToShow();
+
+    public virtual void UpdateShow() //turn into a state someday
+    {
+        
+    }
 
     public abstract Tween Hide();
     
@@ -55,6 +60,8 @@ public abstract class NotificationBehaviour : MonoBehaviour
                 return new DiminishedState(_notif);
             }
 
+            _notif.UpdateShow();
+
             return null;
         }
     }
@@ -70,7 +77,7 @@ public abstract class NotificationBehaviour : MonoBehaviour
 
         public override State Update()
         {
-            if (_notif._gazeReceiver.currentGazeDuration > 0.25f)
+            if (_notif._gazeReceiver.currentGazeDuration > 0.4f)
             {
                 _notif.DiminishToShow();
                 return new ShowState(_notif, doShow: false);
