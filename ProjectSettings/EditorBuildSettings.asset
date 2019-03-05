@@ -6,7 +6,10 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/notifcations.unity
+    path: Assets/Scenes/ramen.unity
+    guid: 71444912096ba40fe9974b821bb8292b
+  - enabled: 0
+    path: Assets/Scenes/notifications.unity
     guid: 4db9344141d634a74a51e14ba4b252fd
   - enabled: 0
     path: Assets/Scenes/main.unity
