@@ -200,8 +200,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f175a5e9e92042e899d539cd716b7207, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  fingerType: 0
   leftFingerCollider: {fileID: 1172030804567848}
   rightFingerCollider: {fileID: 1585650430804946}
+  lerpSpeed: 5
 --- !u!114 &114443653095038068
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -214,7 +216,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _trackedKeyPoses: 511
-  _keyPointFilterLevel: 1
+  _keyPointFilterLevel: 2
   _PoseFilterLevel: 2
 --- !u!135 &135206675931158084
 SphereCollider:
@@ -226,8 +228,8 @@ SphereCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 1.5
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Radius: 0.6313847
+  m_Center: {x: -0.00057703693, y: 0, z: 0}
 --- !u!135 &135236720519368582
 SphereCollider:
   m_ObjectHideFlags: 1

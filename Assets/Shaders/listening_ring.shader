@@ -75,11 +75,17 @@ Shader "Custom/listening_ring" {
 		    		
 			//Calculate Alpha
 			float3 camLookVect = IN.worldPos - _WorldSpaceCameraPos;
-		    float3 flattened = float3(camLookVect.x, objectOrigin.y, camLookVect.z);
+			
+			//camLookVect.y/
+		    float3 flattened = normalize(float3(camLookVect.x, objectOrigin.y, camLookVect.z));
 		    
+		    //float3 flattened = camLookVect * objectOrigin.y/camLookVect.y;
 		    float3 closestObjectPoint = objectOrigin - normalize(flattened) * _Radius;
 			
-			o.Alpha = (1 - abs(distance(closestObjectPoint, IN.worldPos)) / (2*_Radius)) - .015;; 
+			o.Alpha = (1 - abs(distance(closestObjectPoint, IN.worldPos)) / (2*_Radius)) - .015;
+			
+			//o.Alpha *= lerp(5, 1, (flattened.x + flattened.z)/1);
+			
 			
 			//calculate rim power
 			half rim = 1.0 - saturate(dot(normalize(IN.viewDir), o.Normal));

@@ -1224,7 +1224,9 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
 
                                     WordConfidence wc = new WordConfidence();
                                     wc.Word = (string)iwordconf[0];
-                                    wc.Confidence = (double)iwordconf[1];
+                                    
+                                    UnityEngine.Debug.Log(iwordconf[1].GetType());
+                                    wc.Confidence = Convert.ToDouble(iwordconf[1]);
                                     confidence[i] = wc;
                                 }
 

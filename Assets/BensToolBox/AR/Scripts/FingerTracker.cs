@@ -7,6 +7,14 @@ namespace BensToolBox.AR.Scripts
 {
 	public class FingerTracker : MonoBehaviour
 	{
+		public enum FingerType
+		{
+			THUMB,
+			INDEX
+		}
+
+		[SerializeField]
+		public FingerType fingerType;
 
 		private Vector3 leftHandSmoothed = Vector3.zero;
 
@@ -39,7 +47,18 @@ namespace BensToolBox.AR.Scripts
 			
 			if (hand != null)
 			{
-				Vector3 currentPosition = hand.Thumb.Tip.Position;
+				Vector3 currentPosition;
+
+				switch (fingerType)
+				{
+					case FingerType.THUMB:
+						currentPosition = hand.Thumb.Tip.Position;
+						break;
+					
+					default:
+						currentPosition = hand.Index.Tip.Position;
+						break;
+				}
 
 				if (lastSmoothed.Equals(Vector3.zero)) lastSmoothed = currentPosition;
 				else
