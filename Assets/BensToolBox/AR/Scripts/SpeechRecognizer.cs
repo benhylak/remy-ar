@@ -15,6 +15,7 @@
 *
 */
 
+using System;
 using UnityEngine;
 using System.Collections;
 using IBM.Watson.DeveloperCloud.Logging;
@@ -22,6 +23,7 @@ using IBM.Watson.DeveloperCloud.Services.SpeechToText.v1;
 using IBM.Watson.DeveloperCloud.Utilities;
 using IBM.Watson.DeveloperCloud.DataTypes;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine.UI;
 
 public class SpeechRecognizer : MonoBehaviour
@@ -62,6 +64,11 @@ public class SpeechRecognizer : MonoBehaviour
     private int _recordingBufferSize = 1;
     private int _recordingHZ = 22050;
     public bool finalized;
+
+    public bool IsInitalized
+    {
+        get { return _service != null; }
+    }
     
     public float audioLevel;
     public string recognizedText;
@@ -88,15 +95,18 @@ public class SpeechRecognizer : MonoBehaviour
             //  Authenticate using iamApikey
             TokenOptions tokenOptions = new TokenOptions()
             {
-                IamApiKey = _iamApikey,
-                IamUrl = _iamUrl
+                IamApiKey = _iamApikey
             };
 
             credentials = new Credentials(tokenOptions, _serviceUrl);
 
+            Debug.Log("Retreiving token data...");
+            
             //  Wait for tokendata
             while (!credentials.HasIamTokenData())
                 yield return null;
+            
+            Debug.Log("Success: Token Data Retrieved");
         }
         else
         {
@@ -145,6 +155,7 @@ public class SpeechRecognizer : MonoBehaviour
     {
         if (_recordingRoutine == 0)
         {
+            Debug.Log("Start recording");
             UnityObjectUtil.StartDestroyQueue();
             _recordingRoutine = Runnable.Run(RecordingHandler());
         }
@@ -154,6 +165,8 @@ public class SpeechRecognizer : MonoBehaviour
     {
         if (_recordingRoutine != 0)
         {
+            Debug.Log("Stop recording");
+            
             Microphone.End(_microphoneID);
             Runnable.Stop(_recordingRoutine);
             _recordingRoutine = 0;
@@ -164,11 +177,13 @@ public class SpeechRecognizer : MonoBehaviour
     {
         Active = false;
 
+        Debug.Log("Watson Streaming Error: " + error);
         Log.Debug("ExampleStreaming.OnError()", "Error! {0}", error);
     }
 
     private IEnumerator RecordingHandler()
     {
+        Debug.Log($"watson microphones: {Microphone.devices}");
         Log.Debug("ExampleStreaming.RecordingHandler()", "devices: {0}", Microphone.devices);
         _recording = Microphone.Start(_microphoneID, true, _recordingBufferSize, _recordingHZ);
         yield return null;      // let _recordingRoutine get set..
@@ -188,6 +203,7 @@ public class SpeechRecognizer : MonoBehaviour
             int writePos = Microphone.GetPosition(_microphoneID);
             if (writePos > _recording.samples || !Microphone.IsRecording(_microphoneID))
             {
+                Debug.Log("Microphone disconnected");
                 Log.Error("ExampleStreaming.RecordingHandler()", "Microphone disconnected.");
 
                 StopRecording();
@@ -250,6 +266,8 @@ public class SpeechRecognizer : MonoBehaviour
 
     private void OnRecognize(SpeechRecognitionEvent result, Dictionary<string, object> customData)
     {
+        Debug.Log("On Recognize");
+        
         if (result != null && result.results.Length > 0)
         {
             foreach (var res in result.results)
@@ -257,6 +275,7 @@ public class SpeechRecognizer : MonoBehaviour
                 foreach (var alt in res.alternatives)
                 {
                     string text = string.Format("{0} ({1}, {2:0.00})\n", alt.transcript, res.final ? "Final" : "Interim", alt.confidence);
+                    Debug.Log("Recognized: " + text);
                     Log.Debug("ExampleStreaming.OnRecognize()", text);
 
                     if (ResultsField != null)
@@ -274,7 +293,8 @@ public class SpeechRecognizer : MonoBehaviour
                 {
                     foreach (var keyword in res.keywords_result.keyword)
                     {
-                        
+                        Debug.Log(
+                            $"keyword: {keyword.normalized_text}, confidence: {keyword.confidence}, start time: {keyword.start_time}, end time: {keyword.end_time}");
                         Log.Debug("ExampleStreaming.OnRecognize()", "keyword: {0}, confidence: {1}, start time: {2}, end time: {3}", keyword.normalized_text, keyword.confidence, keyword.start_time, keyword.end_time);
                     }
                 }

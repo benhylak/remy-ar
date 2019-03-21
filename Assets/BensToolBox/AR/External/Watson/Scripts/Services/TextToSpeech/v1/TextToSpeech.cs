@@ -25,6 +25,8 @@ using MiniJSON;
 using System;
 using FullSerializer;
 using System.Text.RegularExpressions;
+using UnityEngine.Networking;
+using Utility = IBM.Watson.DeveloperCloud.Utilities.Utility;
 
 namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
 {
@@ -59,7 +61,7 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             { AudioFormatType.WAV, "audio/wav" },
             { AudioFormatType.FLAC, "audio/flac" },
         };
-        private const string ServiceId = "TextToSpeechV1";
+        private const string ServiceId = "text_to_speech";
         private fsSerializer _serializer = new fsSerializer();
         private const float RequestTimeout = 10.0f * 60.0f;
         private Credentials _credentials = null;
@@ -110,6 +112,16 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
                 }
             }
         }
+
+        private bool disableSslVerification = false;
+        /// <summary>
+        /// Gets and sets the option to disable ssl verification
+        /// </summary>
+        public bool DisableSslVerification
+        {
+            get { return disableSslVerification; }
+            set { disableSslVerification = value; }
+        }
         #endregion
 
         #region GetVoiceType
@@ -130,11 +142,64 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
         #endregion
 
         #region Constructor
+        /// <summary>
+        /// TextToSpeech constructor. Use this constructor to auto load credentials via ibm-credentials.env file.
+        /// </summary>
+        public TextToSpeech()
+        {
+            var credentialsPaths = Utility.GetCredentialsPaths();
+            if (credentialsPaths.Count > 0)
+            {
+                foreach (string path in credentialsPaths)
+                {
+                    if (Utility.LoadEnvFile(path))
+                    {
+                        break;
+                    }
+                }
+
+                string ApiKey = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_APIKEY");
+                string Username = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_USERNAME");
+                string Password = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_PASSWORD");
+                string ServiceUrl = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_URL");
+
+                if (string.IsNullOrEmpty(ApiKey) && (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password)))
+                {
+                    throw new NullReferenceException(string.Format("Either {0}_APIKEY or {0}_USERNAME and {0}_PASSWORD did not exist. Please add credentials with this key in ibm-credentials.env.", ServiceId.ToUpper()));
+                }
+
+                if (!string.IsNullOrEmpty(ApiKey))
+                {
+                    TokenOptions tokenOptions = new TokenOptions()
+                    {
+                        IamApiKey = ApiKey
+                    };
+
+                    Credentials = new Credentials(tokenOptions, ServiceUrl);
+
+                    if (string.IsNullOrEmpty(Credentials.Url))
+                    {
+                        Credentials.Url = Url;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(Username) && !string.IsNullOrEmpty(Password))
+                {
+                    Credentials = new Credentials(Username, Password, Url);
+                }
+            }
+        }
+
         public TextToSpeech(Credentials credentials)
         {
             if (credentials.HasCredentials() || credentials.HasWatsonAuthenticationToken() || credentials.HasIamTokenData())
             {
                 Credentials = credentials;
+
+                if (string.IsNullOrEmpty(credentials.Url))
+                {
+                    credentials.Url = Url;
+                }
             }
             else
             {
@@ -180,15 +245,18 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             GetVoicesReq req = new GetVoicesReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.OnResponse = OnGetVoicesResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=GetVoices";
 
             return connector.Send(req);
         }
@@ -276,15 +344,18 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             GetVoiceReq req = new GetVoiceReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.OnResponse = OnGetVoiceResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=GetVoice";
 
             return connector.Send(req);
         }
@@ -406,7 +477,7 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             string escapedText = text.Replace("\\\"", "\"");
             string decodedText = DecodeUnicodeCharacters(escapedText);
 
-            string textId = Utility.GetMD5(decodedText);
+            string textId = Utilities.Utility.GetMD5(decodedText);
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, "/v1/synthesize");
             if (connector == null)
@@ -418,10 +489,12 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             ToSpeechRequest req = new ToSpeechRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -431,6 +504,7 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             req.Parameters["accept"] = _audioFormats[_audioFormat];
             req.Parameters["voice"] = _voiceTypes[_voice];
             req.OnResponse = ToSpeechResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=ToSpeech";
 
             if (usePost)
             {
@@ -496,7 +570,8 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
 
             MatchCollection matches = Regex.Matches(text, @"\\u.{4}");
 
-            foreach(Match match in matches) {
+            foreach (Match match in matches)
+            {
                 string pureCode = match.ToString().Replace("\\u", "");
                 int codeNumber = int.Parse(pureCode, System.Globalization.NumberStyles.HexNumber);
                 string unicodeString = char.ConvertFromUtf32(codeNumber);
@@ -541,10 +616,12 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             GetPronunciationReq req = new GetPronunciationReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -555,6 +632,7 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             if (!string.IsNullOrEmpty(customization_id))
                 req.Parameters["customization_id"] = customization_id;
             req.OnResponse = OnGetPronunciationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=GetPronunciation";
 
             return connector.Send(req);
         }
@@ -636,15 +714,18 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             GetCustomizationsReq req = new GetCustomizationsReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.OnResponse = OnGetCustomizationsResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=GetCustomizations";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, "/v1/customizations");
             if (connector == null)
@@ -744,10 +825,12 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             CreateCustomizationRequest req = new CreateCustomizationRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -756,6 +839,7 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             req.Headers["Accept"] = "application/json";
             req.Send = Encoding.UTF8.GetBytes(customizationJson);
             req.OnResponse = OnCreateCustomizationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=CreateCustomization";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, "/v1/customizations");
             if (connector == null)
@@ -844,17 +928,19 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             DeleteCustomizationRequest req = new DeleteCustomizationRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.Timeout = RequestTimeout;
-            req.Delete = true;
             req.OnResponse = OnDeleteCustomizationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=DeleteCustomization";
 
             string service = "/v1/customizations/{0}";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -922,15 +1008,18 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             GetCustomizationRequest req = new GetCustomizationRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.OnResponse = OnGetCustomizationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=GetCustomization";
 
             string service = "/v1/customizations/{0}";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -1027,10 +1116,12 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             UpdateCustomizationRequest req = new UpdateCustomizationRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -1039,6 +1130,7 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             req.Headers["Accept"] = "application/json";
             req.Send = Encoding.UTF8.GetBytes(customizationJson);
             req.OnResponse = OnUpdateCustomizationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=UpdateCustomization";
 
             string service = "/v1/customizations/{0}";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -1108,15 +1200,18 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             GetCustomizationWordsRequest req = new GetCustomizationWordsRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.OnResponse = OnGetCustomizationWordsResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=GetCustomizationWords";
 
             string service = "/v1/customizations/{0}/words";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -1213,10 +1308,12 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             AddCustomizationWordsRequest req = new AddCustomizationWordsRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -1225,6 +1322,7 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             req.Headers["Accept"] = "application/json";
             req.Send = Encoding.UTF8.GetBytes(customizationJson);
             req.OnResponse = OnAddCustomizationWordsResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=AddCustomizationWords";
 
             string service = "/v1/customizations/{0}/words";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -1295,17 +1393,19 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             DeleteCustomizationWordRequest req = new DeleteCustomizationWordRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.Timeout = RequestTimeout;
-            req.Delete = true;
             req.OnResponse = OnDeleteCustomizationWordResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=DeleteCustomizationWord";
 
             string service = "/v1/customizations/{0}/words/{1}";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID, word));
@@ -1376,15 +1476,18 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             GetCustomizationWordRequest req = new GetCustomizationWordRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.OnResponse = OnGetCustomizationWordResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=GetCustomizationWord";
 
             string service = "/v1/customizations/{0}/words/{1}";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID, word));
@@ -1465,7 +1568,6 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
         /// <returns></returns>
         public bool AddCustomizationWord(SuccessCallback<bool> successCallback, FailCallback failCallback, string customizationID, string word, string translation, Dictionary<string, object> customData = null)
         {
-            Log.Error("TextToSpeech.AddCustomizationWord()", "AddCustomizationWord is not supported. Unity WWW does not support PUT method! Use AddCustomizationWords() instead!");
             if (successCallback == null)
                 throw new ArgumentNullException("successCallback");
             if (failCallback == null)
@@ -1482,10 +1584,13 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             AddCustomizationWordRequest req = new AddCustomizationWordRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            req.HttpMethod = UnityWebRequest.kHttpVerbPUT;
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -1495,6 +1600,7 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             req.Headers["X-HTTP-Method-Override"] = "PUT";
             req.Send = Encoding.UTF8.GetBytes(json);
             req.OnResponse = OnAddCustomizationWordResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=AddCustomizationWord";
 
             string service = "/v1/customizations/{0}/words/{1}";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID, word));
@@ -1544,7 +1650,7 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
         /// <summary>
         /// Deletes all data associated with a specified customer ID. The method has no effect if no data is associated with the customer ID. 
         /// You associate a customer ID with data by passing the X-Watson-Metadata header with a request that passes data. 
-        /// For more information about personal data and customer IDs, see [**Information security**](https://console.bluemix.net/docs/services/discovery/information-security.html).
+        /// For more information about personal data and customer IDs, see [**Information security**](https://cloud.ibm.com/docs/services/discovery/information-security.html).
         /// </summary>
         /// <param name="successCallback">The function that is called when the operation is successful.</param>
         /// <param name="failCallback">The function that is called when the operation fails.</param>
@@ -1563,6 +1669,8 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
             DeleteUserDataRequestObj req = new DeleteUserDataRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -1572,9 +1680,9 @@ namespace IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1
                 }
             }
             req.Parameters["customer_id"] = customerId;
-            req.Delete = true;
 
             req.OnResponse = OnDeleteUserDataResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=text_to_speech;service_version=v1;operation_id=DeleteUserData";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, "/v1/user_data");
             if (connector == null)

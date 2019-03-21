@@ -24,19 +24,18 @@ using FullSerializer;
 using System.IO;
 using System.Collections.Generic;
 using IBM.Watson.DeveloperCloud.Connection;
+using System;
 
 namespace IBM.Watson.DeveloperCloud.UnitTests
 {
     public class TestTextToSpeech : UnitTest
     {
-        private string _username = null;
-        private string _password = null;
         private fsSerializer _serializer = new fsSerializer();
         //private string _token = "<authentication-token>";
 
         TextToSpeech _textToSpeech;
-        string _testString = "<speak version=\"1.0\"><say-as interpret-as=\"letters\">I'm sorry</say-as>. <prosody pitch=\"150Hz\">This is Text to Speech!</prosody><express-as type=\"GoodNews\">I'm sorry. This is Text to Speech!</express-as></speak>";
-        string _testConversationString = "<phoneme alphabet=\\\"ipa\\\" ph=\\\"\\u02c8\\u025b\\u0259\\u02c8\\u0279\\u0259n\\\">Arin</phoneme>";
+        //string _testString = "<speak version=\"1.0\"><say-as interpret-as=\"letters\">I'm sorry</say-as>. <prosody pitch=\"150Hz\">This is Text to Speech!</prosody><express-as type=\"GoodNews\">I'm sorry. This is Text to Speech!</express-as></speak>";
+        //string _testConversationString = "<phoneme alphabet=\\\"ipa\\\" ph=\\\"\\u02c8\\u025b\\u0259\\u02c8\\u0279\\u0259n\\\">Arin</phoneme>";
 
         string _createdCustomizationId;
         CustomVoiceUpdate _customVoiceUpdate;
@@ -45,8 +44,9 @@ namespace IBM.Watson.DeveloperCloud.UnitTests
         string _customizationDescription = "A text to speech voice customization created within Unity.";
         string _testWord = "Watson";
 
-        private bool _synthesizeTested = false;
-        private bool _synthesizeConversationTested = false;
+        //private bool _synthesizeTested = false;
+        //private bool _synthesizeConversationTested = false;
+        private bool _autoGetCustomizationsTested = false;
         private bool _getVoicesTested = false;
         private bool _getVoiceTested = false;
         private bool _getPronuciationTested = false;
@@ -63,6 +63,14 @@ namespace IBM.Watson.DeveloperCloud.UnitTests
         public override IEnumerator RunTest()
         {
             LogSystem.InstallDefaultReactors();
+            
+            //  Test TextToSpeech using loaded credentials
+            TextToSpeech autoTextToSpeech = new TextToSpeech();
+            while (!autoTextToSpeech.Credentials.HasIamTokenData())
+                yield return null;
+            autoTextToSpeech.GetCustomizations(OnAutoGetCustomizations, OnFail);
+            while (!_autoGetCustomizationsTested)
+                yield return null;
 
             VcapCredentials vcapCredentials = new VcapCredentials();
             fsData data = null;
@@ -92,34 +100,35 @@ namespace IBM.Watson.DeveloperCloud.UnitTests
 
             //  Set credentials from imported credntials
             Credential credential = vcapCredentials.GetCredentialByname("text-to-speech-sdk")[0].Credentials;
-            _username = credential.Username.ToString();
-            _password = credential.Password.ToString();
-            _url = credential.Url.ToString();
 
             //  Create credential and instantiate service
-            Credentials credentials = new Credentials(_username, _password, _url);
+            TokenOptions tokenOptions = new TokenOptions()
+            {
+                IamApiKey = credential.IamApikey,
+            };
 
-            //  Or authenticate using token
-            //Credentials credentials = new Credentials(_url)
-            //{
-            //    AuthenticationToken = _token
-            //};
+            //  Create credential and instantiate service
+            Credentials credentials = new Credentials(tokenOptions, credential.Url);
+
+            //  Wait for tokendata
+            while (!credentials.HasIamTokenData())
+                yield return null;
 
             _textToSpeech = new TextToSpeech(credentials);
 
-            //  Synthesize
-            Log.Debug("TestTextToSpeech.RunTest()", "Attempting synthesize.");
-            _textToSpeech.Voice = VoiceType.en_US_Allison;
-            _textToSpeech.ToSpeech(HandleToSpeechCallback, OnFail, _testString, true);
-            while (!_synthesizeTested)
-                yield return null;
+            ////  Synthesize
+            //Log.Debug("TestTextToSpeech.RunTest()", "Attempting synthesize.");
+            //_textToSpeech.Voice = VoiceType.en_US_Allison;
+            //_textToSpeech.ToSpeech(HandleToSpeechCallback, OnFail, _testString, true);
+            //while (!_synthesizeTested)
+            //    yield return null;
 
-            //  Synthesize Conversation string
-            Log.Debug("TestTextToSpeech.RunTest()", "Attempting synthesize a string as returned by Watson Conversation.");
-            _textToSpeech.Voice = VoiceType.en_US_Allison;
-            _textToSpeech.ToSpeech(HandleConversationToSpeechCallback, OnFail, _testConversationString, true);
-            while (!_synthesizeConversationTested)
-                yield return null;
+            ////  Synthesize Conversation string
+            //Log.Debug("TestTextToSpeech.RunTest()", "Attempting synthesize a string as returned by Watson Conversation.");
+            //_textToSpeech.Voice = VoiceType.en_US_Allison;
+            //_textToSpeech.ToSpeech(HandleConversationToSpeechCallback, OnFail, _testConversationString, true);
+            //while (!_synthesizeConversationTested)
+            //    yield return null;
 
             //	Get Voices
             Log.Debug("TestTextToSpeech.RunTest()", "Attempting to get voices.");
@@ -257,35 +266,42 @@ namespace IBM.Watson.DeveloperCloud.UnitTests
             yield break;
         }
 
-        void HandleToSpeechCallback(AudioClip clip, Dictionary<string, object> customData)
+        private void OnAutoGetCustomizations(Customizations response, Dictionary<string, object> customData)
         {
-            PlayClip(clip);
+            Log.Debug("TestTextToSpeech.OnAutoGetCustomizations()", "{0}", customData["json"].ToString());
+            Test(response.customizations != null);
+            _autoGetCustomizationsTested = true;
         }
 
-        private void PlayClip(AudioClip clip)
-        {
-            if (Application.isPlaying && clip != null)
-            {
-                GameObject audioObject = new GameObject("AudioObject");
-                AudioSource source = audioObject.AddComponent<AudioSource>();
-                source.spatialBlend = 0.0f;
-                source.loop = false;
-                source.clip = clip;
-                source.Play();
+        //void HandleToSpeechCallback(AudioClip clip, Dictionary<string, object> customData)
+        //{
+        //    PlayClip(clip);
+        //}
 
-                GameObject.Destroy(audioObject, clip.length);
+        //private void PlayClip(AudioClip clip)
+        //{
+        //    if (Application.isPlaying && clip != null)
+        //    {
+        //        GameObject audioObject = new GameObject("AudioObject");
+        //        AudioSource source = audioObject.AddComponent<AudioSource>();
+        //        source.spatialBlend = 0.0f;
+        //        source.loop = false;
+        //        source.clip = clip;
+        //        source.Play();
 
-                _synthesizeTested = true;
-            }
-        }
+        //        GameObject.Destroy(audioObject, clip.length);
 
-        private void HandleConversationToSpeechCallback(AudioClip clip, Dictionary<string, object> customData)
-        {
-            if (clip != null)
-            {
-                _synthesizeConversationTested = true;
-            }
-        }
+        //        _synthesizeTested = true;
+        //    }
+        //}
+
+        //private void HandleConversationToSpeechCallback(AudioClip clip, Dictionary<string, object> customData)
+        //{
+        //    if (clip != null)
+        //    {
+        //        _synthesizeConversationTested = true;
+        //    }
+        //}
 
         private void OnGetVoices(Voices voices, Dictionary<string, object> customData)
         {

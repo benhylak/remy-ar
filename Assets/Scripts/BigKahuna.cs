@@ -24,6 +24,9 @@ public class BigKahuna: Singleton<BigKahuna>
     private bool isSetup = true;
     public IEnumerable<GameObject> _debugObjects;
     private NotificationManager _notificationManager;
+    public MeshRenderer raycastVisualizer;
+
+    public SpeechManager alternateSpeechManager;
     
     public void Start()
     {
@@ -58,6 +61,7 @@ public class BigKahuna: Singleton<BigKahuna>
 
         MLInput.OnTriggerDown += (_, __) =>
         {
+            alternateSpeechManager.StartSpeechRecognitionFromMicrophone();
          //   _burnerBehaviours.ForEach(x => x.IsLookedAt = true);
         };
         
@@ -97,6 +101,7 @@ public class BigKahuna: Singleton<BigKahuna>
         foreach (var debugObj in _debugObjects)
         {
             debugObj.SetActive(isSetup);
+            raycastVisualizer.gameObject.SetActive(isSetup);
             
             #if !UNITY_EDITOR
                 if (isSetup)

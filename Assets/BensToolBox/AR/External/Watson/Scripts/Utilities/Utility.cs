@@ -29,6 +29,7 @@ using System.Runtime.InteropServices;
 using IBM.Watson.DeveloperCloud.Connection;
 using System.Collections;
 using UnityEngine.Networking;
+using System.IO;
 #if NETFX_CORE
 using System.Reflection;
 #endif
@@ -1178,7 +1179,7 @@ namespace IBM.Watson.DeveloperCloud.Utilities
         /// <returns>True if the call succeeds.</returns>
         public static bool GetWatsonToken(OnGetWatsonToken callback, string serviceEndpoint, string username, string password, string tokenName = "")
         {
-            Log.Warning("Utility.GetWatsonToken()", "Authenticating with the `X-Watson-Authorization-Token` header is deprecated. The token continues to work with Cloud Foundry services, but is not supported for services that use Identity and Access Management (IAM) authentication. For details see [Authenticating with IAM tokens](https://console.bluemix.net/docs/services/watson/getting-started-iam.html#iam) or the README in the IBM Watson SDK you use.");
+            Log.Warning("Utility.GetWatsonToken()", "Authenticating with the `X-Watson-Authorization-Token` header is deprecated. The token continues to work with Cloud Foundry services, but is not supported for services that use Identity and Access Management (IAM) authentication. For details see [Authenticating with IAM tokens](https://cloud.ibm.com/docs/services/watson/getting-started-iam.html#iam) or the README in the IBM Watson SDK you use.");
             if (callback == null)
                 throw new ArgumentNullException("callback");
             if (string.IsNullOrEmpty(serviceEndpoint))
@@ -1254,7 +1255,7 @@ namespace IBM.Watson.DeveloperCloud.Utilities
         }
         #endregion
 
-        #region
+        #region CreateAuthorization
         /// <summary>
         /// Create basic authentication header data for REST requests.
         /// </summary>
@@ -1264,6 +1265,97 @@ namespace IBM.Watson.DeveloperCloud.Utilities
         public static string CreateAuthorization(string username, string password)
         {
             return "Basic " + Convert.ToBase64String(Encoding.ASCII.GetBytes(username + ":" + password));
+        }
+        #endregion
+
+        #region Has Bad First Character
+        public static bool HasBadFirstOrLastCharacter(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return false;
+
+            return value.StartsWith("{") || value.StartsWith("\"") || value.EndsWith("}") || value.EndsWith("\"");
+        }
+        #endregion
+
+        #region Load env file
+        /// <summary>
+        /// Loads environment variables from an external file.
+        /// </summary>
+        /// <param name="filepath">The location in the file system from which to load environment variables.</param>
+        public static bool LoadEnvFile(string filepath)
+        {
+            List<string> lines = new List<string>();
+            string[] rawLines = { };
+
+            try
+            {
+                rawLines = File.ReadAllLines(filepath);
+            }
+            catch
+            {
+                return false;
+            }
+
+            foreach (string line in rawLines)
+            {
+                if (!string.IsNullOrEmpty(line) && !line.StartsWith("#") && line.Contains("="))
+                {
+                    lines.Add(line);
+                }
+            }
+
+            Dictionary<string, string> envDict = new Dictionary<string, string>();
+            foreach (string line in lines)
+            {
+                string[] kvp = line.Split(new char[] { '=' }, 2);
+                envDict.Add(kvp[0], kvp[1]);
+            }
+
+            foreach (KeyValuePair<string, string> keyValuePair in envDict)
+            {
+                Environment.SetEnvironmentVariable(keyValuePair.Key, keyValuePair.Value);
+            }
+
+            return true;
+        }
+
+        public static List<string> GetCredentialsPaths()
+        {
+            List<string> filePathsToLoad = new List<string>();
+            string ibmCredentialsEnvVariable = Environment.GetEnvironmentVariable("IBM_CREDENTIALS_FILE");
+            if (!string.IsNullOrEmpty(ibmCredentialsEnvVariable))
+            {
+                filePathsToLoad.Add(ibmCredentialsEnvVariable);
+            }
+
+            string unixHomePath = Environment.GetEnvironmentVariable("HOME") + "/ibm-credentials.env";
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("HOME")) && File.Exists(unixHomePath))
+            {
+                filePathsToLoad.Add(unixHomePath);
+            }
+
+            string windowsHomePath = Environment.ExpandEnvironmentVariables("%HOMEDRIVE%%HOMEPATH%") + "\\ibm-credentials.env";
+            if (!string.IsNullOrEmpty(Environment.ExpandEnvironmentVariables("%HOMEDRIVE%%HOMEPATH%")) && File.Exists(windowsHomePath))
+            {
+                filePathsToLoad.Add(windowsHomePath);
+            }
+
+            if (File.Exists(@"ibm-credentials.env"))
+            {
+                filePathsToLoad.Add(@"ibm-credentials.env");
+            }
+
+            return filePathsToLoad;
+        }
+        #endregion
+
+        #region String to Double
+        public static double StringToDouble(string input)
+        {
+            double output;
+            double.TryParse(input, out output);
+            return output;
         }
         #endregion
     }
@@ -1380,7 +1472,6 @@ namespace IBM.Watson.DeveloperCloud.Utilities
                 }
             }
         }
-
 
         protected virtual void Dispose(bool disposing)
         {

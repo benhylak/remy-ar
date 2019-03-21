@@ -67,10 +67,10 @@ The credentials for each service contain either a `username`, `password` and end
 ## Watson Services
 To get started with the Watson Services in Unity, click on each service below to read through each of their `README.md`'s and their codes.
 * [Assistant V1](/Scripts/Services/Assistant/v1)
-* [Assistant V2](/Scripts/Services/Assistant/v2) (private beta)
+* [Assistant V2](/Scripts/Services/Assistant/v2)
+* [Compare Comply V1](/Scripts/Services/CompareComply/v1)
 * [Conversation](/Scripts/Services/Conversation/v1) (deprecated - Use Assistant V1 or Assistant V2)
 * [Discovery](/Scripts/Services/Discovery/v1)
-* [Language Translator V2](/Scripts/Services/LanguageTranslator/v2) (deprecated - Use LanguageTranslator V3)
 * [Language Translator V3](/Scripts/Services/LanguageTranslator/v3)
 * [Natural Language Classifier](/Scripts/Services/NaturalLanguageClassifier/v2)
 * [Natural Language Understanding](/Scripts/Services/NaturalLanguageUnderstanding/v1)
@@ -178,6 +178,51 @@ void Start()
     Assistant _assistant = new Assistant(credentials);
 }
 ```
+
+### Supplying credentials
+
+There are two ways to supply the credentials you found above to the SDK for authentication.
+
+#### Credential file (easier!)
+
+With a credential file, you just need to put the file in the right place and the SDK will do the work of parsing it and authenticating. You can get this file by clicking the **Download** button for the credentials in the **Manage** tab of your service instance.
+
+The file downloaded will be called `ibm-credentials.env`. This is the name the SDK will search for and **must** be preserved unless you want to configure the file path (more on that later). The SDK will look for your `ibm-credentials.env` file in the following places (in order):
+
+- Your system's home directory
+- The top-level directory of the project you're using the SDK in
+
+As long as you set that up correctly, you don't have to worry about setting any authentication options in your code. So, for example, if you created and downloaded the credential file for your Discovery instance, you just need to do the following:
+
+```cs
+public IEnumerator ExampleAutoService()
+{
+    Assistant assistantService = new Assistant();
+    assistantService.VersionDate = _assistantVersionDate;
+
+    //  Wait for authorization token
+    while (!assistantService.Credentials.HasIamTokenData())
+        yield return null;
+        
+    var listWorkspacesResult = assistantService.ListWorkspaces();
+}
+```
+
+And that's it!
+
+If you're using more than one service at a time in your code and get two different `ibm-credentials.env` files, just put the contents together in one `ibm-credentials.env` file and the SDK will handle assigning credentials to their appropriate services.
+
+If you would like to configure the location/name of your credential file, you can set an environment variable called `IBM_CREDENTIALS_FILE`. **This will take precedence over the locations specified above.** Here's how you can do that:
+
+```bash
+export IBM_CREDENTIALS_FILE="<path>"
+```
+
+where `<path>` is something like `/home/user/Downloads/<file_name>.env`.
+
+#### Manually
+
+If you'd prefer to set authentication values manually in your code, the SDK supports that as well. The way you'll do this depends on what type of credentials your service instance gives you.
 
 ## Callbacks
 Success and failure callbacks are required. You can specify the return type in the callback.  
@@ -346,6 +391,21 @@ private void OnGetToken(AuthenticationToken authenticationToken, string customDa
 
 ## Streaming outside of US South region
 Watson services have upgraded their hosts to TLS 1.2. The US South region has a TLS 1.0 endpoint that will work for streaming but if you are streaming in other regions you will need to use Unity 2018.2 and set Scripting Runtime Version in Build Settings to .NET 4.x equivalent. In lower versions of Unity you will need to create the Speech to Text instance in US South.
+
+## Disabling SSL verification
+You can disable SSL verifciation when making a service call.
+```cs
+//  Create credential and instantiate service
+Credentials credentials = new Credentials(<username>, <password>, <service-url>);
+
+credentials.DisableSslVerification = true;
+_service = new Assistant(credentials);
+_service.VersionDate = <version-date>;
+_service.DisableSslVerification = true;
+```
+
+## IBM Cloud Private
+The Watson Unity SDK does not support IBM Cloud Private because connection via proxy is not supported in UnityWebRequest. 
 
 ## Documentation
 Documentation can be found [here][documentation]. You can also access the documentation by selecting API Reference the Watson menu (**Watson -> API Reference**).

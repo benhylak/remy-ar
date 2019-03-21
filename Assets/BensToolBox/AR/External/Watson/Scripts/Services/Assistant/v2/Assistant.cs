@@ -23,12 +23,14 @@ using IBM.WatsonDeveloperCloud.Assistant.v2;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine.Networking;
+using Utility = IBM.Watson.DeveloperCloud.Utilities.Utility;
 
 namespace IBM.Watson.DeveloperCloud.Services.Assistant.v2
 {
     public class Assistant : IWatsonService
     {
-        private const string ServiceId = "AssistantV2";
+        private const string ServiceId = "assistant";
         private fsSerializer _serializer = new fsSerializer();
 
         private Credentials _credentials = null;
@@ -48,7 +50,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v2
             }
         }
 
-        private string _url  = "https://gateway.watsonplatform.net/assistant/api";
+        private string _url = "https://gateway.watsonplatform.net/assistant/api";
         /// <summary>
         /// Gets and sets the endpoint URL for the service.
         /// </summary>
@@ -66,6 +68,64 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v2
         {
             get { return _versionDate; }
             set { _versionDate = value; }
+        }
+
+        private bool disableSslVerification = false;
+        /// <summary>
+        /// Gets and sets the option to disable ssl verification
+        /// </summary>
+        public bool DisableSslVerification
+        {
+            get { return disableSslVerification; }
+            set { disableSslVerification = value; }
+        }
+
+        /// <summary>
+        /// Assistant constructor. Use this constructor to auto load credentials via ibm-credentials.env file.
+        /// </summary>
+        public Assistant()
+        {
+            var credentialsPaths = Utility.GetCredentialsPaths();
+            if (credentialsPaths.Count > 0)
+            {
+                foreach (string path in credentialsPaths)
+                {
+                    if (Utility.LoadEnvFile(path))
+                    {
+                        break;
+                    }
+                }
+
+                string ApiKey = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_APIKEY");
+                string Username = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_USERNAME");
+                string Password = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_PASSWORD");
+                string ServiceUrl = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_URL");
+
+                if (string.IsNullOrEmpty(ApiKey) && (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password)))
+                {
+                    throw new NullReferenceException(string.Format("Either {0}_APIKEY or {0}_USERNAME and {0}_PASSWORD did not exist. Please add credentials with this key in ibm-credentials.env.", ServiceId.ToUpper()));
+                }
+
+                if (!string.IsNullOrEmpty(ApiKey))
+                {
+                    TokenOptions tokenOptions = new TokenOptions()
+                    {
+                        IamApiKey = ApiKey
+                    };
+
+                    Credentials = new Credentials(tokenOptions, ServiceUrl);
+
+                    if (string.IsNullOrEmpty(Credentials.Url))
+                    {
+                        Credentials.Url = Url;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(Username) && !string.IsNullOrEmpty(Password))
+                {
+                    Credentials = new Credentials(Username, Password, Url);
+                }
+            }
         }
 
         /// <summary>
@@ -116,7 +176,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v2
         /// <param name="failCallback">The function that is called when the operation fails.</param>
         /// <param name="assistantId">Unique identifier of the assistant. You can find the assistant ID of an assistant
         /// on the **Assistants** tab of the Watson Assistant tool. For information about creating assistants, see the
-        /// [documentation](https://console.bluemix.net/docs/services/assistant/create-assistant.html#creating-assistants).
+        /// [documentation](https://cloud.ibm.com/docs/services/assistant/create-assistant.html#creating-assistants).
         ///
         /// **Note:** Currently, the v2 API does not support creating assistants.</param>
         /// <returns><see cref="SessionResponse" />SessionResponse</returns>
@@ -126,17 +186,27 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v2
         public bool CreateSession(SuccessCallback<SessionResponse> successCallback, FailCallback failCallback, String assistantId, Dictionary<string, object> customData = null)
         {
             if (successCallback == null)
-                throw new ArgumentNullException("successCallback");
+            {
+                throw new ArgumentNullException("successCallback is required for CreateSession");
+            }
             if (failCallback == null)
-                throw new ArgumentNullException("failCallback");
+            {
+                throw new ArgumentNullException("failCallback is required for CreateSession");
+            }
+            if(string.IsNullOrEmpty(assistantId))
+            {
+                throw new ArgumentException("assistantId is required for CreateSession");
+            }
 
             CreateSessionRequestObj req = new CreateSessionRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -144,7 +214,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v2
             req.Headers["Content-Type"] = "application/json";
             req.Parameters["version"] = VersionDate;
             req.OnResponse = OnCreateSessionResponse;
-            req.Post = true;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v2;operation_id=CreateSession";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v2/assistants/{0}/sessions", assistantId));
             if (connector == null)
@@ -174,6 +244,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v2
             SessionResponse result = new SessionResponse();
             fsData data = null;
             Dictionary<string, object> customData = ((CreateSessionRequestObj)req).CustomData;
+            customData.Add(Constants.String.RESPONSE_HEADERS, resp.Headers);
 
             if (resp.Success)
             {
@@ -218,7 +289,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v2
         /// <param name="failCallback">The function that is called when the operation fails.</param>
         /// <param name="assistantId">Unique identifier of the assistant. You can find the assistant ID of an assistant
         /// on the **Assistants** tab of the Watson Assistant tool. For information about creating assistants, see the
-        /// [documentation](https://console.bluemix.net/docs/services/assistant/create-assistant.html#creating-assistants).
+        /// [documentation](https://cloud.ibm.com/docs/services/assistant/create-assistant.html#creating-assistants).
         ///
         /// **Note:** Currently, the v2 API does not support creating assistants.</param>
         /// <param name="sessionId">Unique identifier of the session.</param>
@@ -229,24 +300,38 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v2
         public bool DeleteSession(SuccessCallback<object> successCallback, FailCallback failCallback, String assistantId, String sessionId, Dictionary<string, object> customData = null)
         {
             if (successCallback == null)
-                throw new ArgumentNullException("successCallback");
+            {
+                throw new ArgumentNullException("successCallback is required for DeleteSession");
+            }
             if (failCallback == null)
-                throw new ArgumentNullException("failCallback");
+            {
+                throw new ArgumentNullException("failCallback is required for DeleteSession");
+            }
+            if(string.IsNullOrEmpty(assistantId))
+            {
+                throw new ArgumentException("assistantId is required for DeleteSession");
+            }
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                throw new ArgumentException("sessionId is required for DeleteSession");
+            }
 
             DeleteSessionRequestObj req = new DeleteSessionRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.Parameters["version"] = VersionDate;
             req.OnResponse = OnDeleteSessionResponse;
-            req.Delete = true;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v2;operation_id=DeleteSession";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v2/assistants/{0}/sessions/{1}", assistantId, sessionId));
             if (connector == null)
@@ -276,6 +361,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v2
             object result = new object();
             fsData data = null;
             Dictionary<string, object> customData = ((DeleteSessionRequestObj)req).CustomData;
+            customData.Add(Constants.String.RESPONSE_HEADERS, resp.Headers);
 
             if (resp.Success)
             {
@@ -321,7 +407,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v2
         /// <param name="failCallback">The function that is called when the operation fails.</param>
         /// <param name="assistantId">Unique identifier of the assistant. You can find the assistant ID of an assistant
         /// on the **Assistants** tab of the Watson Assistant tool. For information about creating assistants, see the
-        /// [documentation](https://console.bluemix.net/docs/services/assistant/create-assistant.html#creating-assistants).
+        /// [documentation](https://cloud.ibm.com/docs/services/assistant/create-assistant.html#creating-assistants).
         ///
         /// **Note:** Currently, the v2 API does not support creating assistants.</param>
         /// <param name="sessionId">Unique identifier of the session.</param>
@@ -334,39 +420,48 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v2
         public bool Message(SuccessCallback<MessageResponse> successCallback, FailCallback failCallback, String assistantId, String sessionId, MessageRequest request = null, Dictionary<string, object> customData = null)
         {
             if (successCallback == null)
-                throw new ArgumentNullException("successCallback");
+            {
+                throw new ArgumentNullException("successCallback is required for Message");
+            }
             if (failCallback == null)
-                throw new ArgumentNullException("failCallback");
+            {
+                throw new ArgumentNullException("failCallback is required for Message");
+            }
+            if (string.IsNullOrEmpty(assistantId))
+            {
+                throw new ArgumentException("assistantId is required for Message");
+            }
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                throw new ArgumentException("sessionId is required for Message");
+            }
 
             MessageRequestObj req = new MessageRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
 
-            IDictionary<string, string> requestDict = new Dictionary<string, string>();
-            int iterator = 0;
-            StringBuilder stringBuilder = new StringBuilder("{");
-            foreach (KeyValuePair<string, string> property in requestDict)
+            if (request != null)
             {
-                string delimeter = iterator < requestDict.Count - 1 ? "," : "";
-                stringBuilder.Append(string.Format("\"{0}\": {1}{2}", property.Key, property.Value, delimeter));
-                iterator++;
+                fsData data = null;
+                _serializer.TrySerialize(request, out data);
+                string json = data.ToString().Replace('\"', '"');
+                req.Send = Encoding.UTF8.GetBytes(json);
             }
-            stringBuilder.Append("}");
 
-            string stringToSend = stringBuilder.ToString();
-
-            req.Send = Encoding.UTF8.GetBytes(stringToSend);
             req.Headers["Content-Type"] = "application/json";
             req.Parameters["version"] = VersionDate;
             req.OnResponse = OnMessageResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v2;operation_id=Message";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v2/assistants/{0}/sessions/{1}/message", assistantId, sessionId));
             if (connector == null)
@@ -396,6 +491,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v2
             MessageResponse result = new MessageResponse();
             fsData data = null;
             Dictionary<string, object> customData = ((MessageRequestObj)req).CustomData;
+            customData.Add(Constants.String.RESPONSE_HEADERS, resp.Headers);
 
             if (resp.Success)
             {

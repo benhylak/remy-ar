@@ -21,6 +21,7 @@ using IBM.Watson.DeveloperCloud.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine.Networking;
 
 namespace IBM.Watson.DeveloperCloud.Utilities
 {
@@ -35,6 +36,9 @@ namespace IBM.Watson.DeveloperCloud.Utilities
         private IamTokenData _iamTokenData;
         private string _iamApiKey;
         private string _userAcessToken;
+        private string url;
+        private string username;
+        private string password;
         private const string APIKEY_AS_USERNAME = "apikey";
         private const string ICP_PREFIX = "icp-";
         #endregion
@@ -43,11 +47,39 @@ namespace IBM.Watson.DeveloperCloud.Utilities
         /// <summary>
         /// The user name.
         /// </summary>
-        public string Username { get; set; }
+        public string Username
+        {
+            get { return username; }
+            set
+            {
+                if (!Utility.HasBadFirstOrLastCharacter(value))
+                {
+                    username = value;
+                }
+                else
+                {
+                    throw new WatsonException("The username shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your username.");
+                }
+            }
+        }
         /// <summary>
         /// The password.
         /// </summary>
-        public string Password { get; set; }
+        public string Password
+        {
+            get { return password; }
+            set
+            {
+                if (!Utility.HasBadFirstOrLastCharacter(value))
+                {
+                    password = value;
+                }
+                else
+                {
+                    throw new WatsonException("The password shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your password.");
+                }
+            }
+        }
         /// <summary>
         /// The Api Key.
         /// </summary>
@@ -64,7 +96,21 @@ namespace IBM.Watson.DeveloperCloud.Utilities
         /// <summary>
         /// The service endpoint.
         /// </summary>
-        public string Url { get; set; }
+        public string Url
+        {
+            get { return url; }
+            set
+            {
+                if (!Utility.HasBadFirstOrLastCharacter(value))
+                {
+                    url = value;
+                }
+                else
+                {
+                    throw new WatsonException("The service URL shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your service url.");
+                }
+            }
+        }
 
         /// <summary>
         /// The IAM access token.
@@ -84,6 +130,15 @@ namespace IBM.Watson.DeveloperCloud.Utilities
             }
         }
         private IamTokenData _tokenData = null;
+        private bool disableSslVerification = false;
+        /// <summary>
+        /// Gets and sets the option to disable ssl verification for getting an IAM token.
+        /// </summary>
+        public bool DisableSslVerification
+        {
+            get { return disableSslVerification; }
+            set { disableSslVerification = value; }
+        }
         #endregion
 
         #region Callback delegates
@@ -258,9 +313,11 @@ namespace IBM.Watson.DeveloperCloud.Utilities
             RequestIamTokenRequest req = new RequestIamTokenRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
             req.Headers.Add("Content-type", "application/x-www-form-urlencoded");
             req.Headers.Add("Authorization", "Basic Yng6Yng=");
             req.OnResponse = OnRequestIamTokenResponse;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -349,9 +406,11 @@ namespace IBM.Watson.DeveloperCloud.Utilities
             RefreshIamTokenRequest req = new RefreshIamTokenRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
             req.Headers.Add("Content-type", "application/x-www-form-urlencoded");
             req.Headers.Add("Authorization", "Basic Yng6Yng=");
             req.OnResponse = OnRefreshIamTokenResponse;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -631,8 +690,26 @@ namespace IBM.Watson.DeveloperCloud.Utilities
     [fsObject]
     public class TokenOptions
     {
+        private string iamApiKey;
         [fsProperty("iamApiKey")]
-        public string IamApiKey { get; set; }
+        public string IamApiKey
+        {
+            get
+            {
+                return iamApiKey;
+            }
+            set
+            {
+                if (!Utility.HasBadFirstOrLastCharacter(value))
+                {
+                    iamApiKey = value;
+                }
+                else
+                {
+                    throw new WatsonException("The credentials shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your credentials");
+                }
+            }
+        }
         [fsProperty("iamAcessToken")]
         public string IamAccessToken { get; set; }
         [fsProperty("iamUrl")]

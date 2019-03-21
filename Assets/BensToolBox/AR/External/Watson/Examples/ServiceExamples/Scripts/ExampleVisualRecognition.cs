@@ -14,6 +14,8 @@
 * limitations under the License.
 *
 */
+#pragma warning disable 0649
+
 //  Uncomment to train a new classifier
 //#define TRAIN_CLASSIFIER
 //  Uncommnent to delete the trained classifier
@@ -37,17 +39,10 @@ public class ExampleVisualRecognition : MonoBehaviour
     [Tooltip("The version date with which you would like to use the service in the form YYYY-MM-DD.")]
     [SerializeField]
     private string _versionDate;
-    [Header("CF Authentication")]
-    [Tooltip("The CF apikey (non-iam).")]
-    [SerializeField]
-    private string _apikey;
     [Header("IAM Authentication")]
     [Tooltip("The IAM apikey.")]
     [SerializeField]
     private string _iamApikey;
-    [Tooltip("The IAM url used to authenticate the apikey (optional). This defaults to \"https://iam.bluemix.net/identity/token\".")]
-    [SerializeField]
-    private string _iamUrl;
     #endregion
 
     private VisualRecognition _visualRecognition;
@@ -87,26 +82,24 @@ public class ExampleVisualRecognition : MonoBehaviour
 
     private IEnumerator CreateService()
     {
+        if (string.IsNullOrEmpty(_iamApikey))
+        {
+            throw new WatsonException("Plesae provide IAM ApiKey for the service.");
+        }
+
         Credentials credentials = null;
-        if (!string.IsNullOrEmpty(_iamApikey))
-        {
-            //  Authenticate using iamApikey
-            TokenOptions tokenOptions = new TokenOptions()
-            {
-                IamApiKey = _iamApikey,
-                IamUrl = _iamUrl
-            };
 
-            credentials = new Credentials(tokenOptions, _serviceUrl);
-
-            //  Wait for tokendata
-            while (!credentials.HasIamTokenData())
-                yield return null;
-        }
-        else
+        //  Authenticate using iamApikey
+        TokenOptions tokenOptions = new TokenOptions()
         {
-            throw new WatsonException("Please provide IAM apikey to authenticate the service.");
-        }
+            IamApiKey = _iamApikey
+        };
+
+        credentials = new Credentials(tokenOptions, _serviceUrl);
+
+        //  Wait for tokendata
+        while (!credentials.HasIamTokenData())
+            yield return null;
 
         //  Create credential and instantiate service
         _visualRecognition = new VisualRecognition(credentials);
@@ -159,7 +152,7 @@ public class ExampleVisualRecognition : MonoBehaviour
         Log.Debug("ExampleVisualRecognition.Examples()", "Attempting to classify via image on file system");
         string imagesPath = Application.dataPath + "/Watson/Examples/ServiceExamples/TestData/visual-recognition-classifiers/giraffe_to_classify.jpg";
         string[] owners = { "IBM", "me" };
-        string[] classifierIDs = { "default", _classifierID };
+        string[] classifierIDs = { "default" };
         if (!_visualRecognition.Classify(OnClassifyPost, OnFail, imagesPath, owners, classifierIDs, 0.5f))
             Log.Debug("ExampleVisualRecognition.Classify()", "Classify image failed!");
 
@@ -168,7 +161,7 @@ public class ExampleVisualRecognition : MonoBehaviour
 
         //          Detect faces get
         Log.Debug("ExampleVisualRecognition.Examples()", "Attempting to detect faces via URL");
-        if (!_visualRecognition.DetectFaces(_imageURL, OnDetectFacesGet, OnFail))
+        if (!_visualRecognition.DetectFaces(_imageURL, OnDetectFacesGet, OnFail, "es"))
             Log.Debug("ExampleVisualRecognition.DetectFaces()", "Detect faces failed!");
 
         while (!_detectFacesGetTested)
@@ -177,7 +170,7 @@ public class ExampleVisualRecognition : MonoBehaviour
         //          Detect faces post image
         Log.Debug("ExampleVisualRecognition.Examples()", "Attempting to detect faces via image");
         string faceExamplePath = Application.dataPath + "/Watson/Examples/ServiceExamples/TestData/visual-recognition-classifiers/obama.jpg";
-        if (!_visualRecognition.DetectFaces(OnDetectFacesPost, OnFail, faceExamplePath))
+        if (!_visualRecognition.DetectFaces(OnDetectFacesPost, OnFail, faceExamplePath, "es"))
             Log.Debug("ExampleVisualRecognition.DetectFaces()", "Detect faces failed!");
 
         while (!_detectFacesPostTested)

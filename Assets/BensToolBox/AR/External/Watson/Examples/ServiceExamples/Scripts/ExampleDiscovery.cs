@@ -14,6 +14,8 @@
 * limitations under the License.
 *
 */
+#pragma warning disable 0649
+
 using IBM.Watson.DeveloperCloud.Connection;
 using IBM.Watson.DeveloperCloud.Logging;
 using IBM.Watson.DeveloperCloud.Services.Discovery.v1;
@@ -21,6 +23,7 @@ using IBM.Watson.DeveloperCloud.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using Environment = IBM.Watson.DeveloperCloud.Services.Discovery.v1.Environment;
 
@@ -34,20 +37,10 @@ public class ExampleDiscovery : MonoBehaviour
     [Tooltip("The version date with which you would like to use the service in the form YYYY-MM-DD.")]
     [SerializeField]
     private string _versionDate;
-    [Header("CF Authentication")]
-    [Tooltip("The authentication username.")]
-    [SerializeField]
-    private string _username;
-    [Tooltip("The authentication password.")]
-    [SerializeField]
-    private string _password;
     [Header("IAM Authentication")]
     [Tooltip("The IAM apikey.")]
     [SerializeField]
     private string _iamApikey;
-    [Tooltip("The IAM url used to authenticate the apikey (optional). This defaults to \"https://iam.bluemix.net/identity/token\".")]
-    [SerializeField]
-    private string _iamUrl;
     #endregion
 
     private Discovery _service;
@@ -100,42 +93,47 @@ public class ExampleDiscovery : MonoBehaviour
     private bool _getMetricsQueryTokenEventTested = false;
     private bool _queryLogTested = false;
 
+    private string _stopwordsFilepath;
+    private bool _createStopwordListTested = false;
+    private bool _deleteStopwordListTested = false;
+
+    private bool _listGatewaysTested = false;
+    private bool _createGatewayTested = false;
+    private bool _getGatewayTested = false;
+    private bool _deleteGatewayTested = false;
+    private string _createdGatewayId;
+
     private void Start()
     {
         LogSystem.InstallDefaultReactors();
         _filePathToIngest = Application.dataPath + "/Watson/Examples/ServiceExamples/TestData/watson_beats_jeopardy.html";
         _documentFilePath = Application.dataPath + "/Watson/Examples/ServiceExamples/TestData/watson_beats_jeopardy.html";
+        _stopwordsFilepath = Application.dataPath + "/Watson/Examples/ServiceExamples/TestData/Discovery/stopwords.txt";
+
         Runnable.Run(CreateService());
     }
 
     private IEnumerator CreateService()
     {
+        if (string.IsNullOrEmpty(_iamApikey))
+        {
+            throw new WatsonException("Plesae provide IAM ApiKey for the service.");
+        }
+
         //  Create credential and instantiate service
         Credentials credentials = null;
-        if (!string.IsNullOrEmpty(_username) && !string.IsNullOrEmpty(_password))
+        
+        //  Authenticate using iamApikey
+        TokenOptions tokenOptions = new TokenOptions()
         {
-            //  Authenticate using username and password
-            credentials = new Credentials(_username, _password, _serviceUrl);
-        }
-        else if (!string.IsNullOrEmpty(_iamApikey))
-        {
-            //  Authenticate using iamApikey
-            TokenOptions tokenOptions = new TokenOptions()
-            {
-                IamApiKey = _iamApikey,
-                IamUrl = _iamUrl
-            };
+            IamApiKey = _iamApikey
+        };
 
-            credentials = new Credentials(tokenOptions, _serviceUrl);
+        credentials = new Credentials(tokenOptions, _serviceUrl);
 
-            //  Wait for tokendata
-            while (!credentials.HasIamTokenData())
-                yield return null;
-        }
-        else
-        {
-            throw new WatsonException("Please provide either username and password or IAM apikey to authenticate the service.");
-        }
+        //  Wait for tokendata
+        while (!credentials.HasIamTokenData())
+            yield return null;
 
         _service = new Discovery(credentials);
         _service.VersionDate = _versionDate;
@@ -346,6 +344,46 @@ public class ExampleDiscovery : MonoBehaviour
         _isEnvironmentReady = false;
         Runnable.Run(CheckEnvironmentState(_waitTime));
         while (!_isEnvironmentReady)
+            yield return null;
+
+        //  Create stopword list
+        using (FileStream fs = File.OpenRead(_stopwordsFilepath))
+        {
+
+            Log.Debug("ExampleDiscovery.RunTest()", "Attempting to create stopword list {0}", _createdCollectionId);
+            _service.CreateStopwordList(OnCreateStopwordList, OnFail, _environmentId, _createdCollectionId, fs);
+            while (!_createStopwordListTested)
+                yield return null;
+        }
+
+        //  Delete stopword list
+        Log.Debug("ExampleDiscovery.RunTest()", "Attempting to delete stopword list {0}", _createdCollectionId);
+        _service.DeleteStopwordList(OnDeleteStopwordList, OnFail, _environmentId, _createdCollectionId);
+        while (!_deleteStopwordListTested)
+            yield return null;
+
+        //  List Gateways
+        Log.Debug("ExampleDiscovery.RunTest()", "Attempting to list gateways.");
+        _service.ListGateways(OnListGateways, OnFail, _environmentId);
+        while (!_listGatewaysTested)
+            yield return null;
+
+        //  Create Gateway
+        Log.Debug("ExampleDiscovery.RunTest()", "Attempting to create gateway.");
+        _service.CreateGateway(OnCreateGateway, OnFail, _environmentId);
+        while (!_createGatewayTested)
+            yield return null;
+
+        //  Get Gateway
+        Log.Debug("ExampleDiscovery.RunTest()", "Attempting to get gateway.");
+        _service.GetGateway(OnGetGateway, OnFail, _environmentId, _createdGatewayId);
+        while (!_getGatewayTested)
+            yield return null;
+
+        //  Delete Gateway
+        Log.Debug("ExampleDiscovery.RunTest()", "Attempting to delete gateway.");
+        _service.GetGateway(OnDelteGateway, OnFail, _environmentId, _createdGatewayId);
+        while (!_deleteGatewayTested)
             yield return null;
 
         //  Delete Collection
@@ -592,6 +630,45 @@ public class ExampleDiscovery : MonoBehaviour
     {
         Log.Debug("ExampleDiscovery.OnQueryLog()", "Response: {0}", customData["json"].ToString());
         _queryLogTested = true;
+    }
+
+    private void OnCreateStopwordList(TokenDictStatusResponse response, Dictionary<string, object> customData)
+    {
+        Log.Debug("ExampleDiscovery.OnCreateStopwordList()", "Response: {0}", customData["json"].ToString());
+        _createStopwordListTested = true;
+    }
+
+    private void OnDeleteStopwordList(object response, Dictionary<string, object> customData)
+    {
+        Log.Debug("ExampleDiscovery.OnDeleteStopwordList()", "Success!");
+        _deleteStopwordListTested = true;
+    }
+
+
+    private void OnListGateways(GatewayList response, Dictionary<string, object> customData)
+    {
+        Log.Debug("ExampleDiscovery.OnListGateways()", "Response: {0}", customData["json"].ToString());
+        _listGatewaysTested = true;
+    }
+
+    private void OnCreateGateway(Gateway response, Dictionary<string, object> customData)
+    {
+        Log.Debug("ExampleDiscovery.OnCreateGateway()", "Response: {0}", customData["json"].ToString());
+        _createdGatewayId = response.GatewayId;
+        _createGatewayTested = true;
+    }
+
+    private void OnGetGateway(Gateway response, Dictionary<string, object> customData)
+    {
+        Log.Debug("ExampleDiscovery.OnGetGateway()", "Response: {0}", customData["json"].ToString());
+        _getGatewayTested = true;
+    }
+
+    private void OnDelteGateway(Gateway response, Dictionary<string, object> customData)
+    {
+        Log.Debug("ExampleDiscovery.OnDelteGateway()", "Response: {0}", customData["json"].ToString());
+        _createdGatewayId = null;
+        _deleteGatewayTested = true;
     }
 
     private void OnFail(RESTConnector.Error error, Dictionary<string, object> customData)

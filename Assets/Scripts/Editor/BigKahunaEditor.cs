@@ -26,5 +26,10 @@ public class BigKahunaEditor : Editor
             kahuna.speechRecognizer.recognizedText = "Boil";
             kahuna.speechRecognizer.finalized = true;
         }
+
+        if (GUILayout.Button("Test Streaming Voice"))
+        {
+            kahuna.alternateSpeechManager.StartSpeechRecognitionFromMicrophone();
+        }
     }
 }
