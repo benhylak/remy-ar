@@ -12,6 +12,8 @@ using UnityEngine.Serialization;
 
 public class BurnerBehaviour : MonoBehaviour
 {
+	public Recipe _recipeInProgress;
+	
 	public Burner _model;
 	public Burner.BurnerPosition _position;
 	
