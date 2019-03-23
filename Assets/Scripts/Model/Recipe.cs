@@ -1,40 +1,111 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using UniRx;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class Recipe
 {
-    private Queue<RecipeStep> _recipeSteps;
+    private List<RecipeStep> _recipeSteps;
 
-    public BurnerBehaviour burner;
-    
-    public Recipe()
+    public ReactiveProperty<int> _currentStepIndex = new ReactiveProperty<int>(-1);
+    public IReadOnlyReactiveProperty<RecipeStep> CurrentStep;
+    public IReadOnlyReactiveProperty<int> StepsLeftCount;
+
+    public BurnerBehaviour _burner;
+
+    public readonly IReadOnlyReactiveProperty<bool> RecipeComplete;
+
+    public readonly string Name;
+
+    public void AssignBurner(BurnerBehaviour burner)
     {
+        _burner = burner;
+        _burner.Consume();
+    }
+    
+    public void UnassignBurner()
+    {
+        _burner.Release();
+        _burner = null;
+    }
+    
+    public int GetTotalSteps()
+    {
+        return _recipeSteps.Count;
+    }
+    
+    public Recipe(string name)
+    {
+        _recipeSteps = new List<RecipeStep>();
+        _currentStepIndex.Subscribe(i => Debug.Log($"Step index changed to: {i}"));
         
-    }
-    public bool hasBurner()
-    {
-        return burner != null;
-    }
-    
-    public bool hasBurnerWithPot()
-    {
-        return hasBurner() && burner._model.IsPotDetected.Value;
+        Name = name;
+        
+        CurrentStep = _currentStepIndex
+            .Where(i => _recipeSteps.Count > 0 && i < _recipeSteps.Count)
+            .Select(i =>
+            {       
+                return _recipeSteps[i];
+            })
+            .ToReactiveProperty();
+        
+        StepsLeftCount = _currentStepIndex
+            .Where(i => _recipeSteps.Count > 0 && i < _recipeSteps.Count)
+            .Select(stepIndex =>
+            {
+                return _recipeSteps.Count - (stepIndex + 1);
+            })
+            .ToReactiveProperty();
+        
+        RecipeComplete = StepsLeftCount
+                .Select(stepsLeft => stepsLeft == 0)
+                .ToReactiveProperty();
     }
 
-    public void AddRecipeSteps(params RecipeStep[] recipeSteps)
+    public BurnerBehaviour GetBurner()
     {
-        _recipeSteps = new Queue<RecipeStep>();
+        return _burner;
     }
     
-    public Recipe(params RecipeStep[] recipeSteps)
+    public bool HasBurner()
     {
-        _recipeSteps = new Queue<RecipeStep>(recipeSteps);
+        return _burner != null;
     }
-    public void Update()
+    
+    public bool HasAssignedBurner()
     {
-       bool finishedStep = _recipeSteps.Peek().Update();
-       if (finishedStep) _recipeSteps.Dequeue();
+        return HasBurner() && _burner._model.IsPotDetected.Value;
+    }
+
+    protected void SetRecipeSteps(params RecipeStep[] recipeSteps)
+    {
+        _recipeSteps.Clear();
+        _recipeSteps.AddRange(recipeSteps);
+        
+        Debug.Log("num of steps: " + recipeSteps.Length);
+        Debug.Log("num of steps list: " + _recipeSteps.Count);
+        Debug.Log(GetTotalSteps());
+
+        _currentStepIndex.Value = 0;
+    }
+   
+    
+    public bool Update()
+    {
+        if (!RecipeComplete.Value)
+        {
+            bool stepIsFinished = CurrentStep.Value.Update();
+
+            if (stepIsFinished)
+            {
+                _currentStepIndex.Value++;
+            }
+        }
+
+        return RecipeComplete.Value;
     }
     
     public class RecipeStep
@@ -43,16 +114,17 @@ public class Recipe
         private Action onUpdate;
         private Action _onComplete;
         private Action _onEnter;
+        public string Instruction;
 
         private bool _justEntered = true;
         
-        public RecipeStep(Action onEnter =null, Action onUpdate = null, Func<bool> isStepComplete =null, Action onComplete=null)
+        public RecipeStep(string instruction = "", Action onEnter =null, Action onUpdate = null, Func<bool> isStepComplete =null, Action onComplete=null)
         {
+            this.Instruction = instruction;
             this._onEnter = onEnter;
+            this._onComplete = onComplete;
             this.onUpdate = onUpdate;
             this.isStepComplete = isStepComplete;
-            this._onComplete = onComplete;
-            
         }
 
         public bool Update()

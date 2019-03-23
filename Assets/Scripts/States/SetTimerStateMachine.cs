@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Experimental.PlayerLoop;
 
@@ -27,13 +28,13 @@ public static class SetTimerStateMachine
         {
             foreach (var burner in BigKahuna.Instance._burnerBehaviours)
             {
-                if (burner._model.IsPotDetected.Value && burner._state is BurnerStateMachine.WaitingState)
+                if (burner._state is BurnerStateMachine.AvailableState && burner._model.IsPotDetected.Value && !RecipeManager.Instance.IsWaitingForBurner())
                 {
                     return new BufferState(
                         this, 
                         () => new ProactiveState(burner, this),
                         () => burner._model.IsPotDetected.Value,
-                        .25f);
+                        .2f);
                 }
             }
             
@@ -66,7 +67,7 @@ public static class SetTimerStateMachine
         {
             if (this._burner._model.IsPotDetected.Value == false)
             {
-                _burner.HideProactiveTimer();
+                _burner.HideProactivePrompt();
                 
                 return new MonitoringState();
             }
@@ -120,7 +121,8 @@ public static class SetTimerStateMachine
 
                 if (boilRegex.IsMatch(BigKahuna.Instance.speechRecognizer.recognizedText))
                 {
-                    _burner.WaitForBoil();
+                    _burner.HideProactivePrompt().OnComplete(()=>_burner.WaitForBoil());
+                    
                     BigKahuna.Instance.speechRecognizer.Active = false;
                     
                     return new MonitoringState();

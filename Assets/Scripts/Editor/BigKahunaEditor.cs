@@ -27,6 +27,12 @@ public class BigKahunaEditor : Editor
             kahuna.speechRecognizer.finalized = true;
         }
 
+        if(GUILayout.Button("Say \"Make\""))
+        {
+            kahuna.speechRecognizer.recognizedText = "Make";
+            kahuna.speechRecognizer.finalized = true;
+        }
+        
         if (GUILayout.Button("Test Streaming Voice"))
         {
             kahuna.alternateSpeechManager.StartSpeechRecognitionFromMicrophone();

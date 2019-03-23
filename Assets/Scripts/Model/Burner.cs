@@ -88,7 +88,7 @@ public class Burner
                     break;
                 
                 default:
-                    Debug.Log("Could not map key: " + item.Key);
+                    //Debug.Log("Could not map key: " + item.Key);
                     break;
                     
             }

@@ -621,7 +621,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             _keepAliveRoutine = Runnable.Run(KeepAlive());
             _lastKeepAlive = DateTime.Now;
             
-            UnityEngine.Debug.Log("Start listening... (Watson SpeechToText.cs)");
+            //UnityEngine.Debug.Log("Start listening... (Watson SpeechToText.cs)");
 
             return true;
         }
@@ -824,7 +824,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             if (_listenActive)
             {
                 
-                UnityEngine.Debug.Log("Stop called");
+                //UnityEngine.Debug.Log("Stop called");
                 
                 Dictionary<string, string> stop = new Dictionary<string, string>();
                 stop["action"] = "stop";
@@ -858,14 +858,14 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                 }
             }
             
-            UnityEngine.Debug.Log("Keep alive exited");
+            //UnityEngine.Debug.Log("Keep alive exited");
             
             Log.Debug("SpeechToText.KeepAlive()", "KeepAlive exited.");
         }
 
         private void OnListenMessage(WSConnector.Message msg)
         {
-            UnityEngine.Debug.Log("Got message");
+            //UnityEngine.Debug.Log("Got message");
             
             if (msg is WSConnector.TextMessage)
             {
@@ -900,7 +900,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                     {
                         string state = (string)json["state"];
 
-                        UnityEngine.Debug.Log("Server state is " + state);
+                      //  UnityEngine.Debug.Log("Server state is " + state);
 #if ENABLE_DEBUGGING
                         Log.Debug("SpeechToText.OnListenMessage()", "Server state is {0}", state);
 #endif
@@ -1196,7 +1196,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.Log("Parser exception: " + e.ToString());
+                //UnityEngine.Debug.Log("Parser exception: " + e.ToString());
                 Log.Error("SpeechToText.ParseSpeakerRecognitionResponse()", "ParseSpeakerRecognitionResponse exception: {0}", e.ToString());
                 return null;
             }

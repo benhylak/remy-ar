@@ -15,9 +15,19 @@ public static class BurnerStateMachine
         }
     }
     
-    public class WaitingState : BurnerState
+    public class NotAvailableState : BurnerState
     {
-        public WaitingState(BurnerBehaviour burner) : base(burner) {}
+        public NotAvailableState(BurnerBehaviour burner) : base(burner) {}
+
+        public override State Update()
+        {
+            return null;
+        }
+    }
+    
+    public class AvailableState : BurnerState
+    {
+        public AvailableState(BurnerBehaviour burner) : base(burner) {}
 
         public override State Update()
         {
@@ -29,15 +39,12 @@ public static class BurnerStateMachine
     {
         public WaitingForBoilState(BurnerBehaviour burner) : base(burner)
         {
-            _burnerBehaviour.HideProactiveTimer().OnComplete(() =>
-            {
-                _burnerBehaviour.ring.SetMaterialToBoiling();
-                _burnerBehaviour.ring.SetAlpha(0);
-                
-                _burnerBehaviour.SetLabel("Waiting to Boil");
-
-                _burnerBehaviour.ring.Show(0.5f);
-            }); 
+            _burnerBehaviour.ring.gameObject.SetActive(true);
+            _burnerBehaviour.ring.SetMaterialToBoiling();
+            _burnerBehaviour.ring.SetAlpha(0);
+            _burnerBehaviour.SetLabel("Waiting to Boil", 0.6f);
+            _burnerBehaviour.ring.Show(0.6f);
+       
         }
 
         public override State Update()
@@ -122,7 +129,7 @@ public static class BurnerStateMachine
                     //TODO: NOT WORKING
                 });
               
-                return new WaitingState(_burnerBehaviour);
+                return new AvailableState(_burnerBehaviour);
             }
             
             return null;
@@ -133,7 +140,7 @@ public static class BurnerStateMachine
     {
         public WaitingForTimerState(TimeSpan ts, BurnerBehaviour burner) : base(burner)
         {
-            burner.HideProactiveTimer();
+            burner.HideProactivePrompt();
 		
             burner._Timer.gameObject.SetActive(true);
             burner._Timer.SetTimer(ts);

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using UniRx;
 using UnitySDK.WebSocketSharp;
 
 //TODO:
@@ -21,6 +22,9 @@ public class RamenUI : MonoBehaviour
 	public SpriteRenderer microphoneIcon;
 	
 	public bool isListening;
+	private bool _inputIsEnabled = true;
+
+	public Image _addWaterInstructions;
 	
 	// Use this for initialization
 	void Start ()
@@ -48,6 +52,17 @@ public class RamenUI : MonoBehaviour
 		}
 	}
 
+	public void MakeRamen()
+	{
+		Debug.Log("Successful Command: Making Ramen");
+		StopListening();
+		
+		var ramenRecipe = new RamenRecipe(this);
+		RecipeManager.Instance.StartRecipe(ramenRecipe);
+
+		_inputIsEnabled = false;
+	}
+
 	void StopListening()
 	{
 		isListening = false;
@@ -57,6 +72,8 @@ public class RamenUI : MonoBehaviour
 		promptLabel.DOFade(0, 0.25f);
 		microphoneIcon.DOFade(0, 0.25f);
 
+		BigKahuna.Instance.speechRecognizer.recognizedText = ""; //consume text
+
 		BigKahuna.Instance.speechRecognizer.Active = false;
 	}
 	
@@ -64,8 +81,8 @@ public class RamenUI : MonoBehaviour
 	void Update () {
 		//x and z 
 		// -10 to 0 over X seconds
-			
-		if (Vector3.Distance(transform.position, Camera.main.transform.position) < 0.6f)
+		
+		if (_inputIsEnabled && Vector3.Distance(transform.position, Camera.main.transform.position) < 0.6f)
 		{
 			if (!isListening)
 			{
@@ -74,6 +91,7 @@ public class RamenUI : MonoBehaviour
 		}
 		else if (isListening)
 		{
+			//gonna need a state here, transition to show 1 -- a managed state, until the recipe is no longer being made
 			//sometype of buffer period
 			//then 
 			StopListening();
@@ -99,7 +117,7 @@ public class RamenUI : MonoBehaviour
 				    recognizedText.Contains("prepare") ||
 				    recognizedText.Contains("eat"))
 				{
-					StopListening();
+					MakeRamen();
 					//trigger make ramen instruction
 				}
 				else
@@ -139,5 +157,15 @@ public class RamenUI : MonoBehaviour
 		eulerAngles.y = ring.transform.localRotation.eulerAngles.y + 125f * Time.deltaTime;
 
 		ring.transform.localRotation = Quaternion.Euler(eulerAngles);
+	}
+
+	public void ShowStep1()
+	{
+		_addWaterInstructions.DOFade(1f, 0.3f);
+	}
+
+	public void HideStep1()
+	{
+		_addWaterInstructions.DOFade(0f, 0.3f);
 	}
 }

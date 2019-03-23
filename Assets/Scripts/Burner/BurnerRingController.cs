@@ -24,13 +24,12 @@ public class BurnerRingController : MonoBehaviour
     
     private float lerpAmt;
 
-    private Renderer _renderer;
+    public Renderer _renderer;
     
     public void Start()
     {
         voicePrimaryColor = VoiceInputMat.GetColor(PRIMARY_COLOR_VOICE);
         voiceSecondaryColor = VoiceInputMat.GetColor(SECONDARY_COLOR_VOICE);
-        _renderer = GetComponent<Renderer>();
     }
 
     public Tween Show(float duration = 0.3f)
@@ -66,7 +65,7 @@ public class BurnerRingController : MonoBehaviour
     }
     public void SetMaterialToBoiling()
     {
-        _renderer.material = BoilingWaitMaterial;
+        GetComponent<Renderer>().material = BoilingWaitMaterial;
     }
 
     public void SetColor(Color c)

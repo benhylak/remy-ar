@@ -223,7 +223,7 @@ namespace IBM.Watson.DeveloperCloud.Logging
 #if UNITY_EDITOR || NETFX_CORE
         public static void Debug(string subSystem, string messageFmt, params object[] args)
         {
-            UnityEngine.Debug.Log(String.Format(messageFmt, args));
+             UnityEngine.Debug.Log(String.Format(messageFmt, args));
             
 			if(!LogSystem.InstalledDefaultReactors)
                 System.Console.WriteLine("Call LogSystem.InstallDefaultReactors() prior to logging to see the output of Log.Debug(), Log.Status(), Log.Warning(), Log.Error() and Log.Critical().");            

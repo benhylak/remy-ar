@@ -38,7 +38,7 @@ public class BurnerBehaviour : MonoBehaviour
 	{
 		FloatingLabel.DOFade(0, 0);
 		
-		_state = new BurnerStateMachine.WaitingState(this);
+		_state = new BurnerStateMachine.AvailableState(this);
 		_gazeReceiver = GetComponent<GazeReceiver>();
 	}
 
@@ -49,7 +49,31 @@ public class BurnerBehaviour : MonoBehaviour
 	
 	public void WaitForBoil()
 	{
+		Debug.Log("Wait for Boil");
+		
 		_state = new BurnerStateMachine.WaitingForBoilState(this);
+	}
+	
+	public async void WaitForBoil(int delayMs)
+	{
+		await Task.Delay(delayMs);
+		await new WaitForUpdate();
+		
+		WaitForBoil();
+	}
+
+	public void Consume()
+	{
+		if (_state is BurnerStateMachine.AvailableState)
+		{
+			_state = new BurnerStateMachine.NotAvailableState(this);
+		}
+		else throw new Exception($"{_model.Position} Burner is not available");
+	}
+
+	public void Release()
+	{
+		_state = new BurnerStateMachine.AvailableState(this);
 	}
 	
 	// Update is called once per frame
@@ -161,7 +185,7 @@ public class BurnerBehaviour : MonoBehaviour
 		Debug.Log("Waiting for Input -> Proactive Timer");
 	}
 
-	public Tween HideProactiveTimer()
+	public Tween HideProactivePrompt()
 	{
 		float duration = 1f;
 		
