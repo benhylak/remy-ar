@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using UniRx;
+using UnityEngine.XR.MagicLeap;
 using UnitySDK.WebSocketSharp;
 
 //TODO:
@@ -14,17 +15,25 @@ using UnitySDK.WebSocketSharp;
 //  recognized
 
 // none
-public class RamenUI : MonoBehaviour
+public class RamenUI : MonoBehaviour, InstructionsAnchorable
 {
 	public GameObject ring;
 	public Text ramenLabel;
 	public Text promptLabel;
 	public SpriteRenderer microphoneIcon;
+
+	public Transform instructionsAnchorFlat;
+	public Transform instructionsAnchorBillboard;
 	
 	public bool isListening;
 	private bool _inputIsEnabled = true;
 
-	public Image _addWaterInstructions;
+	private readonly float SWITCH_TO_BILLBOARD_DIST = 0.65f;
+	private readonly float SWITCH_TO_FLAT_DIST = 0.5f;
+
+	private Transform _lastBestAnchor;
+
+	private InstructionUI _instructionUi;
 	
 	// Use this for initialization
 	void Start ()
@@ -66,7 +75,7 @@ public class RamenUI : MonoBehaviour
 	void StopListening()
 	{
 		isListening = false;
-		
+
 		ring.GetComponent<Renderer>().material.DOFade(0, 0.25f);
 		ramenLabel.DOFade(0, 0.25f);
 		promptLabel.DOFade(0, 0.25f);
@@ -76,12 +85,10 @@ public class RamenUI : MonoBehaviour
 
 		BigKahuna.Instance.speechRecognizer.Active = false;
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
-		//x and z 
-		// -10 to 0 over X seconds
-		
+
 		if (_inputIsEnabled && Vector3.Distance(transform.position, Camera.main.transform.position) < 0.6f)
 		{
 			if (!isListening)
@@ -106,6 +113,12 @@ public class RamenUI : MonoBehaviour
 			if (!recognizedText.IsNullOrEmpty())
 			{
 				promptLabel.text = recognizedText;
+			}
+
+			//stand in for working voice recog.
+			if (MLInput.GetController(0).TriggerValue > MLInput.TriggerDownThreshold)
+			{
+				MakeRamen();
 			}
 			
 			if (BigKahuna.Instance.speechRecognizer.finalized)
@@ -150,22 +163,65 @@ public class RamenUI : MonoBehaviour
 
 	void UpdateListeningRing()
 	{
-		Vector3 eulerAngles = new Vector3();
-
-		eulerAngles.x = 6f;
-		eulerAngles.z = 6f * Mathf.Sin(1.25f * Time.time);
-		eulerAngles.y = ring.transform.localRotation.eulerAngles.y + 125f * Time.deltaTime;
+		Vector3 eulerAngles = new Vector3
+		{
+			x = 15f,
+			z = 15f * Mathf.Sin(1.3f * Time.time),
+			y = ring.transform.localRotation.eulerAngles.y + 125f * Time.deltaTime
+		};
 
 		ring.transform.localRotation = Quaternion.Euler(eulerAngles);
 	}
 
-	public void ShowStep1()
-	{
-		_addWaterInstructions.DOFade(1f, 0.3f);
+	public void AnchorInstructions(InstructionUI instructions)
+	{			
+		_instructionUi = instructions;
+		
+		instructions.transform.parent = this.transform;
+		
+		instructions.transform.localScale = instructionsAnchorFlat.localScale;
+		instructions.transform.position = instructionsAnchorFlat.position;
+		instructions.transform.rotation = instructionsAnchorFlat.rotation;
+
+		instructions.Show();
 	}
 
-	public void HideStep1()
+	public Transform GetBestAnchorPoint()
 	{
-		_addWaterInstructions.DOFade(0f, 0.3f);
+		//if there hasn't been a best anchor yet, set it to default
+		if (_lastBestAnchor == null)
+		{
+			_lastBestAnchor = instructionsAnchorFlat;
+			_instructionUi.LookAtCamera = false;		
+		}
+
+		Transform bestAnchorPoint = _lastBestAnchor;
+
+		//check if there's a better point besides default
+		if (Vector3.Distance(transform.position, Camera.main.transform.position) > SWITCH_TO_BILLBOARD_DIST)
+		{				
+			_instructionUi.LookAtCamera = true;		
+			bestAnchorPoint = instructionsAnchorBillboard;
+		}
+		else if (Vector3.Distance(transform.position, Camera.main.transform.position) < SWITCH_TO_FLAT_DIST)
+		{
+			_instructionUi.LookAtCamera = false;
+			bestAnchorPoint = instructionsAnchorFlat;
+		}
+
+		if (bestAnchorPoint != _lastBestAnchor)
+		{
+			_instructionUi.transform.DOScale(bestAnchorPoint.localScale, 0.3f).SetEase(Ease.OutQuad);
+			_lastBestAnchor = bestAnchorPoint;
+		}
+
+		return bestAnchorPoint;
+	}
+
+	public void DeAnchor()
+	{
+		_instructionUi.transform.parent = null;
+		_instructionUi = null;
+		_lastBestAnchor = null;
 	}
 }

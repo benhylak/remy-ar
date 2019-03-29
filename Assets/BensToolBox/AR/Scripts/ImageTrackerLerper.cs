@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using MagicLeapInternal;
 using UnityEngine;
@@ -14,36 +15,42 @@ public class ImageTrackerLerper : MonoBehaviour
 
 	public MLImageTrackerBehavior imageTracker;
 
-	public bool wasActive = false;
+	private bool wasActive = false;
+
+	[NonSerialized]
+	public bool TrackingEnabled = true;
 	
 	// Update is called once per frame
 	void Update ()
 	{
-		bool targetSighted = imageTracker.TrackingStatus == MLImageTargetTrackingStatus.Tracked;
-
-		if (targetSighted)
+		if(!TrackingEnabled) return;
+		
+		if (imageTracker.IsTracking && imageTracker.TrackingStatus == MLImageTargetTrackingStatus.Tracked)
 		{
 			if (wasActive)
 			{
-				this.transform.position =
+				transform.position =
 					Vector3.Lerp(
 						transform.position,
 						imageTracker.transform.position,
 						lerpSpeed * Time.deltaTime);
 
-				this.transform.rotation =
+				transform.rotation =
 					Quaternion.Slerp(
 						transform.rotation,
 						imageTracker.transform.rotation,
 						lerpSpeed * Time.deltaTime);
 			}
-			else
-			{
-				this.transform.position = imageTracker.transform.position;
-				this.transform.rotation = imageTracker.transform.rotation;
-			}
-		}
+			else JumpToTracker();
 
-		wasActive = targetSighted;
+			wasActive = true;
+		}
+		else wasActive = false;
+	}
+
+	public void JumpToTracker()
+	{
+		transform.position = imageTracker.transform.position;
+		transform.rotation = imageTracker.transform.rotation;
 	}
 }

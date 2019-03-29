@@ -20,18 +20,16 @@ public class Recipe
 
     public readonly string Name;
 
-    public void AssignBurner(BurnerBehaviour burner)
-    {
-        _burner = burner;
-        _burner.Consume();
-    }
+    private string _status = "";
     
-    public void UnassignBurner()
+    public string Status => _status;
+
+    public void UpdateStatus(string status)
     {
-        _burner.Release();
-        _burner = null;
+        _status = status;       
+        Debug.Log($"{Name} status updated to {status}");
     }
-    
+
     public int GetTotalSteps()
     {
         return _recipeSteps.Count;
@@ -68,6 +66,16 @@ public class Recipe
     public BurnerBehaviour GetBurner()
     {
         return _burner;
+    }
+
+    public bool BurnerIsBoiling()
+    {
+        return GetBurner().IsBoiling();
+    }
+    
+    public bool BurnerReachedTemperature()
+    {
+        return true;
     }
     
     public bool HasBurner()
@@ -110,21 +118,31 @@ public class Recipe
     
     public class RecipeStep
     {
-        private Func<bool> isStepComplete;
+        public Func<bool> NextStepTrigger;
         private Action onUpdate;
-        private Action _onComplete;
+        public Action _onComplete;
         private Action _onEnter;
         public string Instruction;
+        public readonly bool RequiresBurner;
 
+        public Func<InstructionsAnchorable> getAnchor;
         private bool _justEntered = true;
         
-        public RecipeStep(string instruction = "", Action onEnter =null, Action onUpdate = null, Func<bool> isStepComplete =null, Action onComplete=null)
+        public RecipeStep(string instruction = "", 
+            Action onEnter =null, 
+            Action onUpdate = null, 
+            Func<bool> nextStepTrigger =null, 
+            Action onComplete=null, 
+            Func<InstructionsAnchorable> getAnchor = null, 
+            bool requiresBurner = false)
         {
             this.Instruction = instruction;
             this._onEnter = onEnter;
             this._onComplete = onComplete;
             this.onUpdate = onUpdate;
-            this.isStepComplete = isStepComplete;
+            this.NextStepTrigger = nextStepTrigger;
+            this.getAnchor = getAnchor;
+            RequiresBurner = requiresBurner;
         }
 
         public bool Update()
@@ -134,7 +152,7 @@ public class Recipe
                 _onEnter?.Invoke();
                 _justEntered = false;
             }
-            else if (isStepComplete())
+            else if (NextStepTrigger())
             {
                 _onComplete?.Invoke();
                 return true;

@@ -5,11 +5,11 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
-    path: Assets/Scenes/main.unity
-    guid: 17a04d1e6515d45eb8b671465e11c9ab
   - enabled: 0
-    path: Assets/Scenes/ramen.unity
+    path: 
+    guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: Assets/Scenes/ramen-push-button.unity
     guid: 71444912096ba40fe9974b821bb8292b
   - enabled: 0
     path: Assets/Scenes/notifications.unity

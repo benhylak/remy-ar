@@ -1,30 +1,35 @@
 using System;
 using UniRx;
+using BensToolBox.AR.Scripts;
+using BensToolBox;
+using BensToolBox.AR;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class RamenRecipe : Recipe
 {
+    private readonly string NOODLES_ADDED_STATUS = "NOODLES_ADDED";
+    
     public RamenRecipe(RamenUI ramen) : base("Ramen")
     {
-        SetRecipeSteps( 
-             new RecipeStep(
+        SetRecipeSteps(
+            new RecipeStep(
+                getAnchor: ()=>ramen,
                 instruction: "Boil <b>2 Cups</b> of water.",
-                onEnter: () => RecipeManager.Instance
-                    .OnPotPlaced()
-                    .Subscribe(AssignBurner),  
-                isStepComplete: HasAssignedBurner
+                nextStepTrigger: HasAssignedBurner
             ),
-             
+
             new RecipeStep(
-                onEnter: () => GetBurner().WaitForBoil(350),
-                isStepComplete: () => GetBurner()._model.IsBoiling.Value), //in future, can wait for gaze before moving on
-            
+                nextStepTrigger: BurnerIsBoiling,
+                requiresBurner: true
+            ), //in future, can wait for gaze before moving on
+
             new RecipeStep(
+                getAnchor: GetBurner,
                 instruction: "<b>Add noodles</b>",
-                isStepComplete: () =>
-                {
-                    return false;
-                    //ramenRecipe.burner._model.recipeStatus.ramenDetected;
-                }        
+                nextStepTrigger: () => Status == NOODLES_ADDED_STATUS,
+                requiresBurner: true,
+                onComplete: () => GetBurner().ring.Hide()
             ),
             
             new RecipeStep(
@@ -32,23 +37,16 @@ public class RamenRecipe : Recipe
                 {
                     GetBurner().SetTimer(new TimeSpan(0, 5, 0));
                 },
-                isStepComplete: () =>
-                {
-                    return !GetBurner()._model.IsPotDetected.Value; //pot removed
-                    //engages with eye contact or distance? or removes pot
-                    //ramenRecipe.burner._model.recipeStatus.ramenDetected;
-                },
-                onComplete: UnassignBurner
+                nextStepTrigger: () => !GetBurner()._model.IsPotDetected.Value,
+                requiresBurner: true
             ),
             
             new RecipeStep(
+                requiresBurner: false,
                 
-                onEnter:() =>
-                {
-                    //success over coaster
-                },
+                onEnter: null,
                 
-                isStepComplete: () =>
+                nextStepTrigger: () =>
                 {
                     //delay and then...
                     return true;                 
@@ -56,6 +54,7 @@ public class RamenRecipe : Recipe
                 
                 onComplete: ()=>
                 {
+                    Debug.Log("Done!");
                     //hide success message
                 }          
             )                   

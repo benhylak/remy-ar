@@ -6,14 +6,13 @@ using UnityEngine;
 using DG.Tweening;
 using UnityEngine.UI;
 using BensToolBox.AR.Scripts;
+using Burners.States;
 using IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1;
 using IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3;
 using UnityEngine.Serialization;
 
-public class BurnerBehaviour : MonoBehaviour
-{
-	public Recipe _recipeInProgress;
-	
+public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
+{	
 	public Burner _model;
 	public Burner.BurnerPosition _position;
 	
@@ -33,6 +32,22 @@ public class BurnerBehaviour : MonoBehaviour
 
 	public State _state;
 	public GazeReceiver _gazeReceiver;
+
+	public Transform instructionsMiddleAnchorPoint;
+	public Transform instructionsEdgeAnchorPoint;
+	private Transform _lastBestAnchorPoint;
+	
+	private InstructionUI _instructionUi;
+
+	private readonly float SWITCH_TO_EDGE_DIST = 1f;
+	private readonly float SWITCH_TO_CENTER_DIST = 1.4f;
+
+	public float _desiredTemperature;
+	
+	public bool IsBoiling()
+	{
+		return _model.IsBoiling.Value;
+	}
 	
 	public void Start()
 	{
@@ -44,40 +59,13 @@ public class BurnerBehaviour : MonoBehaviour
 
 	public void SetTimer(TimeSpan ts)
 	{  
-		_state = new BurnerStateMachine.WaitingForTimerState(ts, this);
-	}
-	
-	public void WaitForBoil()
-	{
-		Debug.Log("Wait for Boil");
-		
-		_state = new BurnerStateMachine.WaitingForBoilState(this);
-	}
-	
-	public async void WaitForBoil(int delayMs)
-	{
-		await Task.Delay(delayMs);
-		await new WaitForUpdate();
-		
-		WaitForBoil();
-	}
-
-	public void Consume()
-	{
-		if (_state is BurnerStateMachine.AvailableState)
-		{
-			_state = new BurnerStateMachine.NotAvailableState(this);
-		}
-		else throw new Exception($"{_model.Position} Burner is not available");
-	}
-
-	public void Release()
-	{
-		_state = new BurnerStateMachine.AvailableState(this);
+		_state = new TimerStates.WaitingForTimerState(this, ts);
 	}
 	
 	// Update is called once per frame
 	void Update () {
+		instructionsEdgeAnchorPoint.position = GetEdgeAnchorPosition();	
+		
 		if (FloatingLabel.isActiveAndEnabled)
 		{
 			FloatingLabel.transform.rotation =
@@ -203,4 +191,68 @@ public class BurnerBehaviour : MonoBehaviour
 	}
 	
 	#endregion
+
+	public void AnchorInstructions(InstructionUI instructions)
+	{
+		_instructionUi = instructions;
+		
+		var anchorPoint = GetBestAnchorPoint();
+
+		instructions.transform.parent = this.transform;
+		instructions.transform.localScale = anchorPoint.localScale;
+		instructions.transform.position = anchorPoint.position;
+		instructions.transform.rotation = anchorPoint.rotation;
+
+		instructions.Show(delay:0.35f);
+	
+	}
+
+	public Transform GetBestAnchorPoint()
+	{
+		//if there hasn't been a best anchor yet, set it to default
+		if (_lastBestAnchorPoint == null)
+		{
+			_lastBestAnchorPoint = instructionsMiddleAnchorPoint;
+			_instructionUi.LookAtCamera = true;		
+		}
+
+		Transform bestAnchorPoint = _lastBestAnchorPoint;
+
+		//check if there's a better point besides default
+		if (Vector3.Distance(transform.position, Camera.main.transform.position) < SWITCH_TO_EDGE_DIST)
+		{				
+			_instructionUi.LookAtCamera = true;
+			bestAnchorPoint = instructionsEdgeAnchorPoint;
+		}
+		else if (Vector3.Distance(transform.position, Camera.main.transform.position) > SWITCH_TO_CENTER_DIST)
+		{
+			_instructionUi.LookAtCamera = true;
+			bestAnchorPoint = instructionsMiddleAnchorPoint;
+		}
+
+		if (bestAnchorPoint != _lastBestAnchorPoint)
+		{
+			//_instructionUi.transform.DOScale(bestAnchorPoint.localScale, 0.3f).SetEase(Ease.OutQuad);
+			_lastBestAnchorPoint = bestAnchorPoint;
+		}
+
+		return bestAnchorPoint;
+	}
+
+
+	public void DeAnchor()
+	{
+		_instructionUi = null;
+	}
+
+	private Vector3 GetEdgeAnchorPosition()
+	{
+		Vector3 lookVecFlattened = ring.transform.position - Camera.main.transform.position; 
+		lookVecFlattened.y = ring.transform.position.y;
+
+		Vector3 furthestRingPoint = ring.transform.position + lookVecFlattened.normalized * (ring.GetRingRadius() + 0.01f);
+		furthestRingPoint.y = instructionsEdgeAnchorPoint.transform.position.y;
+
+		return furthestRingPoint;
+	}
 }

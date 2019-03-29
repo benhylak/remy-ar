@@ -8,6 +8,7 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.XR.MagicLeap;
 using System.Linq;
+using DG.Tweening;
 using UnityEngine.Serialization;
 
 public class BigKahuna: Singleton<BigKahuna>
@@ -18,8 +19,7 @@ public class BigKahuna: Singleton<BigKahuna>
     public DatabaseManager _db;
     public List<BurnerBehaviour> _burnerBehaviours;
     private State _timerState;
-    public MLImageTrackerBehavior _stoveTracker;
-    public GameObject burners;
+    public GameObject Stove;
     public SpeechRecognizer speechRecognizer;
     private bool isSetup = true;
     public IEnumerable<GameObject> _debugObjects;
@@ -36,18 +36,18 @@ public class BigKahuna: Singleton<BigKahuna>
                 _burnerBehaviours
                     .Find(x => x._position == burnerData.Value.Position)
                     ._model = burnerData.Value);
-
-        DatabaseManager
-            .Instance
-            .getBurners()
-            .ObserveCountChanged()
-            .Where(x => x == 4)
-            .Subscribe(_ =>
-                {
-                    Debug.Log("Monitoring...");
-                    _timerState = SetTimerStateMachine.GetInitialState();
-                }
-            );
+//
+//        DatabaseManager
+//            .Instance
+//            .getBurners()
+//            .ObserveCountChanged()
+//            .Where(x => x == 4)
+//            .Subscribe(_ =>
+//                {
+//                    Debug.Log("Monitoring...");
+//                    _timerState = SetTimerStateMachine.GetInitialState();
+//                }
+//            );
      
         MLInput.OnControllerButtonDown += (b, button) =>
         {
@@ -61,7 +61,7 @@ public class BigKahuna: Singleton<BigKahuna>
 
         MLInput.OnTriggerDown += (_, __) =>
         {
-            alternateSpeechManager.StartSpeechRecognitionFromMicrophone();
+           // alternateSpeechManager.StartSpeechRecognitionFromMicrophone();
          //   _burnerBehaviours.ForEach(x => x.IsLookedAt = true);
         };
         
@@ -86,12 +86,6 @@ public class BigKahuna: Singleton<BigKahuna>
             var resultState = _timerState.Update();
             _timerState = resultState ?? _timerState;
         }
-
-        if (isSetup && _stoveTracker.IsTracking && _stoveTracker.TrackingStatus == MLImageTargetTrackingStatus.Tracked)
-        {
-            burners.transform.position = Vector3.Lerp(burners.transform.position, _stoveTracker.transform.position, Time.deltaTime);
-            burners.transform.rotation = Quaternion.Slerp(burners.transform.rotation, _stoveTracker.transform.rotation, Time.deltaTime);
-        }    
     }
 
     public void ToggleSetup()
@@ -101,15 +95,15 @@ public class BigKahuna: Singleton<BigKahuna>
         foreach (var debugObj in _debugObjects)
         {
             debugObj.SetActive(isSetup);
-            raycastVisualizer.gameObject.SetActive(isSetup);
-            
-            #if !UNITY_EDITOR
-                if (isSetup)
-                {
-                    MLImageTracker.Enable();
-                }
-                else MLImageTracker.Disable();
-            #endif         
         }
+
+        Stove.GetComponent<ImageTrackerLerper>().TrackingEnabled = false;
+        
+        if (isSetup)
+        {
+            raycastVisualizer.material.DOFade(1, 0.3f);
+        }
+        else raycastVisualizer.material.DOFade(0, 0.3f);
+        
     }
 }

@@ -6,8 +6,8 @@ using UnityEngine;
 public class BurnerRingController : MonoBehaviour
 {
     public Material VoiceInputMat;
-    public Material WhiteProactive;
-    public Material BoilingWaitMaterial;
+    public Material DefaultMat;
+    public Material IndeterminateWaitMat;
 
     private Color voicePrimaryColor;
     private Color voiceSecondaryColor;
@@ -25,6 +25,7 @@ public class BurnerRingController : MonoBehaviour
     private float lerpAmt;
 
     public Renderer _renderer;
+    private Sequence _pulseSequence;
     
     public void Start()
     {
@@ -56,22 +57,28 @@ public class BurnerRingController : MonoBehaviour
 
     public void SetMaterialToDefault()
     {
-        _renderer.material = WhiteProactive;
+        _renderer.material = DefaultMat;
     }
 
     public void SetMaterialToVoiceInput()
     {
         _renderer.material = VoiceInputMat;
     }
-    public void SetMaterialToBoiling()
+    public void SetMaterialToIndeterminate()
     {
-        GetComponent<Renderer>().material = BoilingWaitMaterial;
+        GetComponent<Renderer>().material = IndeterminateWaitMat;
     }
 
     public void SetColor(Color c)
     {
         _renderer.material.SetColor("_Color", c);
         _renderer.material.SetColor("_RimColor", c);
+    }
+    
+    public void SetColor(Color primary, Color rim)
+    {
+        _renderer.material.SetColor("_Color", primary);
+        _renderer.material.SetColor("_RimColor", rim);
     }
     
     public void SetInputLevel(float level)
@@ -137,5 +144,55 @@ public class BurnerRingController : MonoBehaviour
     public float GetVoiceLerp()
     {
         return lerpAmt;
+    }
+
+    public void StartPulsing(Color color)
+    {
+        StartPulsing(color, color);
+    }
+
+    public Sequence StopPulsing()
+    {
+        _pulseSequence?.Kill(true);
+
+        return _pulseSequence;
+    }
+    
+    public void StartPulsing(Color main, Color rim)
+    {
+        var transitionSequence = DOTween.Sequence();
+
+        transitionSequence.Append(
+            Hide(0.5f)
+                .OnComplete(() =>
+                {
+                     SetMaterialToDefault();
+                     SetColor(RemyColors.RED);
+                     SetAlpha(0);                   
+                })
+        );
+
+        transitionSequence.Append(
+            Show());
+
+        transitionSequence.OnComplete(() =>
+        {
+            _pulseSequence = DOTween.Sequence();
+
+            _pulseSequence.Append(
+                DOTween
+                    .To(GetAlpha,
+                        SetAlpha,
+                        0f,
+                        1.5f)
+                    .SetEase(Ease.InSine)
+            );
+
+            _pulseSequence.AppendInterval(0.1f);
+
+            _pulseSequence
+                .SetLoops(-1, LoopType.Yoyo)
+                .Play();
+        });
     }
 }
