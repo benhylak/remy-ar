@@ -14,6 +14,7 @@
 * limitations under the License.
 *
 */
+#pragma warning disable 0618
 
 #define ENABLE_DEBUGGING
 
@@ -29,6 +30,8 @@ using UnityEngine;
 using System.Text;
 using FullSerializer;
 using System.IO;
+using UnityEngine.Networking;
+using Utility = IBM.Watson.DeveloperCloud.Utilities.Utility;
 
 namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
 {
@@ -42,7 +45,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
         /// <summary>
         /// This ID is used to match up a configuration record with this service.
         /// </summary>
-        private const string ServiceId = "SpeechToTextV1";
+        private const string ServiceId = "speech_to_text";
         /// <summary>
         /// How often to send a message to the web socket to keep it alive.
         /// </summary>
@@ -78,6 +81,16 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
         /// Set this property to overload the internal file loading of this class.
         /// </summary>
         public LoadFileDelegate LoadFile { get; set; }
+
+        private bool disableSslVerification = false;
+        /// <summary>
+        /// Gets and sets the option to disable ssl verification
+        /// </summary>
+        public bool DisableSslVerification
+        {
+            get { return disableSslVerification; }
+            set { disableSslVerification = value; }
+        }
         #endregion
 
         #region Private Data
@@ -162,7 +175,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
         /// If true, then we will get interim results while recognizing. The user will then need to check 
         /// the Final flag on the results.
         /// </summary>
-        public bool EnableInterimResults { get; set; }
+        public bool? EnableInterimResults { get; set; }
         /// <summary>
         /// If true, then we will try not to send silent audio clips to the server. This can save bandwidth
         /// when no sound is happening.
@@ -241,29 +254,85 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
         /// </summary>
         public int InactivityTimeout { get { return _inactivityTimeout; } set { _inactivityTimeout = value; } }
         /// <summary>
-        /// Specifies the Globally Unique Identifier (GUID) of a custom language model that is to be used for all requests sent over the connection. The base model of the custom language model must match the value of the model parameter. By default, no custom language model is used. For more information, see https://console.bluemix.net/docs/services/speech-to-text/custom.html.
+        /// Specifies the Globally Unique Identifier (GUID) of a custom language model that is to be used for all requests sent over the connection. The base model of the custom language model must match the value of the model parameter. By default, no custom language model is used. For more information, see https://cloud.ibm.com/docs/services/speech-to-text/custom.html.
         /// </summary>
         [Obsolete("Use LanguageCustomizationId instead.")]
         public string CustomizationId { get { return _customization_id; } set { _customization_id = value; } }
         /// <summary>
-        /// Specifies the Globally Unique Identifier (GUID) of a custom language model that is to be used for all requests sent over the connection. The base model of the custom language model must match the value of the model parameter. By default, no custom language model is used. For more information, see https://console.bluemix.net/docs/services/speech-to-text/custom.html.
+        /// Specifies the Globally Unique Identifier (GUID) of a custom language model that is to be used for all requests sent over the connection. The base model of the custom language model must match the value of the model parameter. By default, no custom language model is used. For more information, see https://cloud.ibm.com/docs/services/speech-to-text/custom.html.
         /// </summary>
         public string LanguageCustomizationId { get { return _languageCustomizationId; } set { _languageCustomizationId = value; } }
         /// <summary>
-        /// Specifies the Globally Unique Identifier (GUID) of a custom acoustic model that is to be used for all requests sent over the connection. The base model of the custom acoustic model must match the value of the model parameter. By default, no custom acoustic model is used. For more information, see https://console.bluemix.net/docs/services/speech-to-text/custom.html.
+        /// Specifies the Globally Unique Identifier (GUID) of a custom acoustic model that is to be used for all requests sent over the connection. The base model of the custom acoustic model must match the value of the model parameter. By default, no custom acoustic model is used. For more information, see https://cloud.ibm.com/docs/services/speech-to-text/custom.html.
         /// </summary>
         public string AcousticCustomizationId { get { return _acoustic_customization_id; } set { _acoustic_customization_id = value; } }
         /// <summary>
-        /// Specifies the weight the service gives to words from a specified custom language model compared to those from the base model for all requests sent over the connection. Specify a value between 0.0 and 1.0; the default value is 0.3. For more information, see https://console.bluemix.net/docs/services/speech-to-text/language-use.html#weight.
+        /// Specifies the weight the service gives to words from a specified custom language model compared to those from the base model for all requests sent over the connection. Specify a value between 0.0 and 1.0; the default value is 0.3. For more information, see https://cloud.ibm.com/docs/services/speech-to-text/language-use.html#weight.
         /// </summary>
         public float? CustomizationWeight { get { return _customization_weight; } set { _customization_weight = value; } }
         /// <summary>
-        /// If true sets `Transfer-Encoding` request header to `chunked` causing the audio to be streamed to the service. By default, audio is sent all at once as a one-shot delivery. See https://console.bluemix.net/docs/services/speech-to-text/input.html#transmission.
+        /// If true sets `Transfer-Encoding` request header to `chunked` causing the audio to be streamed to the service. By default, audio is sent all at once as a one-shot delivery. See https://cloud.ibm.com/docs/services/speech-to-text/input.html#transmission.
         /// </summary>
         public bool StreamMultipart { get { return _streamMultipart; } set { _streamMultipart = value; } }
+        /// <summary>
+        /// The name of a grammar that is to be used with the recognition request. If you specify a grammar, you must also use the `language_customization_id` parameter to specify the name of the custom language model for which the grammar is defined. The service recognizes only strings that are recognized by the specified grammar; it does not recognize other custom words from the model's words resource. See [Grammars](https://cloud.ibm.com/docs/services/speech-to-text/output.html).
+        /// </summary>
+        public string GrammarName { get; set; }
+        /// <summary>
+        /// If `true`, the service redacts, or masks, numeric data from final transcripts. The feature redacts any number that has three or more consecutive digits by replacing each digit with an `X` character. It is intended to redact sensitive numeric data, such as credit card numbers. By default, the service performs no redaction. \n\nWhen you enable redaction, the service automatically enables smart formatting, regardless of whether you explicitly disable that feature. To ensure maximum security, the service also disables keyword spotting (ignores the `keywords` and `keywords_threshold` parameters) and returns only a single final transcript (forces the `max_alternatives` parameter to be `1`). \n\n**Note:** Applies to US English, Japanese, and Korean transcription only. \n\nSee [Numeric redaction](https://cloud.ibm.com/docs/services/speech-to-text/output.html#redaction).
+        /// </summary>
+        public string Redaction { get; set; }
         #endregion
 
         #region Constructor
+        /// <summary>
+        /// SpeechToText constructor. Use this constructor to auto load credentials via ibm-credentials.env file.
+        /// </summary>
+        public SpeechToText()
+        {
+            var credentialsPaths = Utility.GetCredentialsPaths();
+            if (credentialsPaths.Count > 0)
+            {
+                foreach (string path in credentialsPaths)
+                {
+                    if (Utility.LoadEnvFile(path))
+                    {
+                        break;
+                    }
+                }
+
+                string ApiKey = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_APIKEY");
+                string Username = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_USERNAME");
+                string Password = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_PASSWORD");
+                string ServiceUrl = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_URL");
+
+                if (string.IsNullOrEmpty(ApiKey) && (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password)))
+                {
+                    throw new NullReferenceException(string.Format("Either {0}_APIKEY or {0}_USERNAME and {0}_PASSWORD did not exist. Please add credentials with this key in ibm-credentials.env.", ServiceId.ToUpper()));
+                }
+
+                if (!string.IsNullOrEmpty(ApiKey))
+                {
+                    TokenOptions tokenOptions = new TokenOptions()
+                    {
+                        IamApiKey = ApiKey
+                    };
+
+                    Credentials = new Credentials(tokenOptions, ServiceUrl);
+
+                    if (string.IsNullOrEmpty(Credentials.Url))
+                    {
+                        Credentials.Url = Url;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(Username) && !string.IsNullOrEmpty(Password))
+                {
+                    Credentials = new Credentials(Username, Password, Url);
+                }
+            }
+        }
+
         /// <summary>
         /// Speech to Text constructor.
         /// </summary>
@@ -325,6 +394,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             GetModelsRequest req = new GetModelsRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -334,6 +405,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                 }
             }
             req.OnResponse = OnGetModelsResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=GetModels";
             return connector.Send(req);
         }
 
@@ -420,6 +492,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             GetModelRequest req = new GetModelRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -429,6 +503,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                 }
             }
             req.OnResponse = OnGetModelResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=GetModel";
 
             return connector.Send(req);
         }
@@ -545,6 +620,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                 _speakerLabelCallback = speakerLabelCallback;
             _keepAliveRoutine = Runnable.Run(KeepAlive());
             _lastKeepAlive = DateTime.Now;
+            
+            //UnityEngine.Debug.Log("Start listening... (Watson SpeechToText.cs)");
 
             return true;
         }
@@ -679,16 +756,15 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                     parsedParams += string.Format("&{0}={1}", kvp.Key, kvp.Value);
                 }
 
-                _listenSocket = WSConnector.CreateConnector(Credentials, "/v1/recognize", "?model=" + WWW.EscapeURL(_recognizeModel) + parsedParams);
+                _listenSocket = WSConnector.CreateConnector(Credentials, "/v1/recognize", "?model=" + UnityWebRequest.EscapeURL(_recognizeModel) + parsedParams);
+                _listenSocket.DisableSslVerification = DisableSslVerification;
                 if (_listenSocket == null)
                 {
                     return false;
                 }
                 else
                 {
-#if ENABLE_DEBUGGING
-                    Log.Debug("SpeechToText.CreateListenConnector()", "Created listen socket. Model: {0}, parsedParams: {1}", WWW.EscapeURL(_recognizeModel), parsedParams);
-#endif
+                    Log.Debug("SpeechToText.CreateListenConnector()", "Created listen socket. Model: {0}, parsedParams: {1}", UnityWebRequest.EscapeURL(_recognizeModel), parsedParams);
                 }
 
                 _listenSocket.OnMessage = OnListenMessage;
@@ -716,7 +792,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             start["action"] = "start";
             start["content-type"] = "audio/l16;rate=" + _recordingHZ.ToString() + ";channels=1;";
             start["inactivity_timeout"] = InactivityTimeout;
-            start["interim_results"] = EnableInterimResults;
+            if (EnableInterimResults != null)
+                start["interim_results"] = EnableInterimResults;
             if (Keywords != null)
                 start["keywords"] = Keywords;
             if (KeywordsThreshold != null)
@@ -729,11 +806,13 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             if (WordAlternativesThreshold != null)
                 start["word_alternatives_threshold"] = WordAlternativesThreshold;
             start["word_confidence"] = EnableWordConfidence;
+            if (GrammarName != null)
+                start["grammar_name"] = GrammarName;
+            if (Redaction != null)
+                start["redaction"] = Redaction;
 
             _listenSocket.Send(new WSConnector.TextMessage(Json.Serialize(start)));
-#if ENABLE_DEBUGGING
             Log.Debug("SpeechToText.SendStart()", "SendStart() with the following params: {0}", Json.Serialize(start));
-#endif
             _lastStartSent = DateTime.Now;
         }
 
@@ -744,6 +823,9 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
 
             if (_listenActive)
             {
+                
+                //UnityEngine.Debug.Log("Stop called");
+                
                 Dictionary<string, string> stop = new Dictionary<string, string>();
                 stop["action"] = "stop";
 
@@ -775,11 +857,16 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                     _lastKeepAlive = DateTime.Now;
                 }
             }
+            
+            //UnityEngine.Debug.Log("Keep alive exited");
+            
             Log.Debug("SpeechToText.KeepAlive()", "KeepAlive exited.");
         }
 
         private void OnListenMessage(WSConnector.Message msg)
         {
+            //UnityEngine.Debug.Log("Got message");
+            
             if (msg is WSConnector.TextMessage)
             {
                 WSConnector.TextMessage tm = (WSConnector.TextMessage)msg;
@@ -813,6 +900,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                     {
                         string state = (string)json["state"];
 
+                      //  UnityEngine.Debug.Log("Server state is " + state);
 #if ENABLE_DEBUGGING
                         Log.Debug("SpeechToText.OnListenMessage()", "Server state is {0}", state);
 #endif
@@ -847,6 +935,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                     else if (json.Contains("error"))
                     {
                         string error = (string)json["error"];
+
                         Log.Error("SpeechToText.OnListenMessage()", "Error: {0}", error);
 
                         StopListening();
@@ -867,10 +956,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
 
         private void OnListenClosed(WSConnector connector)
         {
-#if ENABLE_DEBUGGING
             Log.Debug("SpeechToText.OnListenClosed()", "OnListenClosed(), State = {0}", connector.State.ToString());
-#endif
-
+            
             _listenActive = false;
             StopListening();
 
@@ -932,6 +1019,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             RecognizeRequest req = new RecognizeRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -984,6 +1073,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             req.Parameters["word_confidence"] = EnableWordConfidence ? "true" : "false";
 
             req.OnResponse = OnRecognizeResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=Recognize";
 
             return connector.Send(req);
         }
@@ -1092,10 +1182,10 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                         continue;
 
                     SpeakerLabelsResult result = new SpeakerLabelsResult();
-                    result.confidence = (double)iresult["confidence"];
+                    result.confidence = Utility.StringToDouble(iresult["confidence"].ToString());
                     result.final = (bool)iresult["final"];
-                    result.from = (double)iresult["from"];
-                    result.to = (double)iresult["to"];
+                    result.from = Utility.StringToDouble(iresult["from"].ToString());
+                    result.to = Utility.StringToDouble(iresult["to"].ToString());
                     result.speaker = (Int64)iresult["speaker"];
 
                     results.Add(result);
@@ -1106,6 +1196,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             }
             catch (Exception e)
             {
+                //UnityEngine.Debug.Log("Parser exception: " + e.ToString());
                 Log.Error("SpeechToText.ParseSpeakerRecognitionResponse()", "ParseSpeakerRecognitionResponse exception: {0}", e.ToString());
                 return null;
             }
@@ -1145,9 +1236,9 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
 
                             WordAlternativeResults wordAlternativeResults = new WordAlternativeResults();
                             if (iwordAlternative.Contains("start_time"))
-                                wordAlternativeResults.start_time = (double)iwordAlternative["start_time"];
+                                wordAlternativeResults.start_time = Utility.StringToDouble(iwordAlternative["start_time"].ToString());
                             if (iwordAlternative.Contains("end_time"))
-                                wordAlternativeResults.end_time = (double)iwordAlternative["end_time"];
+                                wordAlternativeResults.end_time = Utility.StringToDouble(iwordAlternative["end_time"].ToString());
                             if (iwordAlternative.Contains("alternatives"))
                             {
                                 List<WordAlternativeResult> wordAlternativeResultList = new List<WordAlternativeResult>();
@@ -1162,7 +1253,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                                     if (ialternative.Contains("word"))
                                         wordAlternativeResult.word = (string)ialternative["word"];
                                     if (ialternative.Contains("confidence"))
-                                        wordAlternativeResult.confidence = (double)ialternative["confidence"];
+                                        wordAlternativeResult.confidence = Utility.StringToDouble(ialternative["confidence"].ToString());
                                     wordAlternativeResultList.Add(wordAlternativeResult);
                                 }
 
@@ -1189,7 +1280,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                             SpeechRecognitionAlternative alternative = new SpeechRecognitionAlternative();
                             alternative.transcript = (string)ialternative["transcript"];
                             if (ialternative.Contains("confidence"))
-                                alternative.confidence = (double)ialternative["confidence"];
+                                alternative.confidence = Utility.StringToDouble(ialternative["confidence"].ToString());
 
                             if (ialternative.Contains("timestamps"))
                             {
@@ -1204,8 +1295,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
 
                                     TimeStamp ts = new TimeStamp();
                                     ts.Word = (string)itimestamp[0];
-                                    ts.Start = (double)itimestamp[1];
-                                    ts.End = (double)itimestamp[2];
+                                    ts.Start = Utility.StringToDouble(itimestamp[1].ToString());
+                                    ts.End = Utility.StringToDouble(itimestamp[2].ToString());
                                     timestamps[i] = ts;
                                 }
 
@@ -1214,7 +1305,6 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                             if (ialternative.Contains("word_confidence"))
                             {
                                 IList iconfidence = ialternative["word_confidence"] as IList;
-
                                 WordConfidence[] confidence = new WordConfidence[iconfidence.Count];
                                 for (int i = 0; i < iconfidence.Count; ++i)
                                 {
@@ -1224,7 +1314,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
 
                                     WordConfidence wc = new WordConfidence();
                                     wc.Word = (string)iwordconf[0];
-                                    wc.Confidence = (double)iwordconf[1];
+                                    wc.Confidence = Utility.StringToDouble(iwordconf[1].ToString());
                                     confidence[i] = wc;
                                 }
 
@@ -1255,9 +1345,9 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                                     IDictionary iKeywordDictionary = k as IDictionary;
                                     KeywordResult keywordResult = new KeywordResult();
                                     keywordResult.keyword = keyword;
-                                    keywordResult.confidence = (double)iKeywordDictionary["confidence"];
-                                    keywordResult.end_time = (double)iKeywordDictionary["end_time"];
-                                    keywordResult.start_time = (double)iKeywordDictionary["start_time"];
+                                    keywordResult.confidence = Utility.StringToDouble(iKeywordDictionary["confidence"].ToString());
+                                    keywordResult.end_time = Utility.StringToDouble(iKeywordDictionary["end_time"].ToString());
+                                    keywordResult.start_time = Utility.StringToDouble(iKeywordDictionary["start_time"].ToString());
                                     keywordResult.normalized_text = (string)iKeywordDictionary["normalized_text"];
                                     keywordResults.Add(keywordResult);
                                 }
@@ -1307,6 +1397,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             GetCustomizationsReq req = new GetCustomizationsReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -1317,6 +1409,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             }
             req.Parameters["language"] = language;
             req.OnResponse = OnGetCustomizationsResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=GetCustomizations";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, "/v1/customizations");
             if (connector == null)
@@ -1416,6 +1509,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             CreateCustomizationRequest req = new CreateCustomizationRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -1428,6 +1523,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             req.Headers["Accept"] = "application/json";
             req.Send = Encoding.UTF8.GetBytes(customizationJson);
             req.OnResponse = OnCreateCustomizationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=CreateCustomization";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, "/v1/customizations");
             if (connector == null)
@@ -1516,6 +1612,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             DeleteCustomizationRequest req = new DeleteCustomizationRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -1524,8 +1622,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
-            req.Delete = true;
             req.OnResponse = OnDeleteCustomizationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=DeleteCustomization";
 
             string service = "/v1/customizations/{0}";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -1593,6 +1691,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             GetCustomizationRequest req = new GetCustomizationRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -1602,6 +1702,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                 }
             }
             req.OnResponse = OnGetCustomizationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=GetCustomization";
 
             string service = "/v1/customizations/{0}";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -1700,6 +1801,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             TrainCustomizationRequest req = new TrainCustomizationRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -1713,6 +1816,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             req.Headers["Accept"] = "application/json";
             req.Send = Encoding.UTF8.GetBytes("{}");
             req.OnResponse = OnTrainCustomizationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=TrainCustomization";
 
             string service = "/v1/customizations/{0}/train";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -1780,6 +1884,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             ResetCustomizationRequest req = new ResetCustomizationRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -1792,6 +1898,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             req.Headers["Accept"] = "application/json";
             req.Send = Encoding.UTF8.GetBytes("{}");
             req.OnResponse = OnResetCustomizationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=ResetCustomization";
 
             string service = "/v1/customizations/{0}/reset";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -1859,6 +1966,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             UpgradeCustomizationRequest req = new UpgradeCustomizationRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -1871,6 +1980,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             req.Headers["Accept"] = "application/json";
             req.Send = Encoding.UTF8.GetBytes("{}");
             req.OnResponse = OnResetCustomizationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=UpgradeCustomization";
 
             string service = "/v1/customizations/{0}/upgrade";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -1939,6 +2049,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             GetCustomCorporaReq req = new GetCustomCorporaReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -1948,6 +2060,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                 }
             }
             req.OnResponse = OnGetCustomCorporaResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=GetCustomCorpora";
 
             string service = "/v1/customizations/{0}/corpora";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -2041,6 +2154,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             GetCustomCorpusReq req = new GetCustomCorpusReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -2050,6 +2165,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                 }
             }
             req.OnResponse = OnGetCustomCorpusResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=GetCustomCorpus";
 
             string service = "/v1/customizations/{0}/corpora/{1}";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID, corpusName));
@@ -2142,6 +2258,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             DeleteCustomCorpusRequest req = new DeleteCustomCorpusRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -2150,8 +2268,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
-            req.Delete = true;
             req.OnResponse = OnDeleteCustomCorpusResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=DeleteCustomCorpus";
 
             string service = "/v1/customizations/{0}/corpora/{1}";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID, corpusName));
@@ -2224,6 +2342,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             AddCustomCorpusRequest req = new AddCustomCorpusRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -2237,6 +2357,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             req.Parameters["allow_overwrite"] = allowOverwrite.ToString();
             req.Send = Encoding.UTF8.GetBytes(trainingData);
             req.OnResponse = OnAddCustomCorpusResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=AddCustomCorpus";
 
             string service = "/v1/customizations/{0}/corpora/{1}";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID, corpusName));
@@ -2306,6 +2427,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             GetCustomWordsReq req = new GetCustomWordsReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -2316,6 +2439,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             }
             req.Parameters["word_type"] = wordType.ToString();
             req.OnResponse = OnGetCustomWordsResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=GetCustomWords";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/customizations/{0}/words", customizationID));
             if (connector == null)
@@ -2501,6 +2625,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             AddCustomWordsRequest req = new AddCustomWordsRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -2513,6 +2639,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             req.Headers["Accept"] = "application/json";
             req.Send = Encoding.UTF8.GetBytes(wordsJson);
             req.OnResponse = OnAddCustomWordsResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=AddCustomWords";
 
             string service = "/v1/customizations/{0}/words";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -2584,6 +2711,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             DeleteCustomWordRequest req = new DeleteCustomWordRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -2592,8 +2721,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
-            req.Delete = true;
             req.OnResponse = OnDeleteCustomWordResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=DeleteCustomWord";
 
             string service = "/v1/customizations/{0}/words/{1}";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID, word));
@@ -2664,6 +2793,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             GetCustomWordReq req = new GetCustomWordReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -2673,6 +2804,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                 }
             }
             req.OnResponse = OnGetCustomWordResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=GetCustomWord";
 
             string service = "/v1/customizations/{0}/words/{1}";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID, word));
@@ -2759,6 +2891,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             GetCustomAcousticModelsReq req = new GetCustomAcousticModelsReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -2770,6 +2904,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             if (!string.IsNullOrEmpty(language))
                 req.Parameters["language"] = language;
             req.OnResponse = OnGetCustomAcousticModelsResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=GetCustomAcousticModels";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/acoustic_customizations/"));
             if (connector == null)
@@ -2868,6 +3003,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             CreateAcousticCustomizationRequest req = new CreateAcousticCustomizationRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -2880,6 +3017,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             req.Headers["Accept"] = "application/json";
             req.Send = Encoding.UTF8.GetBytes(customizationJson);
             req.OnResponse = OnCreateAcousticCustomizationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=CreateAcousticCustomization";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, "/v1/acoustic_customizations");
             if (connector == null)
@@ -2967,6 +3105,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             DeleteAcousticCustomizationRequest req = new DeleteAcousticCustomizationRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -2975,8 +3115,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
-            req.Delete = true;
             req.OnResponse = OnDeleteAcousticCustomizationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=DeleteAcousticCustomization";
 
             string service = "/v1/acoustic_customizations/{0}";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -3043,6 +3183,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             GetCustomAcousticModelReq req = new GetCustomAcousticModelReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -3052,6 +3194,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                 }
             }
             req.OnResponse = OnGetCustomAcousticModelResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=GetCustomAcousticModel";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/acoustic_customizations/{0}", customizationId));
             if (connector == null)
@@ -3141,6 +3284,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             TrainAcousticCustomizationRequest req = new TrainAcousticCustomizationRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -3157,6 +3302,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                 req.Parameters["force"] = "true";
             req.Send = Encoding.UTF8.GetBytes("{}");
             req.OnResponse = OnTrainAcousticCustomizationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=TrainAcousticCustomization";
 
             string service = "/v1/acoustic_customizations/{0}/train";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -3223,6 +3369,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             ResetAcousticCustomizationRequest req = new ResetAcousticCustomizationRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -3235,6 +3383,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             req.Headers["Accept"] = "application/json";
             req.Send = Encoding.UTF8.GetBytes("{}");
             req.OnResponse = OnResetAcousticCustomizationResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=ResetAcousticCustomization";
 
             string service = "/v1/acoustic_customizations/{0}/reset";
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID));
@@ -3301,6 +3450,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             GetCustomAcousticResourcesReq req = new GetCustomAcousticResourcesReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -3310,6 +3461,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                 }
             }
             req.OnResponse = OnGetCustomAcousticResourcesResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=GetCustomAcousticResources";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/acoustic_customizations/{0}/audio", customizationId));
             if (connector == null)
@@ -3400,6 +3552,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             DeleteAcousticResourceRequest req = new DeleteAcousticResourceRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -3408,12 +3562,12 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
-            req.Delete = true;
             req.Timeout = 10f;
             req.OnResponse = OnDeleteAcousticResourceResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=DeleteAcousticResource";
 
             string service = "/v1/acoustic_customizations/{0}/audio/{1}";
-            RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID, WWW.EscapeURL(audioName)));
+            RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(service, customizationID, UnityWebRequest.EscapeURL(audioName)));
             if (connector == null)
                 return false;
 
@@ -3480,6 +3634,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             GetCustomAcousticResourceReq req = new GetCustomAcousticResourceReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -3489,6 +3645,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                 }
             }
             req.OnResponse = OnGetCustomAcousticResourceResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=GetCustomAcousticResource";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/acoustic_customizations/{0}/audio/{1}", customizationId, audioName));
             if (connector == null)
@@ -3589,6 +3746,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             AddAcousticResourceRequest req = new AddAcousticResourceRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -3603,6 +3762,7 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             req.Parameters["allow_overwrite"] = allowOverwrite ? "true" : "false";
             req.Send = audioResource;
             req.OnResponse = OnAddAcousticResourceResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=AddAcousticResource";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/acoustic_customizations/{0}/audio/{1}", customizationId, audioName));
             if (connector == null)
@@ -3647,11 +3807,452 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
         }
         #endregion
 
+        #region List Grammars
+        /// <summary>
+        /// List grammars.
+        ///
+        /// Lists information about all grammars from a custom language model. The information includes the total number
+        /// of out-of-vocabulary (OOV) words, name, and status of each grammar. You must use credentials for the
+        /// instance of the service that owns a model to list its grammars.
+        ///
+        /// **See also:** [Listing grammars from a custom language
+        /// model](https://cloud.ibm.com/docs/services/speech-to-text/).
+        /// </summary>
+        /// <param name="customizationId">The customization ID (GUID) of the custom language model that is to be used
+        /// for the request. You must make the request with credentials for the instance of the service that owns the
+        /// custom model.</param>
+        /// <param name="customData">Custom data object to pass data including custom request headers.</param>
+        /// <returns><see cref="Grammars" />Grammars</returns>
+        public bool ListGrammars(SuccessCallback<Grammars> successCallback, FailCallback failCallback, string customizationId, Dictionary<string, object> customData = null)
+        {
+            if (successCallback == null)
+                throw new ArgumentNullException("successCallback");
+            if (failCallback == null)
+                throw new ArgumentNullException("failCallback");
+            if (string.IsNullOrEmpty(customizationId))
+                throw new ArgumentNullException("customizationId");
+
+            ListGrammarsRequestObj req = new ListGrammarsRequestObj();
+            req.SuccessCallback = successCallback;
+            req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
+            req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            {
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                {
+                    req.Headers.Add(kvp.Key, kvp.Value);
+                }
+            }
+
+            req.OnResponse = OnListGrammarsResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=ListGrammars";
+
+            RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/customizations/{0}/grammars", customizationId));
+            if (connector == null)
+                return false;
+
+            return connector.Send(req);
+        }
+
+        private class ListGrammarsRequestObj : RESTConnector.Request
+        {
+            /// <summary>
+            /// The success callback.
+            /// </summary>
+            public SuccessCallback<Grammars> SuccessCallback { get; set; }
+            /// <summary>
+            /// The fail callback.
+            /// </summary>
+            public FailCallback FailCallback { get; set; }
+            /// <summary>
+            /// Custom data.
+            /// </summary>
+            public Dictionary<string, object> CustomData { get; set; }
+        }
+
+        private void OnListGrammarsResponse(RESTConnector.Request req, RESTConnector.Response resp)
+        {
+            Grammars result = new Grammars();
+            fsData data = null;
+            Dictionary<string, object> customData = ((ListGrammarsRequestObj)req).CustomData;
+            customData.Add(Constants.String.RESPONSE_HEADERS, resp.Headers);
+
+            if (resp.Success)
+            {
+                try
+                {
+                    fsResult r = fsJsonParser.Parse(Encoding.UTF8.GetString(resp.Data), out data);
+                    if (!r.Succeeded)
+                        throw new WatsonException(r.FormattedMessages);
+
+                    object obj = result;
+                    r = _serializer.TryDeserialize(data, obj.GetType(), ref obj);
+                    if (!r.Succeeded)
+                        throw new WatsonException(r.FormattedMessages);
+                }
+                catch (Exception e)
+                {
+                    Log.Error("SpeechToText.OnListGrammarsResponse()", "Exception: {0}", e.ToString());
+                    resp.Success = false;
+                }
+            }
+
+            customData.Add("json", data);
+
+            if (resp.Success)
+            {
+                if (((ListGrammarsRequestObj)req).SuccessCallback != null)
+                    ((ListGrammarsRequestObj)req).SuccessCallback(result, customData);
+            }
+            else
+            {
+                if (((ListGrammarsRequestObj)req).FailCallback != null)
+                    ((ListGrammarsRequestObj)req).FailCallback(resp.Error, customData);
+            }
+        }
+        #endregion
+
+        #region Add Grammar
+        /// <summary>
+        /// Add a grammar.
+        ///
+        /// Adds a single grammar file to a custom language model. Submit a plain text file in UTF-8 format that defines
+        /// the grammar. Use multiple requests to submit multiple grammar files. You must use credentials for the
+        /// instance of the service that owns a model to add a grammar to it. Adding a grammar does not affect the
+        /// custom language model until you train the model for the new data by using the **Train a custom language
+        /// model** method.
+        ///
+        /// The call returns an HTTP 201 response code if the grammar is valid. The service then asynchronously
+        /// processes the contents of the grammar and automatically extracts new words that it finds. This can take a
+        /// few seconds to complete depending on the size and complexity of the grammar, as well as the current load on
+        /// the service. You cannot submit requests to add additional resources to the custom model or to train the
+        /// model until the service's analysis of the grammar for the current request completes. Use the **Get a
+        /// grammar** method to check the status of the analysis.
+        ///
+        /// The service populates the model's words resource with any word that is recognized by the grammar that is not
+        /// found in the model's base vocabulary. These are referred to as out-of-vocabulary (OOV) words. You can use
+        /// the **List custom words** method to examine the words resource and use other words-related methods to
+        /// eliminate typos and modify how words are pronounced as needed.
+        ///
+        /// To add a grammar that has the same name as an existing grammar, set the `allow_overwrite` parameter to
+        /// `true`; otherwise, the request fails. Overwriting an existing grammar causes the service to process the
+        /// grammar file and extract OOV words anew. Before doing so, it removes any OOV words associated with the
+        /// existing grammar from the model's words resource unless they were also added by another resource or they
+        /// have been modified in some way with the **Add custom words** or **Add a custom word** method.
+        ///
+        /// The service limits the overall amount of data that you can add to a custom model to a maximum of 10 million
+        /// total words from all sources combined. Also, you can add no more than 30 thousand OOV words to a model. This
+        /// includes words that the service extracts from corpora and grammars and words that you add directly.
+        ///
+        /// **See also:**
+        /// * [Working with grammars](https://cloud.ibm.com/docs/services/speech-to-text/)
+        /// * [Add grammars to the custom language model](https://cloud.ibm.com/docs/services/speech-to-text/).
+        /// </summary>
+        /// <param name="customizationId">The customization ID (GUID) of the custom language model that is to be used
+        /// for the request. You must make the request with credentials for the instance of the service that owns the
+        /// custom model.</param>
+        /// <param name="grammarName">The name of the new grammar for the custom language model. Use a localized name
+        /// that matches the language of the custom model and reflects the contents of the grammar.
+        /// * Include a maximum of 128 characters in the name.
+        /// * Do not include spaces, slashes, or backslashes in the name.
+        /// * Do not use the name of an existing grammar or corpus that is already defined for the custom model.
+        /// * Do not use the name `user`, which is reserved by the service to denote custom words that are added or
+        /// modified by the user.</param>
+        /// <param name="grammarFile">A plain text file that contains the grammar in the format specified by the
+        /// `Content-Type` header. Encode the file in UTF-8 (ASCII is a subset of UTF-8). Using any other encoding can
+        /// lead to issues when compiling the grammar or to unexpected results in decoding. The service ignores an
+        /// encoding that is specified in the header of the grammar.</param>
+        /// <param name="contentType">The format (MIME type) of the grammar file:
+        /// * `application/srgs` for Augmented Backus-Naur Form (ABNF), which uses a plain-text representation that is
+        /// similar to traditional BNF grammars.
+        /// * `application/srgs+xml` for XML Form, which uses XML elements to represent the grammar.</param>
+        /// <param name="allowOverwrite">If `true`, the specified grammar overwrites an existing grammar with the same
+        /// name. If `false`, the request fails if a grammar with the same name already exists. The parameter has no
+        /// effect if a grammar with the same name does not already exist. (optional, default to false)</param>
+        /// <param name="customData">Custom data object to pass data including custom request headers.</param>
+        /// <returns><see cref="object" />object</returns>
+        public bool AddGrammar(SuccessCallback<object> successCallback, FailCallback failCallback, string customizationId, string grammarName, string grammarFile, string contentType, bool? allowOverwrite = null, Dictionary<string, object> customData = null)
+        {
+            if (successCallback == null)
+                throw new ArgumentNullException("successCallback");
+            if (failCallback == null)
+                throw new ArgumentNullException("failCallback");
+            if (string.IsNullOrEmpty(customizationId))
+                throw new ArgumentNullException("customizationId");
+            if (string.IsNullOrEmpty(grammarName))
+                throw new ArgumentNullException("grammarName");
+            if (string.IsNullOrEmpty(grammarFile))
+                throw new ArgumentNullException("grammarFile");
+            if (string.IsNullOrEmpty(contentType))
+                throw new ArgumentNullException("contentType");
+
+            AddGrammarRequestObj req = new AddGrammarRequestObj();
+            req.SuccessCallback = successCallback;
+            req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
+            req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            {
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                {
+                    req.Headers.Add(kvp.Key, kvp.Value);
+                }
+            }
+            req.Headers["Content-Type"] = contentType;
+            req.Send = Encoding.UTF8.GetBytes(grammarFile);
+            req.OnResponse = OnAddGrammarResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=AddGrammar";
+
+            RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/customizations/{0}/grammars/{1}", customizationId, grammarName));
+            if (connector == null)
+                return false;
+
+            return connector.Send(req);
+        }
+
+        private class AddGrammarRequestObj : RESTConnector.Request
+        {
+            /// <summary>
+            /// The success callback.
+            /// </summary>
+            public SuccessCallback<object> SuccessCallback { get; set; }
+            /// <summary>
+            /// The fail callback.
+            /// </summary>
+            public FailCallback FailCallback { get; set; }
+            /// <summary>
+            /// Custom data.
+            /// </summary>
+            public Dictionary<string, object> CustomData { get; set; }
+        }
+
+        private void OnAddGrammarResponse(RESTConnector.Request req, RESTConnector.Response resp)
+        {
+            object result = new object();
+            Dictionary<string, object> customData = ((AddGrammarRequestObj)req).CustomData;
+            customData.Add(Constants.String.RESPONSE_HEADERS, resp.Headers);
+
+            if (resp.Success)
+            {
+                if (((AddGrammarRequestObj)req).SuccessCallback != null)
+                    ((AddGrammarRequestObj)req).SuccessCallback(result, customData);
+            }
+            else
+            {
+                if (((AddGrammarRequestObj)req).FailCallback != null)
+                    ((AddGrammarRequestObj)req).FailCallback(resp.Error, customData);
+            }
+        }
+        #endregion
+
+        #region Get Grammar
+        /// <summary>
+        /// Get a grammar.
+        ///
+        /// Gets information about a grammar from a custom language model. The information includes the total number of
+        /// out-of-vocabulary (OOV) words, name, and status of the grammar. You must use credentials for the instance of
+        /// the service that owns a model to list its grammars.
+        ///
+        /// **See also:** [Listing grammars from a custom language
+        /// model](https://cloud.ibm.com/docs/services/speech-to-text/).
+        /// </summary>
+        /// <param name="customizationId">The customization ID (GUID) of the custom language model that is to be used
+        /// for the request. You must make the request with credentials for the instance of the service that owns the
+        /// custom model.</param>
+        /// <param name="grammarName">The name of the grammar for the custom language model.</param>
+        /// <param name="customData">Custom data object to pass data including custom request headers.</param>
+        /// <returns><see cref="Grammar" />Grammar</returns>
+        public bool GetGrammar(SuccessCallback<Grammar> successCallback, FailCallback failCallback, string customizationId, string grammarName, Dictionary<string, object> customData = null)
+        {
+            if (successCallback == null)
+                throw new ArgumentNullException("successCallback");
+            if (failCallback == null)
+                throw new ArgumentNullException("failCallback");
+            if (string.IsNullOrEmpty(customizationId))
+                throw new ArgumentNullException("customizationId");
+            if (string.IsNullOrEmpty(grammarName))
+                throw new ArgumentNullException("grammarName");
+
+            GetGrammarRequestObj req = new GetGrammarRequestObj();
+            req.SuccessCallback = successCallback;
+            req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
+            req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            {
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                {
+                    req.Headers.Add(kvp.Key, kvp.Value);
+                }
+            }
+
+            req.OnResponse = OnGetGrammarResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=GetGrammar";
+
+            RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/customizations/{0}/grammars/{1}", customizationId, grammarName));
+            if (connector == null)
+                return false;
+
+            return connector.Send(req);
+        }
+
+        private class GetGrammarRequestObj : RESTConnector.Request
+        {
+            /// <summary>
+            /// The success callback.
+            /// </summary>
+            public SuccessCallback<Grammar> SuccessCallback { get; set; }
+            /// <summary>
+            /// The fail callback.
+            /// </summary>
+            public FailCallback FailCallback { get; set; }
+            /// <summary>
+            /// Custom data.
+            /// </summary>
+            public Dictionary<string, object> CustomData { get; set; }
+        }
+
+        private void OnGetGrammarResponse(RESTConnector.Request req, RESTConnector.Response resp)
+        {
+            Grammar result = new Grammar();
+            fsData data = null;
+            Dictionary<string, object> customData = ((GetGrammarRequestObj)req).CustomData;
+            customData.Add(Constants.String.RESPONSE_HEADERS, resp.Headers);
+
+            if (resp.Success)
+            {
+                try
+                {
+                    fsResult r = fsJsonParser.Parse(Encoding.UTF8.GetString(resp.Data), out data);
+                    if (!r.Succeeded)
+                        throw new WatsonException(r.FormattedMessages);
+
+                    object obj = result;
+                    r = _serializer.TryDeserialize(data, obj.GetType(), ref obj);
+                    if (!r.Succeeded)
+                        throw new WatsonException(r.FormattedMessages);
+                }
+                catch (Exception e)
+                {
+                    Log.Error("SpeechToText.OnGetGrammarResponse()", "Exception: {0}", e.ToString());
+                    resp.Success = false;
+                }
+            }
+
+            customData.Add("json", data);
+
+            if (resp.Success)
+            {
+                if (((GetGrammarRequestObj)req).SuccessCallback != null)
+                    ((GetGrammarRequestObj)req).SuccessCallback(result, customData);
+            }
+            else
+            {
+                if (((GetGrammarRequestObj)req).FailCallback != null)
+                    ((GetGrammarRequestObj)req).FailCallback(resp.Error, customData);
+            }
+        }
+        #endregion
+
+        #region Delete Grammar
+        /// <summary>
+        /// Delete a grammar.
+        ///
+        /// Deletes an existing grammar from a custom language model. The service removes any out-of-vocabulary (OOV)
+        /// words associated with the grammar from the custom model's words resource unless they were also added by
+        /// another resource or they were modified in some way with the **Add custom words** or **Add a custom word**
+        /// method. Removing a grammar does not affect the custom model until you train the model with the **Train a
+        /// custom language model** method. You must use credentials for the instance of the service that owns a model
+        /// to delete its grammar.
+        ///
+        /// **See also:** [Deleting a grammar from a custom language
+        /// model](https://cloud.ibm.com/docs/services/speech-to-text/).
+        /// </summary>
+        /// <param name="customizationId">The customization ID (GUID) of the custom language model that is to be used
+        /// for the request. You must make the request with credentials for the instance of the service that owns the
+        /// custom model.</param>
+        /// <param name="grammarName">The name of the grammar for the custom language model.</param>
+        /// <param name="customData">Custom data object to pass data including custom request headers.</param>
+        /// <returns><see cref="BaseModel" />BaseModel</returns>
+        public bool DeleteGrammar(SuccessCallback<object> successCallback, FailCallback failCallback, string customizationId, string grammarName, Dictionary<string, object> customData = null)
+        {
+            if (successCallback == null)
+                throw new ArgumentNullException("successCallback");
+            if (failCallback == null)
+                throw new ArgumentNullException("failCallback");
+            if (string.IsNullOrEmpty(customizationId))
+                throw new ArgumentNullException("customizationId");
+            if (string.IsNullOrEmpty(grammarName))
+                throw new ArgumentNullException("grammarName");
+
+            DeleteGrammarRequestObj req = new DeleteGrammarRequestObj();
+            req.SuccessCallback = successCallback;
+            req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
+            req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            {
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                {
+                    req.Headers.Add(kvp.Key, kvp.Value);
+                }
+            }
+
+            req.OnResponse = OnDeleteGrammarResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=DeleteGrammar";
+
+            RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/customizations/{0}/grammars/{1}", customizationId, grammarName));
+            if (connector == null)
+                return false;
+
+            return connector.Send(req);
+        }
+
+        private class DeleteGrammarRequestObj : RESTConnector.Request
+        {
+            /// <summary>
+            /// The success callback.
+            /// </summary>
+            public SuccessCallback<object> SuccessCallback { get; set; }
+            /// <summary>
+            /// The fail callback.
+            /// </summary>
+            public FailCallback FailCallback { get; set; }
+            /// <summary>
+            /// Custom data.
+            /// </summary>
+            public Dictionary<string, object> CustomData { get; set; }
+        }
+
+        private void OnDeleteGrammarResponse(RESTConnector.Request req, RESTConnector.Response resp)
+        {
+            object result = new object();
+            Dictionary<string, object> customData = ((DeleteGrammarRequestObj)req).CustomData;
+            customData.Add(Constants.String.RESPONSE_HEADERS, resp.Headers);
+
+            if (resp.Success)
+            {
+                if (((DeleteGrammarRequestObj)req).SuccessCallback != null)
+                    ((DeleteGrammarRequestObj)req).SuccessCallback(result, customData);
+            }
+            else
+            {
+                if (((DeleteGrammarRequestObj)req).FailCallback != null)
+                    ((DeleteGrammarRequestObj)req).FailCallback(resp.Error, customData);
+            }
+        }
+        #endregion
+
         #region Delete User Data
         /// <summary>
         /// Deletes all data associated with a specified customer ID. The method has no effect if no data is associated with the customer ID. 
         /// You associate a customer ID with data by passing the X-Watson-Metadata header with a request that passes data. 
-        /// For more information about personal data and customer IDs, see [**Information security**](https://console.bluemix.net/docs/services/discovery/information-security.html).
+        /// For more information about personal data and customer IDs, see [**Information security**](https://cloud.ibm.com/docs/services/discovery/information-security.html).
         /// </summary>
         /// <param name="successCallback">The function that is called when the operation is successful.</param>
         /// <param name="failCallback">The function that is called when the operation fails.</param>
@@ -3670,6 +4271,8 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
             DeleteUserDataRequestObj req = new DeleteUserDataRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -3679,9 +4282,9 @@ namespace IBM.Watson.DeveloperCloud.Services.SpeechToText.v1
                 }
             }
             req.Parameters["customer_id"] = customerId;
-            req.Delete = true;
 
             req.OnResponse = OnDeleteUserDataResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=speech_to_text;service_version=v1;operation_id=DeleteUserData";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, "/v1/user_data");
             if (connector == null)

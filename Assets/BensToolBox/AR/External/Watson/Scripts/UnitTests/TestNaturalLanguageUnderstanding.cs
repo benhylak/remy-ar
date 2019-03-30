@@ -23,25 +23,34 @@ using FullSerializer;
 using System.IO;
 using System.Collections.Generic;
 using IBM.Watson.DeveloperCloud.Connection;
+using System;
 
 namespace IBM.Watson.DeveloperCloud.UnitTests
 {
     public class TestNaturalLanguageUnderstanding : UnitTest
     {
-        private string _username = null;
-        private string _password = null;
         private fsSerializer _serializer = new fsSerializer();
         private string _versionDate = "2017-02-27";
         //private string _token = "<authentication-token>";
 
         NaturalLanguageUnderstanding _naturalLanguageUnderstanding;
 
+        private bool _autoGetModelsTested = false;
         private bool _getModelsTested = false;
         private bool _analyzeTested = false;
 
         public override IEnumerator RunTest()
         {
             LogSystem.InstallDefaultReactors();
+
+            //  Test NaturalLanguageUnderstanding using loaded credentials
+            NaturalLanguageUnderstanding autoNaturalLanguageUnderstanding = new NaturalLanguageUnderstanding();
+            autoNaturalLanguageUnderstanding.VersionDate = _versionDate;
+            while (!autoNaturalLanguageUnderstanding.Credentials.HasIamTokenData())
+                yield return null;
+            autoNaturalLanguageUnderstanding.GetModels(OnAutoGetModels, OnFail);
+            while (!_autoGetModelsTested)
+                yield return null;
 
             VcapCredentials vcapCredentials = new VcapCredentials();
             fsData data = null;
@@ -71,18 +80,18 @@ namespace IBM.Watson.DeveloperCloud.UnitTests
 
             //  Set credentials from imported credntials
             Credential credential = vcapCredentials.GetCredentialByname("natural-language-understanding-sdk")[0].Credentials;
-            _username = credential.Username.ToString();
-            _password = credential.Password.ToString();
-            _url = credential.Url.ToString();
+            //  Create credential and instantiate service
+            TokenOptions tokenOptions = new TokenOptions()
+            {
+                IamApiKey = credential.IamApikey,
+            };
 
             //  Create credential and instantiate service
-            Credentials credentials = new Credentials(_username, _password, _url);
+            Credentials credentials = new Credentials(tokenOptions, credential.Url);
 
-            //  Or authenticate using token
-            //Credentials credentials = new Credentials(_url)
-            //{
-            //    AuthenticationToken = _token
-            //};
+            //  Wait for tokendata
+            while (!credentials.HasIamTokenData())
+                yield return null;
 
             _naturalLanguageUnderstanding = new NaturalLanguageUnderstanding(credentials);
             _naturalLanguageUnderstanding.VersionDate = _versionDate;
@@ -124,6 +133,13 @@ namespace IBM.Watson.DeveloperCloud.UnitTests
             Log.Debug("TestNaturalLanguageUnderstanding.RunTests()", "Natural language understanding examples complete.");
 
             yield break;
+        }
+
+        private void OnAutoGetModels(ListModelsResults response, Dictionary<string, object> customData)
+        {
+            Log.Debug("TestNaturalLanguageUnderstanding.OnAutoGetModels()", "ListModelsResult: {0}", customData["json"].ToString());
+            Test(response.models != null);
+            _autoGetModelsTested = true;
         }
 
         private void OnGetModels(ListModelsResults resp, Dictionary<string, object> customData)

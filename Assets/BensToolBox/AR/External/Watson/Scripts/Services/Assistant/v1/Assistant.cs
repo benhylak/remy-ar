@@ -23,12 +23,14 @@ using IBM.Watson.DeveloperCloud.Logging;
 using IBM.Watson.DeveloperCloud.Utilities;
 using System;
 using MiniJSON;
+using UnityEngine.Networking;
+using Utility = IBM.Watson.DeveloperCloud.Utilities.Utility;
 
 namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
 {
     public class Assistant : IWatsonService
     {
-        private const string ServiceId = "Assistantv1";
+        private const string ServiceId = "assistant";
         private fsSerializer _serializer = new fsSerializer();
 
         private Credentials _credentials = null;
@@ -68,6 +70,16 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             set { _versionDate = value; }
         }
 
+        private bool disableSslVerification = false;
+        /// <summary>
+        /// Gets and sets the option to disable ssl verification
+        /// </summary>
+        public bool DisableSslVerification
+        {
+            get { return disableSslVerification; }
+            set { disableSslVerification = value; }
+        }
+
         #region Callback delegates
         /// <summary>
         /// Success callback delegate.
@@ -86,6 +98,54 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
         #endregion
 
         /// <summary>
+        /// Assistant constructor. Use this constructor to auto load credentials via ibm-credentials.env file.
+        /// </summary>
+        public Assistant()
+        {
+            var credentialsPaths = Utility.GetCredentialsPaths();
+            if (credentialsPaths.Count > 0)
+            {
+                foreach (string path in credentialsPaths)
+                {
+                    if (Utility.LoadEnvFile(path))
+                    {
+                        break;
+                    }
+                }
+
+                string ApiKey = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_APIKEY");
+                string Username = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_USERNAME");
+                string Password = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_PASSWORD");
+                string ServiceUrl = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_URL");
+
+                if (string.IsNullOrEmpty(ApiKey) && (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password)))
+                {
+                    throw new NullReferenceException(string.Format("Either {0}_APIKEY or {0}_USERNAME and {0}_PASSWORD did not exist. Please add credentials with this key in ibm-credentials.env.", ServiceId.ToUpper()));
+                }
+
+                if (!string.IsNullOrEmpty(ApiKey))
+                {
+                    TokenOptions tokenOptions = new TokenOptions()
+                    {
+                        IamApiKey = ApiKey
+                    };
+
+                    Credentials = new Credentials(tokenOptions, ServiceUrl);
+
+                    if (string.IsNullOrEmpty(Credentials.Url))
+                    {
+                        Credentials.Url = Url;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(Username) && !string.IsNullOrEmpty(Password))
+                {
+                    Credentials = new Credentials(Username, Password, Url);
+                }
+            }
+        }
+
+        /// <summary>
         /// Assistant constructor.
         /// </summary>
         /// <param name="credentials">The service credentials.</param>
@@ -93,12 +153,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
         {
             if (credentials.HasCredentials() || credentials.HasWatsonAuthenticationToken() || credentials.HasIamTokenData())
             {
-                Credentials = credentials;
-
                 if (string.IsNullOrEmpty(credentials.Url))
                 {
                     credentials.Url = Url;
                 }
+
+                Credentials = credentials;
             }
             else
             {
@@ -121,13 +181,15 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
                 throw new ArgumentNullException("successCallback");
             if (failCallback == null)
                 throw new ArgumentNullException("failCallback");
+            if (string.IsNullOrEmpty(workspaceId))
+                throw new ArgumentNullException("workspaceId");
 
             IDictionary<string, string> requestDict = new Dictionary<string, string>();
             if (request.Context != null)
                 requestDict.Add("context", Json.Serialize(request.Context));
             if (request.Input != null)
                 requestDict.Add("input", Json.Serialize(request.Input));
-            if(request.AlternateIntents != null)
+            if (request.AlternateIntents != null)
                 requestDict.Add("alternate_intents", Json.Serialize(request.AlternateIntents));
             if (request.Entities != null)
                 requestDict.Add("entities", Json.Serialize(request.Entities));
@@ -151,10 +213,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             MessageRequestObj req = new MessageRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -163,6 +227,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             req.Headers["Content-Type"] = "application/json";
             req.Send = Encoding.UTF8.GetBytes(stringToSend);
             req.OnResponse = OnMessageResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=Message";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/message", workspaceId));
             if (connector == null)
@@ -236,14 +301,16 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
                 throw new ArgumentNullException("successCallback");
             if (failCallback == null)
                 throw new ArgumentNullException("failCallback");
-            
+
             CreateWorkspaceRequestObj req = new CreateWorkspaceRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -255,7 +322,8 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             string json = data.ToString().Replace('\"', '"');
             req.Send = Encoding.UTF8.GetBytes(json);
             req.OnResponse = OnCreateWorkspaceResponse;
-            
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=CreateWorkspace";
+
             RESTConnector connector = RESTConnector.GetConnector(Credentials, "/v1/workspaces");
             if (connector == null)
                 return false;
@@ -338,18 +406,20 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             DeleteWorkspaceRequestObj req = new DeleteWorkspaceRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.Parameters["version"] = VersionDate;
-            req.Delete = true;
 
             req.OnResponse = OnDeleteWorkspaceResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=DeleteWorkspace";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}", workspaceId));
             if (connector == null)
@@ -435,10 +505,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             GetWorkspaceRequestObj req = new GetWorkspaceRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -448,6 +520,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             req.Parameters["version"] = VersionDate;
 
             req.OnResponse = OnGetWorkspaceResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=GetWorkspace";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}", workspaceId));
             if (connector == null)
@@ -535,10 +608,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             ListWorkspacesRequestObj req = new ListWorkspacesRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -555,6 +630,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             if (includeAudit != null)
                 req.Parameters["include_audit"] = includeAudit;
             req.OnResponse = OnListWorkspacesResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=ListWorkspaces";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, "/v1/workspaces");
             if (connector == null)
@@ -640,10 +716,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             UpdateWorkspaceRequestObj req = new UpdateWorkspaceRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -654,6 +732,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(properties, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnUpdateWorkspaceResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=UpdateWorkspace";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}", workspaceId));
             if (connector == null)
@@ -737,10 +816,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             CreateIntentRequestObj req = new CreateIntentRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -751,6 +832,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(body, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnCreateIntentResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=CreateIntent";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/intents", workspaceId));
             if (connector == null)
@@ -835,18 +917,20 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             DeleteIntentRequestObj req = new DeleteIntentRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.Parameters["version"] = VersionDate;
-            req.Delete = true;
 
             req.OnResponse = OnDeleteIntentResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=DeleteIntent";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/intents/{1}", workspaceId, intent));
             if (connector == null)
@@ -933,10 +1017,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             GetIntentRequestObj req = new GetIntentRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -946,6 +1032,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             req.Parameters["version"] = VersionDate;
 
             req.OnResponse = OnGetIntentResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=GetIntent";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/intents/{1}", workspaceId, intent));
             if (connector == null)
@@ -1035,10 +1122,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             ListIntentsRequestObj req = new ListIntentsRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -1057,6 +1146,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             if (includeAudit != null)
                 req.Parameters["include_audit"] = includeAudit;
             req.OnResponse = OnListIntentsResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=ListIntents";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/intents", workspaceId));
             if (connector == null)
@@ -1142,10 +1232,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             UpdateIntentRequestObj req = new UpdateIntentRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -1156,6 +1248,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(body, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnUpdateIntentResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=UpdateIntent";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/intents/{1}", workspaceId, intent));
             if (connector == null)
@@ -1240,10 +1333,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             CreateExampleRequestObj req = new CreateExampleRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -1254,6 +1349,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(body, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnCreateExampleResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=CreateExample";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/intents/{1}/examples", workspaceId, intent));
             if (connector == null)
@@ -1339,18 +1435,20 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             DeleteExampleRequestObj req = new DeleteExampleRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.Parameters["version"] = VersionDate;
-            req.Delete = true;
 
             req.OnResponse = OnDeleteExampleResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=DeleteExample";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/intents/{1}/examples/{2}", workspaceId, intent, text));
             if (connector == null)
@@ -1437,10 +1535,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             GetExampleRequestObj req = new GetExampleRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -1449,6 +1549,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             if (includeAudit != null)
                 req.Parameters["include_audit"] = includeAudit;
             req.OnResponse = OnGetExampleResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=GetExample";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/intents/{1}/examples/{2}", workspaceId, intent, text));
             if (connector == null)
@@ -1538,10 +1639,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             ListExamplesRequestObj req = new ListExamplesRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -1558,6 +1661,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             if (includeAudit != null)
                 req.Parameters["include_audit"] = includeAudit;
             req.OnResponse = OnListExamplesResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=ListExamples";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/intents/{1}/examples", workspaceId, intent));
             if (connector == null)
@@ -1644,10 +1748,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             UpdateExampleRequestObj req = new UpdateExampleRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -1658,6 +1764,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(body, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnUpdateExampleResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=UpdateExample";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/intents/{1}/examples/{2}", workspaceId, intent, text));
             if (connector == null)
@@ -1741,10 +1848,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             CreateCounterexampleRequestObj req = new CreateCounterexampleRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -1755,6 +1864,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(body, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnCreateCounterexampleResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=CreateCounterexample";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/counterexamples", workspaceId));
             if (connector == null)
@@ -1839,18 +1949,20 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             DeleteCounterexampleRequestObj req = new DeleteCounterexampleRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.Parameters["version"] = VersionDate;
-            req.Delete = true;
 
             req.OnResponse = OnDeleteCounterexampleResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=DeleteCounterexample";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/counterexamples/{1}", workspaceId, text));
             if (connector == null)
@@ -1936,10 +2048,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             GetCounterexampleRequestObj req = new GetCounterexampleRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -1949,6 +2063,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             req.Parameters["version"] = VersionDate;
 
             req.OnResponse = OnGetCounterexampleResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=GetCounterexample";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/counterexamples/{1}", workspaceId, text));
             if (connector == null)
@@ -2037,10 +2152,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             ListCounterexamplesRequestObj req = new ListCounterexamplesRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -2058,6 +2175,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             req.Parameters["version"] = VersionDate;
 
             req.OnResponse = OnListCounterexamplesResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=ListCounterexamples";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/counterexamples", workspaceId));
             if (connector == null)
@@ -2143,10 +2261,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             UpdateCounterexampleRequestObj req = new UpdateCounterexampleRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -2157,6 +2277,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(body, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnUpdateCounterexampleResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=UpdateCounterexample";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/counterexamples/{1}", workspaceId, text));
             if (connector == null)
@@ -2240,10 +2361,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             CreateEntityRequestObj req = new CreateEntityRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -2254,6 +2377,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(properties, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnCreateEntityResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=CreateEntity";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities", workspaceId));
             if (connector == null)
@@ -2338,18 +2462,20 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             DeleteEntityRequestObj req = new DeleteEntityRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.Parameters["version"] = VersionDate;
-            req.Delete = true;
 
             req.OnResponse = OnDeleteEntityResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=DeleteEntity";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities/{1}", workspaceId, entity));
             if (connector == null)
@@ -2436,10 +2562,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             GetEntityRequestObj req = new GetEntityRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -2451,6 +2579,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             req.Parameters["version"] = VersionDate;
 
             req.OnResponse = OnGetEntityResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=GetEntity";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities/{1}", workspaceId, entity));
             if (connector == null)
@@ -2540,10 +2669,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             ListEntitiesRequestObj req = new ListEntitiesRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -2562,6 +2693,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             if (includeAudit != null)
                 req.Parameters["include_audit"] = includeAudit;
             req.OnResponse = OnListEntitiesResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=ListEntities";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities", workspaceId));
             if (connector == null)
@@ -2647,10 +2779,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             UpdateEntityRequestObj req = new UpdateEntityRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -2661,6 +2795,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(properties, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnUpdateEntityResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=UpdateEntity";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities/{1}", workspaceId, entity));
             if (connector == null)
@@ -2757,6 +2892,8 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             ListMentionsRequestObj req = new ListMentionsRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -2771,6 +2908,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             if (includeAudit != null)
                 req.Parameters["include_audit"] = includeAudit;
             req.OnResponse = OnListMentionsResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=ListMentions";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities/{1}/mentions", workspaceId, entity));
             if (connector == null)
@@ -2855,10 +2993,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             CreateValueRequestObj req = new CreateValueRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -2869,6 +3009,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(properties, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnCreateValueResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=CreateValue";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities/{1}/values", workspaceId, entity));
             if (connector == null)
@@ -2954,18 +3095,20 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             DeleteValueRequestObj req = new DeleteValueRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.Parameters["version"] = VersionDate;
-            req.Delete = true;
 
             req.OnResponse = OnDeleteValueResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=DeleteValue";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities/{1}/values/{2}", workspaceId, entity, value));
             if (connector == null)
@@ -3053,10 +3196,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             GetValueRequestObj req = new GetValueRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -3068,6 +3213,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             req.Parameters["version"] = VersionDate;
 
             req.OnResponse = OnGetValueResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=GetValue";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities/{1}/values/{2}", workspaceId, entity, value));
             if (connector == null)
@@ -3158,10 +3304,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             ListValuesRequestObj req = new ListValuesRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -3180,6 +3328,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             if (includeAudit != null)
                 req.Parameters["include_audit"] = includeAudit;
             req.OnResponse = OnListValuesResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=ListValues";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities/{1}/values", workspaceId, entity));
             if (connector == null)
@@ -3266,10 +3415,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             UpdateValueRequestObj req = new UpdateValueRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -3280,6 +3431,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(properties, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnUpdateValueResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=UpdateValue";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities/{1}/values/{2}", workspaceId, entity, value));
             if (connector == null)
@@ -3365,10 +3517,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             CreateSynonymRequestObj req = new CreateSynonymRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -3379,6 +3533,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(body, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnCreateSynonymResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=CreateSynonym";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities/{1}/values/{2}/synonyms", workspaceId, entity, value));
             if (connector == null)
@@ -3465,18 +3620,20 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             DeleteSynonymRequestObj req = new DeleteSynonymRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.Parameters["version"] = VersionDate;
-            req.Delete = true;
 
             req.OnResponse = OnDeleteSynonymResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=DeleteSynonym";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities/{1}/values/{2}/synonyms/{3}", workspaceId, entity, value, synonym));
             if (connector == null)
@@ -3564,10 +3721,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             GetSynonymRequestObj req = new GetSynonymRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -3577,6 +3736,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             req.Parameters["version"] = VersionDate;
 
             req.OnResponse = OnGetSynonymResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=GetSynonym";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities/{1}/values/{2}/synonyms/{3}", workspaceId, entity, value, synonym));
             if (connector == null)
@@ -3667,10 +3827,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             ListSynonymsRequestObj req = new ListSynonymsRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -3687,6 +3849,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             if (includeAudit != null)
                 req.Parameters["include_audit"] = includeAudit;
             req.OnResponse = OnListSynonymsResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=ListSynonyms";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities/{1}/values/{2}/synonyms", workspaceId, entity, value));
             if (connector == null)
@@ -3774,10 +3937,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             UpdateSynonymRequestObj req = new UpdateSynonymRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -3788,6 +3953,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(body, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnUpdateSynonymResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=UpdateSynonym";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/entities/{1}/values/{2}/synonyms/{3}", workspaceId, entity, value, synonym));
             if (connector == null)
@@ -3871,10 +4037,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             CreateDialogNodeRequestObj req = new CreateDialogNodeRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -3885,6 +4053,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(properties, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnCreateDialogNodeResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=CreateDialogNode";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/dialog_nodes", workspaceId));
             if (connector == null)
@@ -3969,18 +4138,20 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             DeleteDialogNodeRequestObj req = new DeleteDialogNodeRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.Parameters["version"] = VersionDate;
-            req.Delete = true;
 
             req.OnResponse = OnDeleteDialogNodeResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=DeleteDialogNode";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/dialog_nodes/{1}", workspaceId, dialogNode));
             if (connector == null)
@@ -4066,10 +4237,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             GetDialogNodeRequestObj req = new GetDialogNodeRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -4079,6 +4252,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             req.Parameters["version"] = VersionDate;
 
             req.OnResponse = OnGetDialogNodeResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=GetDialogNode";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/dialog_nodes/{1}", workspaceId, dialogNode));
             if (connector == null)
@@ -4167,10 +4341,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             ListDialogNodesRequestObj req = new ListDialogNodesRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -4187,6 +4363,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             if (includeAudit != null)
                 req.Parameters["include_audit"] = includeAudit;
             req.OnResponse = OnListDialogNodesResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=ListDialogNodes";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/dialog_nodes", workspaceId));
             if (connector == null)
@@ -4272,10 +4449,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             UpdateDialogNodeRequestObj req = new UpdateDialogNodeRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -4286,6 +4465,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             _serializer.TrySerialize(properties, out data);
             req.Send = Encoding.UTF8.GetBytes(data.ToString());
             req.OnResponse = OnUpdateDialogNodeResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=UpdateDialogNode";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/dialog_nodes/{1}", workspaceId, dialogNode));
             if (connector == null)
@@ -4355,7 +4535,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
         /// </summary>
         /// <param name="successCallback">The function that is called when the operation is successful.</param>
         /// <param name="failCallback">The function that is called when the operation fails.</param>
-        /// <param name="filter">A cacheable parameter that limits the results to those matching the specified filter. You must specify a filter query that includes a value for `language`, as well as a value for `workspace_id` or `request.context.metadata.deployment`. For more information, see the [documentation](https://console.bluemix.net/docs/services/conversation/filter-reference.html#filter-query-syntax).</param>
+        /// <param name="filter">A cacheable parameter that limits the results to those matching the specified filter. You must specify a filter query that includes a value for `language`, as well as a value for `workspace_id` or `request.context.metadata.deployment`. For more information, see the [documentation](https://cloud.ibm.com/docs/services/assistant/filter-reference.html#filter-query-syntax).</param>
         /// <param name="sort">The attribute by which returned results will be sorted. To reverse the sort order, prefix the value with a minus sign (`-`). Supported values are `name`, `updated`, and `workspace_id`. (optional)</param>
         /// <param name="pageLimit">The number of records to return in each page of results. (optional, default to 100)</param>
         /// <param name="cursor">A token identifying the last object from the previous page of results. (optional)</param>
@@ -4371,26 +4551,29 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             ListAllLogsRequestObj req = new ListAllLogsRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
-            if(!string.IsNullOrEmpty(filter))
+            if (!string.IsNullOrEmpty(filter))
                 req.Parameters["filter"] = filter;
             if (!string.IsNullOrEmpty(sort))
                 req.Parameters["sort"] = sort;
-            if(pageLimit != null)
+            if (pageLimit != null)
                 req.Parameters["page_imit"] = pageLimit;
-            if(!string.IsNullOrEmpty(cursor))
+            if (!string.IsNullOrEmpty(cursor))
                 req.Parameters["cursor"] = cursor;
 
             req.Parameters["version"] = VersionDate;
 
             req.OnResponse = OnListAllLogsResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=ListAllLogs";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, "/v1/logs");
             if (connector == null)
@@ -4463,7 +4646,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
         /// <param name="failCallback">The function that is called when the operation fails.</param>
         /// <param name="workspaceId">Unique identifier of the workspace.</param>
         /// <param name="sort">The attribute by which returned results will be sorted. To reverse the sort order, prefix the value with a minus sign (`-`). Supported values are `name`, `updated`, and `workspace_id`. (optional)</param>
-        /// <param name="filter">A cacheable parameter that limits the results to those matching the specified filter. For more information, see the [documentation](https://console.bluemix.net/docs/services/conversation/filter-reference.html#filter-query-syntax). (optional)</param>
+        /// <param name="filter">A cacheable parameter that limits the results to those matching the specified filter. For more information, see the [documentation](https://cloud.ibm.com/docs/services/assistant/filter-reference.html#filter-query-syntax). (optional)</param>
         /// <param name="pageLimit">The number of records to return in each page of results. (optional, default to 100)</param>
         /// <param name="cursor">A token identifying the last object from the previous page of results. (optional)</param>
         /// <returns><see cref="LogCollection" />LogCollection</returns>
@@ -4478,10 +4661,12 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             ListLogsRequestObj req = new ListLogsRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -4496,6 +4681,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             if (!string.IsNullOrEmpty(filter))
                 req.Parameters["filter"] = filter;
             req.OnResponse = OnListLogsResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=ListLogs";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format("/v1/workspaces/{0}/logs", workspaceId));
             if (connector == null)
@@ -4565,7 +4751,7 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
         /// <summary>
         /// Deletes all data associated with a specified customer ID. The method has no effect if no data is associated with the customer ID. 
         /// You associate a customer ID with data by passing the X-Watson-Metadata header with a request that passes data. 
-        /// For more information about personal data and customer IDs, see [**Information security**](https://console.bluemix.net/docs/services/discovery/information-security.html).
+        /// For more information about personal data and customer IDs, see [**Information security**](https://cloud.ibm.com/docs/services/discovery/information-security.html).
         /// </summary>
         /// <param name="successCallback">The function that is called when the operation is successful.</param>
         /// <param name="failCallback">The function that is called when the operation fails.</param>
@@ -4584,6 +4770,8 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             DeleteUserDataRequestObj req = new DeleteUserDataRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -4594,9 +4782,9 @@ namespace IBM.Watson.DeveloperCloud.Services.Assistant.v1
             }
             req.Parameters["customer_id"] = customerId;
             req.Parameters["version"] = VersionDate;
-            req.Delete = true;
 
             req.OnResponse = OnDeleteUserDataResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=conversation;service_version=v1;operation_id=DeleteUserData";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, "/v1/user_data");
             if (connector == null)

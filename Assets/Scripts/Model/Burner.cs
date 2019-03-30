@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Reflection;
 using UniRx;
 using UnityEngine;
+using UnitySDK.WebSocketSharp;
 
 public class Burner
 {
@@ -56,6 +57,8 @@ public class Burner
     
     public BurnerPosition Position;
 
+    public Recipe RecipeInProgress;
+
     public override string ToString()
     {
         return string.Format("Position: {0} On: {1} Temp: {2}", Position, IsOn.Value,Temperature.Value);
@@ -86,9 +89,37 @@ public class Burner
                 case "name":
                     _name = (string) item.Value;
                     break;
+
+                case "recipe":
+                    var values = item.Value as Dictionary<string, object>;
+
+                    if (values == null)
+                    {
+                        Debug.Log("Cast failed");
+                        return;
+                    }
+
+                    if (RecipeInProgress == null)
+                    {
+                        //start one? -- means a recipe was detected remotely without starting
+                    }
+                    else
+                    {
+                        var status = (string)values["status"];
+
+                        if (status.IsNullOrEmpty() || RecipeInProgress.Status.Equals(status))
+                        {
+                            return;
+                        }
+                            
+                        RecipeInProgress.UpdateStatus(status);
+                    }
+                    
+                    break;
+
                 
                 default:
-                    Debug.Log("Could not map key: " + item.Key);
+                    //Debug.Log("Could not map key: " + item.Key);
                     break;
                     
             }

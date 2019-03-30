@@ -70,15 +70,15 @@ Material:
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _Radius: 0.1
-    - _RimPower: 1.05
+    - _Radius: 0.089
+    - _RimPower: 0.57
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
-    - _Volume: 0
-    - _WaveAmp: 0.003
-    - _WaveSpeed: 1
+    - _Volume: 0.257
+    - _WaveAmp: 0.019
+    - _WaveSpeed: 1.11
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}

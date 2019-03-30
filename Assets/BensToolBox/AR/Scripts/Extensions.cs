@@ -1,9 +1,19 @@
+using System;
 using UnityEngine;
 
 namespace BensToolBox.AR.Scripts
 {
     public static class Extensions
     {
+        //waits and then runs on complete *on the main thread*
+        public static async void DelayedInvoke(this object obj, float delaySeconds, Action onComplete) 
+        { 
+            await new WaitForSeconds(delaySeconds);
+            await new WaitForUpdate();
+            
+            onComplete.Invoke();
+        }
+        
         public static void SetTransparency(this UnityEngine.UI.Image p_image, float p_transparency)
         {
             if (p_image != null)

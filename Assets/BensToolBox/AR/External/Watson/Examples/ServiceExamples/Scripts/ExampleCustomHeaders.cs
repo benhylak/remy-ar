@@ -14,6 +14,7 @@
 * limitations under the License.
 *
 */
+#pragma warning disable 0649
 
 using IBM.Watson.DeveloperCloud.Connection;
 using IBM.Watson.DeveloperCloud.DataTypes;
@@ -181,7 +182,7 @@ public class ExampleCustomHeaders : MonoBehaviour
                 _speechToText.EnableWordConfidence = true;
                 _speechToText.EnableTimestamps = true;
                 _speechToText.SilenceThreshold = 0.01f;
-                _speechToText.MaxAlternatives = 0;
+                _speechToText.MaxAlternatives = 1;
                 _speechToText.EnableInterimResults = true;
                 _speechToText.OnError = OnError;
                 _speechToText.InactivityTimeout = -1;

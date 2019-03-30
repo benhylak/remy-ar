@@ -23,6 +23,8 @@ using System.Text;
 using System.Collections.Generic;
 using System.IO;
 using System;
+using UnityEngine.Networking;
+using Utility = IBM.Watson.DeveloperCloud.Utilities.Utility;
 
 namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
 {
@@ -46,7 +48,7 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
         #endregion
 
         #region Private Data
-        private const string ServiceId = "VisualRecognitionV3";
+        private const string ServiceId = "visual_recognition";
         private const string ClassifyEndpoint = "/v3/classify";
         private const string DetectFacesEndpoint = "/v3/detect_faces";
         private const string ClassifiersEndpoint = "/v3/classifiers";
@@ -97,9 +99,67 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
                 }
             }
         }
+
+        private bool disableSslVerification = false;
+        /// <summary>
+        /// Gets and sets the option to disable ssl verification
+        /// </summary>
+        public bool DisableSslVerification
+        {
+            get { return disableSslVerification; }
+            set { disableSslVerification = value; }
+        }
         #endregion
 
         #region Constructor
+        /// <summary>
+        /// VisualRecognition constructor. Use this constructor to auto load credentials via ibm-credentials.env file.
+        /// </summary>
+        public VisualRecognition()
+        {
+            var credentialsPaths = Utility.GetCredentialsPaths();
+            if (credentialsPaths.Count > 0)
+            {
+                foreach (string path in credentialsPaths)
+                {
+                    if (Utility.LoadEnvFile(path))
+                    {
+                        break;
+                    }
+                }
+
+                string ApiKey = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_APIKEY");
+                string Username = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_USERNAME");
+                string Password = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_PASSWORD");
+                string ServiceUrl = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_URL");
+
+                if (string.IsNullOrEmpty(ApiKey) && (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password)))
+                {
+                    throw new NullReferenceException(string.Format("Either {0}_APIKEY or {0}_USERNAME and {0}_PASSWORD did not exist. Please add credentials with this key in ibm-credentials.env.", ServiceId.ToUpper()));
+                }
+
+                if (!string.IsNullOrEmpty(ApiKey))
+                {
+                    TokenOptions tokenOptions = new TokenOptions()
+                    {
+                        IamApiKey = ApiKey
+                    };
+
+                    Credentials = new Credentials(tokenOptions, ServiceUrl);
+
+                    if (string.IsNullOrEmpty(Credentials.Url))
+                    {
+                        Credentials.Url = Url;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(Username) && !string.IsNullOrEmpty(Password))
+                {
+                    Credentials = new Credentials(Username, Password, Url);
+                }
+            }
+        }
+
         public VisualRecognition(Credentials credentials)
         {
             if (!credentials.HasApiKey() && !credentials.HasIamApikey() && !credentials.HasIamAuthorizationToken())
@@ -160,6 +220,8 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             ClassifyReq req = new ClassifyReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -169,7 +231,8 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
                 }
             }
             req.OnResponse = OnClassifyResp;
-            req.Headers["Accepted-Language"] = acceptLanguage;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=watson_vision_combined;service_version=v3;operation_id=Classify";
+            req.Headers["Accept-Language"] = acceptLanguage;
             if (Credentials.HasApiKey())
                 req.Parameters["api_key"] = Credentials.ApiKey;
             req.Parameters["url"] = url;
@@ -253,6 +316,8 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             ClassifyReq req = new ClassifyReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -262,11 +327,13 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
                 }
             }
             req.OnResponse = OnClassifyResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=watson_vision_combined;service_version=v3;operation_id=Classify";
             if (Credentials.HasApiKey())
                 req.Parameters["api_key"] = Credentials.ApiKey;
             req.Parameters["version"] = VersionDate;
             req.Headers["Content-Type"] = "multipart/form-data";
             req.Headers["Accept"] = "application/json";
+            req.Headers["Accept-Language"] = acceptLanguage;
 
             if (owners != default(string[]))
                 req.Parameters["owners"] = string.Join(",", owners);
@@ -278,7 +345,7 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             if (imageData != null)
             {
                 req.Forms = new Dictionary<string, RESTConnector.Form>();
-                req.Forms.Add("images_file", new RESTConnector.Form(imageData, imageMimeType));
+                req.Forms.Add("images_file", new RESTConnector.Form(imageData, "image" + Utility.GetExtension(imageMimeType), imageMimeType));
             }
 
             return connector.Send(req);
@@ -354,8 +421,10 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
         /// <param name="url">URL.</param>
         /// <param name="successCallback">The success callback.</param>
         /// <param name="failCallback">The fail callback.</param>
+        /// <param name="acceptLanguage">The language used for the value of `gender_label` in the response. (optional,
+        /// default to en)</param>
         /// <param name="customData">Custom data.</param>
-        public bool DetectFaces(string url, SuccessCallback<DetectedFaces> successCallback, FailCallback failCallback, Dictionary<string, object> customData = null)
+        public bool DetectFaces(string url, SuccessCallback<DetectedFaces> successCallback, FailCallback failCallback, string acceptLanguage = null, Dictionary<string, object> customData = null)
         {
             if (successCallback == null)
                 throw new ArgumentNullException("successCallback");
@@ -371,6 +440,8 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             DetectFacesReq req = new DetectFacesReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -380,8 +451,11 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
                 }
             }
             req.OnResponse = OnDetectFacesResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=watson_vision_combined;service_version=v3;operation_id=DetectFaces";
             if (Credentials.HasApiKey())
                 req.Parameters["api_key"] = Credentials.ApiKey;
+            if (!string.IsNullOrEmpty(acceptLanguage))
+                req.Headers["Accept-Language"] = acceptLanguage;
             req.Parameters["url"] = url;
             req.Parameters["version"] = VersionDate;
 
@@ -395,8 +469,10 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
         /// <param name="successCallback">The success callback.</param>
         /// <param name="failCallback">The fail callback.</param>
         /// <param name="imagePath">Image path.</param>
+        /// <param name="acceptLanguage">The language used for the value of `gender_label` in the response. (optional,
+        /// default to en)</param>
         /// <param name="customData">Custom data.</param>
-        public bool DetectFaces(SuccessCallback<DetectedFaces> successCallback, FailCallback failCallback, string imagePath, Dictionary<string, object> customData = null)
+        public bool DetectFaces(SuccessCallback<DetectedFaces> successCallback, FailCallback failCallback, string imagePath, string acceptLanguage = null, Dictionary<string, object> customData = null)
         {
             if (successCallback == null)
                 throw new ArgumentNullException("successCallback");
@@ -423,7 +499,7 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
                     Log.Error("VisualRecognition.DetectFaces()", "Failed to upload {0}!", imagePath);
             }
 
-            return DetectFaces(successCallback, failCallback, imageData, customData);
+            return DetectFaces(successCallback, failCallback, imageData, acceptLanguage, customData);
         }
 
         /// <summary>
@@ -432,9 +508,11 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
         /// <param name="successCallback">The success callback.</param>
         /// <param name="failCallback">The fail callback.</param>
         /// <param name="imageData">ByteArray of image data.</param>
+        /// <param name="acceptLanguage">The language used for the value of `gender_label` in the response. (optional,
+        /// default to en)</param>
         /// <param name="customData">Custom data.</param>
         /// <returns></returns>
-        public bool DetectFaces(SuccessCallback<DetectedFaces> successCallback, FailCallback failCallback, byte[] imageData, Dictionary<string, object> customData = null)
+        public bool DetectFaces(SuccessCallback<DetectedFaces> successCallback, FailCallback failCallback, byte[] imageData, string acceptLanguage = null, Dictionary<string, object> customData = null)
         {
             if (successCallback == null)
                 throw new ArgumentNullException("successCallback");
@@ -449,6 +527,8 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             DetectFacesReq req = new DetectFacesReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -458,8 +538,11 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
                 }
             }
             req.OnResponse = OnDetectFacesResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=watson_vision_combined;service_version=v3;operation_id=DetectFaces";
             if (Credentials.HasApiKey())
                 req.Parameters["api_key"] = Credentials.ApiKey;
+            if (!string.IsNullOrEmpty(acceptLanguage))
+                req.Headers["Accept-Language"] = acceptLanguage;
             req.Parameters["version"] = VersionDate;
             req.Forms = new Dictionary<string, RESTConnector.Form>();
             req.Forms["images_file"] = new RESTConnector.Form(imageData);
@@ -551,6 +634,8 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             GetClassifiersBriefReq req = new GetClassifiersBriefReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -564,6 +649,7 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             req.Parameters["version"] = VersionDate;
             req.Timeout = 20.0f * 60.0f;
             req.OnResponse = OnGetClassifiersBriefResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=watson_vision_combined;service_version=v3;operation_id=GetClassifiersBrief";
 
             return connector.Send(req);
         }
@@ -650,6 +736,8 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             GetClassifiersVerboseReq req = new GetClassifiersVerboseReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -663,6 +751,7 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             req.Parameters["version"] = VersionDate;
             req.Timeout = 20.0f * 60.0f;
             req.OnResponse = OnGetClassifiersBriefResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=watson_vision_combined;service_version=v3;operation_id=GetClassifiersVerbose";
 
             return connector.Send(req);
         }
@@ -751,6 +840,8 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             GetClassifierReq req = new GetClassifierReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -764,6 +855,7 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             req.Parameters["version"] = VersionDate;
             req.Parameters["verbose"] = true;
             req.OnResponse = OnGetClassifierResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=watson_vision_combined;service_version=v3;operation_id=GetClassifier";
 
             return connector.Send(req);
         }
@@ -904,6 +996,8 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             TrainClassifierReq req = new TrainClassifierReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -913,6 +1007,7 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
                 }
             }
             req.OnResponse = OnTrainClassifierResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=watson_vision_combined;service_version=v3;operation_id=TrainClassifier";
             if (Credentials.HasApiKey())
                 req.Parameters["api_key"] = Credentials.ApiKey;
             req.Parameters["version"] = VersionDate;
@@ -1068,6 +1163,8 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             TrainClassifierReq req = new TrainClassifierReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -1077,6 +1174,7 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
                 }
             }
             req.OnResponse = OnTrainClassifierResp;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=watson_vision_combined;service_version=v3;operation_id=UpdateClassifier";
             if (Credentials.HasApiKey())
                 req.Parameters["api_key"] = Credentials.ApiKey;
             req.Parameters["version"] = VersionDate;
@@ -1116,6 +1214,8 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             DeleteClassifierReq req = new DeleteClassifierReq();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -1128,7 +1228,7 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
                 req.Parameters["api_key"] = Credentials.ApiKey;
             req.Parameters["version"] = VersionDate;
             req.OnResponse = OnDeleteClassifierResp;
-            req.Delete = true;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=watson_vision_combined;service_version=v3;operation_id=DeleteClassifier";
 
             return connector.Send(req);
         }
@@ -1182,6 +1282,8 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             GetCoreMLModelRequest req = new GetCoreMLModelRequest();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -1194,6 +1296,7 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
                 req.Parameters["api_key"] = Credentials.ApiKey;
             req.Parameters["version"] = VersionDate;
             req.OnResponse = GetCoreMLModelResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=watson_vision_combined;service_version=v3;operation_id=GetCoreMLModel";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, string.Format(CoreMLEndpoint, classifierID));
             if (connector == null)
@@ -1264,7 +1367,7 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
         /// <summary>
         /// Deletes all data associated with a specified customer ID. The method has no effect if no data is associated with the customer ID. 
         /// You associate a customer ID with data by passing the X-Watson-Metadata header with a request that passes data. 
-        /// For more information about personal data and customer IDs, see [**Information security**](https://console.bluemix.net/docs/services/discovery/information-security.html).
+        /// For more information about personal data and customer IDs, see [**Information security**](https://cloud.ibm.com/docs/services/discovery/information-security.html).
         /// </summary>
         /// <param name="successCallback">The function that is called when the operation is successful.</param>
         /// <param name="failCallback">The function that is called when the operation fails.</param>
@@ -1283,6 +1386,8 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             DeleteUserDataRequestObj req = new DeleteUserDataRequestObj();
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
             if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
@@ -1294,9 +1399,9 @@ namespace IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3
             req.Parameters["customer_id"] = customerId;
             if (Credentials.HasApiKey())
                 req.Parameters["api_key"] = Credentials.ApiKey;
-            req.Delete = true;
 
             req.OnResponse = OnDeleteUserDataResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=watson_vision_combined;service_version=v3;operation_id=DeleteUserData";
 
             RESTConnector connector = RESTConnector.GetConnector(Credentials, "/v3/user_data");
             if (connector == null)

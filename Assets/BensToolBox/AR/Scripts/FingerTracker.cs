@@ -7,6 +7,14 @@ namespace BensToolBox.AR.Scripts
 {
 	public class FingerTracker : MonoBehaviour
 	{
+		public enum FingerType
+		{
+			THUMB,
+			INDEX
+		}
+
+		[SerializeField]
+		public FingerType fingerType;
 
 		private Vector3 leftHandSmoothed = Vector3.zero;
 
@@ -16,6 +24,8 @@ namespace BensToolBox.AR.Scripts
 
 		[SerializeField] private GameObject rightFingerCollider;
 
+		public float lerpSpeed = 2;
+		
 		// Use this for initialization
 		void Start()
 		{
@@ -24,49 +34,38 @@ namespace BensToolBox.AR.Scripts
 		// Update is called once per frame
 		void Update()
 		{
-			UpdateSmoothedFingerPosition(MLHands.Left);
-			UpdateSmoothedFingerPosition(MLHands.Right);
+			UpdateSmoothedFingerPosition(MLHands.Left, ref leftHandSmoothed);
+			UpdateSmoothedFingerPosition(MLHands.Right, ref rightHandSmoothed);
 
 			leftFingerCollider.transform.position = leftHandSmoothed;
 			rightFingerCollider.transform.position = rightHandSmoothed;
 		}
 
-		void UpdateSmoothedFingerPosition(MLHand hand)
+		void UpdateSmoothedFingerPosition(MLHand hand, ref Vector3 lastSmoothed)
 		{
+			if (lastSmoothed == null) return;
+			
 			if (hand != null)
 			{
-				List<MLKeyPoint> drawingKeypoints = hand.Index.KeyPoints;
-				Vector3 currentPosition = drawingKeypoints.First().Position;
+				Vector3 currentPosition;
 
-				//	Vector3 lastSmoothed;
-
-				if (hand == MLHands.Left)
+				switch (fingerType)
 				{
-					leftFingerCollider.transform.position = currentPosition;
+					case FingerType.THUMB:
+						currentPosition = hand.Thumb.Tip.Position;
+						break;
+					
+					default:
+						currentPosition = hand.Index.Tip.Position;
+						break;
 				}
+
+				if (lastSmoothed.Equals(Vector3.zero)) lastSmoothed = currentPosition;
 				else
 				{
-					rightFingerCollider.transform.position = currentPosition;
+					lastSmoothed = Vector3.Lerp(lastSmoothed, currentPosition, lerpSpeed * Time.deltaTime);
 				}
-
-				//			if (lastSmoothed == Vector3.zero) lastSmoothed = currentPosition;
-				//			else
-				//			{
-				//				lastSmoothed = Vector3.Lerp(lastSmoothed, currentPosition, 6.0f * Time.deltaTime);
-				//			}
-				//			
-				//			if (hand == MLHands.Left)
-				//			{
-				//				leftHandSmoothed = lastSmoothed;
-				//			}
-				//			else
-				//			{
-				//				rightHandSmoothed = lastSmoothed;
-				//			}
-				//			
-				//			Debug.Log("Updated pos: " + lastSmoothed.x);
 			}
-
 		}
 	}
 }

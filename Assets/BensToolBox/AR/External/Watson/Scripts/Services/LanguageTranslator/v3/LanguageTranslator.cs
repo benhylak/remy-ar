@@ -15,7 +15,6 @@
 *
 */
 
-using UnityEngine;
 using System.Collections.Generic;
 using IBM.Watson.DeveloperCloud.Connection;
 using IBM.Watson.DeveloperCloud.Utilities;
@@ -25,6 +24,8 @@ using MiniJSON;
 using System;
 using FullSerializer;
 using System.IO;
+using UnityEngine.Networking;
+using Utility = IBM.Watson.DeveloperCloud.Utilities.Utility;
 
 namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
 {
@@ -72,16 +73,74 @@ namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
             get { return _versionDate; }
             set { _versionDate = value; }
         }
+
+        private bool disableSslVerification = false;
+        /// <summary>
+        /// Gets and sets the option to disable ssl verification
+        /// </summary>
+        public bool DisableSslVerification
+        {
+            get { return disableSslVerification; }
+            set { disableSslVerification = value; }
+        }
         #endregion
 
         #region Private Data
-        private const string ServiceId = "LanguageTranslatorV3";
+        private const string ServiceId = "language_translator";
         private fsSerializer _serializer = new fsSerializer();
         private Credentials _credentials = null;
         private string _url = "https://gateway.watsonplatform.net/language-translator/api";
         #endregion
 
         #region Constructor
+        /// <summary>
+        /// LanguageTranslator constructor. Use this constructor to auto load credentials via ibm-credentials.env file.
+        /// </summary>
+        public LanguageTranslator()
+        {
+            var credentialsPaths = Utility.GetCredentialsPaths();
+            if (credentialsPaths.Count > 0)
+            {
+                foreach (string path in credentialsPaths)
+                {
+                    if (Utility.LoadEnvFile(path))
+                    {
+                        break;
+                    }
+                }
+
+                string ApiKey = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_APIKEY");
+                string Username = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_USERNAME");
+                string Password = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_PASSWORD");
+                string ServiceUrl = Environment.GetEnvironmentVariable(ServiceId.ToUpper() + "_URL");
+
+                if (string.IsNullOrEmpty(ApiKey) && (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password)))
+                {
+                    throw new NullReferenceException(string.Format("Either {0}_APIKEY or {0}_USERNAME and {0}_PASSWORD did not exist. Please add credentials with this key in ibm-credentials.env.", ServiceId.ToUpper()));
+                }
+
+                if (!string.IsNullOrEmpty(ApiKey))
+                {
+                    TokenOptions tokenOptions = new TokenOptions()
+                    {
+                        IamApiKey = ApiKey
+                    };
+
+                    Credentials = new Credentials(tokenOptions, ServiceUrl);
+
+                    if (string.IsNullOrEmpty(Credentials.Url))
+                    {
+                        Credentials.Url = Url;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(Username) && !string.IsNullOrEmpty(Password))
+                {
+                    Credentials = new Credentials(Username, Password, Url);
+                }
+            }
+        }
+
         public LanguageTranslator(string versionDate, Credentials credentials)
         {
             VersionDate = versionDate;
@@ -189,15 +248,18 @@ namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
             req.Parameters["version"] = VersionDate;
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.OnResponse = TranslateResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=language_translator;service_version=v3;operation_id=GetTranslation";
             req.Send = Encoding.UTF8.GetBytes(json);
             req.Headers["accept"] = "application/json";
             req.Headers["Content-Type"] = "application/json";
@@ -248,7 +310,7 @@ namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
                     resp.Success = false;
                 }
             }
-            
+
             if (resp.Success)
             {
                 if (((TranslateReq)req).SuccessCallback != null)
@@ -291,11 +353,11 @@ namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
         /// <param name="targetFilter">Optional target language filter.</param>
         /// <param name="defaults">Controls if we get default, non-default, or all models.</param>
         /// <returns>Returns a true on success, false if it failed to submit the request.</returns>
-        public bool GetModels(SuccessCallback<TranslationModels> successCallback, 
+        public bool GetModels(SuccessCallback<TranslationModels> successCallback,
             FailCallback failCallback,
             string sourceFilter = null,
             string targetFilter = null,
-            TypeFilter defaults = TypeFilter.ALL, 
+            TypeFilter defaults = TypeFilter.ALL,
             Dictionary<string, object> customData = null)
         {
             if (successCallback == null)
@@ -311,15 +373,18 @@ namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
             req.Parameters["version"] = VersionDate;
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.OnResponse = GetModelsResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=language_translator;service_version=v3;operation_id=GetModels";
 
             if (!string.IsNullOrEmpty(sourceFilter))
                 req.Parameters["source"] = sourceFilter;
@@ -414,16 +479,19 @@ namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
             req.Parameters["version"] = VersionDate;
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
-            req.Function = WWW.EscapeURL(model_id);
+            req.Function = UnityWebRequest.EscapeURL(model_id);
             req.OnResponse = GetModelResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=language_translator;service_version=v3;operation_id=GetModel";
 
             return connector.Send(req);
         }
@@ -504,7 +572,7 @@ namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
         /// <param name="monolingualCorpusFilePath">A UTF-8 encoded plain text file that is used to customize the target language model.</param>
         /// <param name="customData">User defined custom string data.</param>
         /// <returns>True if the call succeeded, false if the call fails.</returns>
-        public bool CreateModel(SuccessCallback<TranslationModel> successCallback, FailCallback failCallback, string baseModelId, string customModelName, string forcedGlossaryFilePath = default(string), string parallelCorpusFilePath= default(string), string monolingualCorpusFilePath = default(string), Dictionary<string, object> customData = null)
+        public bool CreateModel(SuccessCallback<TranslationModel> successCallback, FailCallback failCallback, string baseModelId, string customModelName, string forcedGlossaryFilePath = default(string), string parallelCorpusFilePath = default(string), string monolingualCorpusFilePath = default(string), Dictionary<string, object> customData = null)
         {
             if (successCallback == null)
                 throw new ArgumentNullException("successCallback");
@@ -516,15 +584,17 @@ namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
                 throw new ArgumentNullException("customModelName");
             if (string.IsNullOrEmpty(forcedGlossaryFilePath) && string.IsNullOrEmpty(parallelCorpusFilePath) && string.IsNullOrEmpty(monolingualCorpusFilePath))
                 throw new ArgumentNullException("Either a forced glossary, parallel corpus or monolingual corpus is required to create a custom model.");
-            
+
             CreateModelRequest req = new CreateModelRequest();
             req.Parameters["version"] = VersionDate;
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -532,18 +602,19 @@ namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
             req.Parameters["base_model_id"] = baseModelId;
             req.Parameters["name"] = customModelName;
             req.OnResponse = OnCreateModelResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=language_translator;service_version=v3;operation_id=CreateModel";
 
             byte[] forcedGlossaryData = null;
             byte[] parallelCorpusData = null;
             byte[] monolingualCorpusData = null;
 
-            if(!string.IsNullOrEmpty(forcedGlossaryFilePath))
+            if (!string.IsNullOrEmpty(forcedGlossaryFilePath))
             {
                 try
                 {
                     forcedGlossaryData = File.ReadAllBytes(forcedGlossaryFilePath);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Log.Debug("LanguageTranslator.CreateModel()", "There was an error loading the forced glossary file: {0}", e.Message);
                 }
@@ -587,7 +658,7 @@ namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
 
             return connector.Send(req);
         }
-        
+
         private class CreateModelRequest : RESTConnector.Request
         {
             /// <summary>
@@ -669,17 +740,19 @@ namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
             req.Parameters["version"] = VersionDate;
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbDELETE;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
-            req.Function = WWW.EscapeURL(model_id);
+            req.Function = UnityWebRequest.EscapeURL(model_id);
             req.OnResponse = DeleteModelResponse;
-            req.Delete = true;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=language_translator;service_version=v3;operation_id=DeleteModel";
             return connector.Send(req);
         }
 
@@ -763,15 +836,18 @@ namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
             req.Parameters["version"] = VersionDate;
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbGET;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
             }
             req.OnResponse = GetLanguagesResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=language_translator;service_version=v3;operation_id=GetLanguages";
 
             return connector.Send(req);
         }
@@ -859,10 +935,12 @@ namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
             req.Parameters["version"] = VersionDate;
             req.SuccessCallback = successCallback;
             req.FailCallback = failCallback;
+            req.HttpMethod = UnityWebRequest.kHttpVerbPOST;
+            req.DisableSslVerification = DisableSslVerification;
             req.CustomData = customData == null ? new Dictionary<string, object>() : customData;
-            if(req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
+            if (req.CustomData.ContainsKey(Constants.String.CUSTOM_REQUEST_HEADERS))
             {
-                foreach(KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
+                foreach (KeyValuePair<string, string> kvp in req.CustomData[Constants.String.CUSTOM_REQUEST_HEADERS] as Dictionary<string, string>)
                 {
                     req.Headers.Add(kvp.Key, kvp.Value);
                 }
@@ -871,6 +949,7 @@ namespace IBM.Watson.DeveloperCloud.Services.LanguageTranslator.v3
             req.Headers["Content-Type"] = "text/plain";
             req.Headers["Accept"] = "application/json";
             req.OnResponse = OnIdentifyResponse;
+            req.Headers["X-IBMCloud-SDK-Analytics"] = "service_name=language_translator;service_version=v3;operation_id=Identify";
 
             return connector.Send(req);
         }

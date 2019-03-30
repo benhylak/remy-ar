@@ -79,7 +79,7 @@ public class NotificationTestManager : MonoBehaviour
 
     private float triggerDownStartTime = -1;
     private float startExperimentTriggerDownThreshold = 0.5f;
-z
+
     private Firebase _firebase;
 
     private Experiment _experiment;

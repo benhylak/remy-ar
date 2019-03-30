@@ -25,14 +25,13 @@ using FullSerializer;
 using System.IO;
 using System.Collections.Generic;
 using IBM.Watson.DeveloperCloud.Connection;
+using System;
 
 namespace IBM.Watson.DeveloperCloud.UnitTests
 {
 
     public class TestPersonalityInsights : UnitTest
     {
-        private string _username = null;
-        private string _password = null;
         private fsSerializer _serializer = new fsSerializer();
 
         private PersonalityInsights _personalityInsights;
@@ -42,12 +41,22 @@ namespace IBM.Watson.DeveloperCloud.UnitTests
         private string _dataPath;
         //private string _token = "<authentication-token>";
 
+        private bool _autoGetProfileTested = false;
         private bool _getProfileTextTested = false;
         private bool _getProfileJsonTested = false;
 
         public override IEnumerator RunTest()
         {
             LogSystem.InstallDefaultReactors();
+
+            //  Test PersonalityInsights using loaded credentials
+            PersonalityInsights autoPersonalityInsights = new PersonalityInsights();
+            autoPersonalityInsights.VersionDate = _personalityInsightsVersionDate;
+            while (!autoPersonalityInsights.Credentials.HasIamTokenData())
+                yield return null;
+            autoPersonalityInsights.GetProfile(OnAutoGetProfile, OnFail, _testString, ContentType.TextHtml, ContentLanguage.English);
+            while (!_autoGetProfileTested)
+                yield return null;
 
             VcapCredentials vcapCredentials = new VcapCredentials();
             fsData data = null;
@@ -76,18 +85,18 @@ namespace IBM.Watson.DeveloperCloud.UnitTests
 
             //  Set credentials from imported credntials
             Credential credential = vcapCredentials.GetCredentialByname("personality-insights-sdk")[0].Credentials;
-            _username = credential.Username.ToString();
-            _password = credential.Password.ToString();
-            _url = credential.Url.ToString();
+            //  Create credential and instantiate service
+            TokenOptions tokenOptions = new TokenOptions()
+            {
+                IamApiKey = credential.IamApikey,
+            };
 
             //  Create credential and instantiate service
-            Credentials credentials = new Credentials(_username, _password, _url);
+            Credentials credentials = new Credentials(tokenOptions, credential.Url);
 
-            //  Or authenticate using token
-            //Credentials credentials = new Credentials(_url)
-            //{
-            //    AuthenticationToken = _token
-            //};
+            //  Wait for tokendata
+            while (!credentials.HasIamTokenData())
+                yield return null;
 
             _personalityInsights = new PersonalityInsights(credentials);
             _personalityInsights.VersionDate = _personalityInsightsVersionDate;
@@ -107,6 +116,13 @@ namespace IBM.Watson.DeveloperCloud.UnitTests
             Log.Debug("ExamplePersonalityInsights.RunTest()", "Personality insights examples complete.");
 
             yield break;
+        }
+
+        private void OnAutoGetProfile(Profile response, Dictionary<string, object> customData)
+        {
+            Log.Debug("ExamplePersonaltyInsights.OnAutoGetProfile()", "Personality Insights - GetProfileText Response: {0}", customData["json"].ToString());
+            Test(response.personality != null);
+            _autoGetProfileTested = true;
         }
 
         private void OnGetProfileText(Profile profile, Dictionary<string, object> customData = null)

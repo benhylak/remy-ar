@@ -223,6 +223,8 @@ namespace IBM.Watson.DeveloperCloud.Logging
 #if UNITY_EDITOR || NETFX_CORE
         public static void Debug(string subSystem, string messageFmt, params object[] args)
         {
+             UnityEngine.Debug.Log(String.Format(messageFmt, args));
+            
 			if(!LogSystem.InstalledDefaultReactors)
                 System.Console.WriteLine("Call LogSystem.InstallDefaultReactors() prior to logging to see the output of Log.Debug(), Log.Status(), Log.Warning(), Log.Error() and Log.Critical().");            
             LogSystem.Instance.ProcessLog(new LogRecord(LogLevel.DEBUG, subSystem, messageFmt, args));
@@ -244,6 +246,8 @@ namespace IBM.Watson.DeveloperCloud.Logging
         /// <param name="args">Formatting arguments.</param>
         public static void Status(string subSystem, string messageFmt, params object[] args)
         {
+            UnityEngine.Debug.Log(String.Format(messageFmt, args));
+            
             if(!LogSystem.InstalledDefaultReactors)
                 System.Console.WriteLine("Call LogSystem.InstallDefaultReactors() prior to logging to see the output of Log.Debug(), Log.Status(), Log.Warning(), Log.Error() and Log.Critical().");
             LogSystem.Instance.ProcessLog(new LogRecord(LogLevel.STATUS, subSystem, messageFmt, args));
@@ -259,6 +263,8 @@ namespace IBM.Watson.DeveloperCloud.Logging
         /// <param name="args">Formatting arguments.</param>
         public static void Warning(string subSystem, string messageFmt, params object[] args)
         {
+            UnityEngine.Debug.Log(String.Format(messageFmt, args));
+            
             if(!LogSystem.InstalledDefaultReactors)
                 System.Console.WriteLine("Call LogSystem.InstallDefaultReactors() prior to logging to see the output of Log.Debug(), Log.Status(), Log.Warning(), Log.Error() and Log.Critical().");
             LogSystem.Instance.ProcessLog(new LogRecord(LogLevel.WARNING, subSystem, messageFmt, args));
@@ -274,6 +280,7 @@ namespace IBM.Watson.DeveloperCloud.Logging
         /// <param name="args">Formatting arguments.</param>
         public static void Error(string subSystem, string messageFmt, params object[] args)
         {
+            UnityEngine.Debug.Log(String.Format(messageFmt, args));
             if(!LogSystem.InstalledDefaultReactors)
                 System.Console.WriteLine("Call LogSystem.InstallDefaultReactors() prior to logging to see the output of Log.Debug(), Log.Status(), Log.Warning(), Log.Error() and Log.Critical().");
             LogSystem.Instance.ProcessLog(new LogRecord(LogLevel.ERROR, subSystem, messageFmt, args));
@@ -289,6 +296,8 @@ namespace IBM.Watson.DeveloperCloud.Logging
         /// <param name="args">Formatting arguments.</param>
         public static void Critical(string subSystem, string messageFmt, params object[] args)
         {
+            UnityEngine.Debug.Log(String.Format(messageFmt, args));
+            
             if(!LogSystem.InstalledDefaultReactors)
                 System.Console.WriteLine("Call LogSystem.InstallDefaultReactors() prior to logging to see the output of Log.Debug(), Log.Status(), Log.Warning(), Log.Error() and Log.Critical().");
             LogSystem.Instance.ProcessLog(new LogRecord(LogLevel.CRITICAL, subSystem, messageFmt, args));

@@ -14,6 +14,7 @@
 * limitations under the License.
 *
 */
+#pragma warning disable 0649
 
 using UnityEngine;
 using System.Collections;
@@ -36,20 +37,16 @@ public class ExampleStreamingSplitSamples : MonoBehaviour
     private string _serviceUrl;
     [Tooltip("Text field to display the results of streaming.")]
     public Text ResultsField;
-    [Header("CF Authentication")]
-    [Tooltip("The authentication username.")]
-    [SerializeField]
-    private string _username;
-    [Tooltip("The authentication password.")]
-    [SerializeField]
-    private string _password;
     [Header("IAM Authentication")]
     [Tooltip("The IAM apikey.")]
     [SerializeField]
     private string _iamApikey;
-    [Tooltip("The IAM url used to authenticate the apikey (optional). This defaults to \"https://iam.bluemix.net/identity/token\".")]
+
+    [Header("Parameters")]
+    // https://www.ibm.com/watson/developercloud/speech-to-text/api/v1/curl.html?curl#get-model
+    [Tooltip("The Model to use. This defaults to en-US_BroadbandModel")]
     [SerializeField]
-    private string _iamUrl;
+    private string _recognizeModel;
     #endregion
 
     private int _recordingRoutine = 0;
@@ -69,32 +66,25 @@ public class ExampleStreamingSplitSamples : MonoBehaviour
 
     private IEnumerator CreateService()
     {
+        if (string.IsNullOrEmpty(_iamApikey))
+        {
+            throw new WatsonException("Plesae provide IAM ApiKey for the service.");
+        }
+
         //  Create credential and instantiate service
         Credentials credentials = null;
-        if (!string.IsNullOrEmpty(_username) && !string.IsNullOrEmpty(_password))
-        {
-            //  Authenticate using username and password
-            credentials = new Credentials(_username, _password, _serviceUrl);
-        }
-        else if (!string.IsNullOrEmpty(_iamApikey))
-        {
-            //  Authenticate using iamApikey
-            TokenOptions tokenOptions = new TokenOptions()
-            {
-                IamApiKey = _iamApikey,
-                IamUrl = _iamUrl
-            };
 
-            credentials = new Credentials(tokenOptions, _serviceUrl);
-
-            //  Wait for tokendata
-            while (!credentials.HasIamTokenData())
-                yield return null;
-        }
-        else
+        //  Authenticate using iamApikey
+        TokenOptions tokenOptions = new TokenOptions()
         {
-            throw new WatsonException("Please provide either username and password or IAM apikey to authenticate the service.");
-        }
+            IamApiKey = _iamApikey
+        };
+
+        credentials = new Credentials(tokenOptions, _serviceUrl);
+
+        //  Wait for tokendata
+        while (!credentials.HasIamTokenData())
+            yield return null;
 
         _service = new SpeechToText(credentials);
         _service.StreamMultipart = true;
@@ -113,11 +103,12 @@ public class ExampleStreamingSplitSamples : MonoBehaviour
         {
             if (value && !_service.IsListening)
             {
+                _service.RecognizeModel = (string.IsNullOrEmpty(_recognizeModel) ? "en-US_BroadbandModel" : _recognizeModel);
                 _service.DetectSilence = true;
                 _service.EnableWordConfidence = true;
                 _service.EnableTimestamps = true;
                 _service.SilenceThreshold = 0.01f;
-                _service.MaxAlternatives = 0;
+                _service.MaxAlternatives = 1;
                 _service.EnableInterimResults = true;
                 _service.OnError = OnError;
                 _service.InactivityTimeout = -1;
