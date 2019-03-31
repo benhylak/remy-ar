@@ -23,7 +23,18 @@ public class RecipeManager : Singleton<RecipeManager>
         _recipeInProgress._burner = _burner;
         return _recipeInProgress;
     }
-    
+
+    public bool IsRecipeInProgress => _recipeInProgress != null;
+
+    public void EndRecipe()
+    {
+        Debug.Log("========RECIPE ENDED========");
+        
+        _instructionUi.Hide();
+        _instructionUi.transform.parent = this.transform;
+        
+        _recipeInProgress.FreeResources();
+    }
     public bool IsWaitingForBurner()
     {
         //if we are waiting for an assigned burner before moving to the next step, then we are waiting for a burner.

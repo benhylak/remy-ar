@@ -26,7 +26,7 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 	public Transform instructionsAnchorBillboard;
 	
 	public bool isListening;
-	private bool _inputIsEnabled = true;
+	public bool inputIsEnabled = true;
 
 	private readonly float SWITCH_TO_BILLBOARD_DIST = 0.65f;
 	private readonly float SWITCH_TO_FLAT_DIST = 0.5f;
@@ -69,7 +69,7 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 		var ramenRecipe = new RamenRecipe(this);
 		RecipeManager.Instance.StartRecipe(ramenRecipe);
 
-		_inputIsEnabled = false;
+		inputIsEnabled = false;
 	}
 
 	void StopListening()
@@ -89,7 +89,7 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 	// Update is called once per frame
 	void Update () {
 
-		if (_inputIsEnabled && Vector3.Distance(transform.position, Camera.main.transform.position) < 0.6f)
+		if (inputIsEnabled && Vector3.Distance(transform.position, Camera.main.transform.position) < 0.6f)
 		{
 			if (!isListening)
 			{

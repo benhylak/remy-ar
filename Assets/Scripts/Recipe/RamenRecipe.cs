@@ -9,9 +9,12 @@ using UnityEngine.UI;
 public class RamenRecipe : Recipe
 {
     private readonly string NOODLES_ADDED_STATUS = "NOODLES_ADDED";
+    private RamenUI _ramen;
     
     public RamenRecipe(RamenUI ramen) : base("Ramen")
     {
+        _ramen = ramen;
+        
         SetRecipeSteps(
             new RecipeStep(
                 getAnchor: ()=>ramen,
@@ -59,5 +62,11 @@ public class RamenRecipe : Recipe
                 }          
             )                   
         );
+    }
+
+    public override void FreeResources()
+    {
+        _ramen.inputIsEnabled = true;
+        base.FreeResources();
     }
 }

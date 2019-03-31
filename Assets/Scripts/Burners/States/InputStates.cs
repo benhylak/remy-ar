@@ -96,11 +96,15 @@ namespace Burners.States
                 if (BigKahuna.Instance.speechRecognizer.finalized)
                 {
                     MatchCollection matches;
+
+                    var recognizedText = BigKahuna.Instance.speechRecognizer.recognizedText;
+                                     
+                    BigKahuna.Instance.speechRecognizer.recognizedText = "";
+                    BigKahuna.Instance.speechRecognizer.finalized = false;
+                    BigKahuna.Instance.speechRecognizer.Active = false;
     
-                    if (boilRegex.IsMatch(BigKahuna.Instance.speechRecognizer.recognizedText))
-                    {       
-                        BigKahuna.Instance.speechRecognizer.Active = false;
-                        
+                    if (boilRegex.IsMatch(recognizedText))
+                    {                           
                         return new BurnerStateMachine
                             .BurnerTransitionState(
                                 _burner,
@@ -109,7 +113,7 @@ namespace Burners.States
                                         () => new BoilStates.BoilDoneTimerState(_burner)),
                                 0.3f);                          
                     }
-                    else if ((matches = timeRegex.Matches(BigKahuna.Instance.speechRecognizer.recognizedText)).Count > 0)
+                    else if ((matches = timeRegex.Matches(recognizedText)).Count > 0)
                     {               
                         TimeSpan ts = new TimeSpan();
                         
@@ -139,9 +143,6 @@ namespace Burners.States
                                 () => new TimerStates.WaitingForTimerState(_burner, ts),
                                 0.2f);                                        
                     }
-                    
-                    BigKahuna.Instance.speechRecognizer.recognizedText = "";
-                    BigKahuna.Instance.speechRecognizer.finalized = false;
                 }
     
                 return null;

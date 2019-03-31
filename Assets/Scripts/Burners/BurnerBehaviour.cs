@@ -48,6 +48,11 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 	{
 		return _model.IsBoiling.Value;
 	}
+
+	public void SetStateToDefault()
+	{
+		_state = new BurnerStateMachine.AvailableState(this);
+	}
 	
 	public void Start()
 	{

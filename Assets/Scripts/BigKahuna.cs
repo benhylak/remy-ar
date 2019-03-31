@@ -55,6 +55,10 @@ public class BigKahuna: Singleton<BigKahuna>
             {
                 ToggleSetup();
             }
+            else if (button == MLInputControllerButton.HomeTap)
+            {
+                RecipeManager.Instance.EndRecipe();
+            }
 
             ;
         }; //toggle setup mode.

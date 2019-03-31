@@ -68,6 +68,14 @@ public class Recipe
         return _burner;
     }
 
+    public virtual void FreeResources()
+    {
+        if (GetBurner() != null)
+        {
+            GetBurner().SetStateToDefault();
+        }
+    }
+    
     public bool BurnerIsBoiling()
     {
         return GetBurner().IsBoiling();
@@ -100,7 +108,6 @@ public class Recipe
         _currentStepIndex.Value = 0;
     }
    
-    
     public bool Update()
     {
         if (!RecipeComplete.Value)

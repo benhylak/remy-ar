@@ -30,6 +30,11 @@ public class InstructionUI : MonoBehaviour
 
 	private void Update()
 	{
+		if (Input.anyKeyDown)
+		{
+			Hide(0.3f);	
+		}
+		
 		if (_currentAnchor != null)
 		{
 			Transform bestAnchorPoint = _currentAnchor.GetBestAnchorPoint();
@@ -115,9 +120,9 @@ public class InstructionUI : MonoBehaviour
 		TweenFade(1, duration, delay);
 	}
 
-	public void Hide(float duration = 0.0f, float delay = 0.0f)
+	public void Hide(float duration = 0.3f, float delay = 0.0f)
 	{
-		if (_hidden) return; //already hdiden
+		//if (_hidden) return; //already hdiden
 		
 		Debug.Log("Hide Instructions");
 		

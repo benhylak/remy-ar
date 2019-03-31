@@ -80,7 +80,7 @@ namespace Burners.States
                 if (_burnerBehaviour._gazeReceiver.isLookedAt &&
                     _burnerBehaviour._gazeReceiver.currentGazeDuration > 0.35f)
                 {
-                    _burnerBehaviour.ring.StopPulsing();
+                   // _burnerBehaviour.ring.StopPulsing();
 //                    _burnerBehaviour.ring.StopPulsing().onKill(() =>
                    // {
                         _burnerBehaviour.ring.Hide().OnComplete(() =>
