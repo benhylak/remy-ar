@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------
 // %COPYRIGHT_BEGIN%
 //
-// Copyright (c) 2018 Magic Leap, Inc. All Rights Reserved.
+// Copyright (c) 2019 Magic Leap, Inc. All Rights Reserved.
 // Use of this file is governed by the Creator Agreement, located
 // here: https://id.magicleap.com/creator-terms
 //
@@ -29,7 +29,7 @@ Shader "Magic Leap/Vignette"
         Pass
         {
             CGPROGRAM
-            #pragma vertex vert_img_custom
+            #pragma vertex vert
             #pragma fragment frag
             #pragma target 3.0
             #include "UnityCG.cginc"
@@ -38,9 +38,10 @@ Shader "Magic Leap/Vignette"
             {
                 float4 vertex : POSITION;
                 half2 texcoord : TEXCOORD0;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
-            struct v2f_img_custom
+            struct v2f
             {
                 float4 pos : SV_POSITION;
                 half2 uv : TEXCOORD0;
@@ -49,17 +50,23 @@ Shader "Magic Leap/Vignette"
                 half4 uv2 : TEXCOORD1;
                 half4 stereoUV2 : TEXCOORD3;
         #endif
+                UNITY_VERTEX_OUTPUT_STEREO
             };
 
-            uniform sampler2D _MainTex;
+            UNITY_DECLARE_SCREENSPACE_TEXTURE(_MainTex);
             uniform half4 _MainTex_TexelSize;
             uniform half4 _MainTex_ST;
             uniform int _VignetteMode;
             uniform float _VignettePower;
 
-            v2f_img_custom vert_img_custom (appdata_img_custom v)
+            v2f vert (appdata_img_custom v)
             {
-                v2f_img_custom o;
+                v2f o;
+
+                UNITY_SETUP_INSTANCE_ID(v);
+                UNITY_INITIALIZE_OUTPUT(v2f, o);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+
                 o.pos = UnityObjectToClipPos(v.vertex);
                 o.uv = float4(v.texcoord.xy, 1, 1);
 
@@ -76,8 +83,10 @@ Shader "Magic Leap/Vignette"
                 return o;
             }
 
-            half4 frag (v2f_img_custom i) : SV_Target
+            half4 frag (v2f i) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
+
                 #ifdef UNITY_UV_STARTS_AT_TOP
                     half2 uv = i.uv2;
                     half2 stereoUV = i.stereoUV2;
@@ -88,7 +97,7 @@ Shader "Magic Leap/Vignette"
 
                 float4 color = float4(1, 1, 1, 0);
                 float2 uvTexture = i.uv.xy * _MainTex_ST.xy + _MainTex_ST.zw;
-                float4 mainTexure = tex2D(_MainTex, uvTexture);
+                float4 mainTexure = UNITY_SAMPLE_SCREENSPACE_TEXTURE(_MainTex, uvTexture);
 
                 float uvX = (uvTexture).x;
                 float uvY = (uvTexture).y;

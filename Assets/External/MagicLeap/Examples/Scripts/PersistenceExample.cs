@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------
 // %COPYRIGHT_BEGIN%
 //
-// Copyright (c) 2018 Magic Leap, Inc. All Rights Reserved.
+// Copyright (c) 2019 Magic Leap, Inc. All Rights Reserved.
 // Use of this file is governed by the Creator Agreement, located
 // here: https://id.magicleap.com/creator-terms
 //
@@ -28,32 +28,29 @@ namespace MagicLeap
     {
         #region Private Variables
         [SerializeField, Tooltip("Content to create")]
-        GameObject _content;
+        GameObject _content = null;
         List<MLPersistentBehavior> _pointBehaviors = new List<MLPersistentBehavior>();
 
         [SerializeField, Tooltip("Status Text")]
-        Text _statusText;
+        Text _statusText = null;
 
         [SerializeField, Tooltip("Destroyed content effect")]
-        GameObject _destroyedContentEffect;
+        GameObject _destroyedContentEffect = null;
 
         [SerializeField, Tooltip("Text to count restored objects")]
-        Text _countRestoredText;
+        Text _countRestoredText = null;
         string _countRestoredTextFormat;
         int _countRestoredGood = 0;
         int _countRestoredBad = 0;
 
         [SerializeField, Tooltip("Text to count created objects")]
-        Text _countCreatedText;
+        Text _countCreatedText = null;
         string _countCreatedTextFormat;
         int _countCreatedGood = 0;
         int _countCreatedBad = 0;
 
-        [SerializeField, Tooltip("Visualizers to enable when the privilege is granted")]
-        GameObject[] _visualizers;
-
         [SerializeField, Tooltip("Controller")]
-        ControllerConnectionHandler _controller;
+        ControllerConnectionHandler _controller = null;
 
         [SerializeField, Tooltip("Distance in front of Controller to create content")]
         float _distance = 0.2f;
@@ -61,7 +58,7 @@ namespace MagicLeap
         PrivilegeRequester _privilegeRequester;
 
         [SerializeField, Tooltip("PCF Visualizer when debugging")]
-        PCFVisualizer _pcfVisualizer;
+        PCFVisualizer _pcfVisualizer = null;
         #endregion // Private Variables
 
         #region Unity Methods

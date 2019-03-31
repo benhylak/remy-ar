@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------
 // %COPYRIGHT_BEGIN%
 //
-// Copyright (c) 2018 Magic Leap, Inc. All Rights Reserved.
+// Copyright (c) 2019 Magic Leap, Inc. All Rights Reserved.
 // Use of this file is governed by the Creator Agreement, located
 // here: https://id.magicleap.com/creator-terms
 //
@@ -27,33 +27,33 @@ namespace MagicLeap
     {
         #region Private Variables
         [SerializeField, Tooltip("The highlight for the left button.")]
-        private GameObject _leftButtonHighlight;
+        private GameObject _leftButtonHighlight = null;
 
         [SerializeField, Tooltip("The highlight for the right button.")]
-        private GameObject _rightButtonHighlight;
+        private GameObject _rightButtonHighlight = null;
 
         [SerializeField, Tooltip("The indicator for the home tap.")]
-        private GameObject _homeTapIndicator;
+        private GameObject _homeTapIndicator = null;
 
         [SerializeField, Tooltip("Number of seconds to show home tap.")]
         private float _homeActiveDuration = 0.5f;
         private float _timeToDeactivateHome = 0;
 
         [SerializeField, Tooltip("The indicator for the first touch.")]
-        private GameObject _touch1Indicator;
+        private GameObject _touch1Indicator = null;
 
         [SerializeField, Tooltip("The indicator for the second touch.")]
-        private GameObject _touch2Indicator;
+        private GameObject _touch2Indicator = null;
 
         [SerializeField, Tooltip("The keyboard input text.")]
-        private Text _keyboardText;
+        private Text _keyboardText = null;
 
         [SerializeField, Tooltip("Renderer of the Mesh")]
-        private MeshRenderer _modelRenderer;
+        private MeshRenderer _modelRenderer = null;
 
-        private Color _origColor;
+        private Color _origColor = Color.clear;
 
-        private ControllerConnectionHandler _controllerConnectionHandler;
+        private ControllerConnectionHandler _controllerConnectionHandler = null;
         #endregion
 
         #region Unity Methods

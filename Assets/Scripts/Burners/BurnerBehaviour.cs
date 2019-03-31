@@ -10,6 +10,7 @@ using Burners.States;
 using IBM.Watson.DeveloperCloud.Services.TextToSpeech.v1;
 using IBM.Watson.DeveloperCloud.Services.VisualRecognition.v3;
 using UnityEngine.Serialization;
+using UnityEngine.XR.MagicLeap;
 
 public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 {	
@@ -39,26 +40,53 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 	
 	private InstructionUI _instructionUi;
 
-	private readonly float SWITCH_TO_EDGE_DIST = 1f;
-	private readonly float SWITCH_TO_CENTER_DIST = 1.4f;
+	private readonly float SWITCH_TO_EDGE_DIST = 0.3f;
+	private readonly float SWITCH_TO_CENTER_DIST = 0.5f;
 
-	public float _desiredTemperature;
-	
+	public float? targetTemperature = null;
+
 	public bool IsBoiling()
 	{
 		return _model.IsBoiling.Value;
 	}
 
+	public void ClearTargetTemp()
+	{
+		targetTemperature = null;
+	}
+
+	public void RaiseBurnerNotification(string text) //urgency level
+	{
+		OnBurnerNotification(new NotificationManager.Notification(text, this));
+	}
+
+	public bool HasReachedTargetTemp()
+	{
+		if (targetTemperature.HasValue)
+		{
+			return _model.Temperature.Value > targetTemperature.Value;
+		}
+		else
+		{
+			throw new Exception("HasReachedTargetTemp called, but burner is not targeting a temp.");
+		}
+	}
+
 	public void SetStateToDefault()
 	{
-		_state = new BurnerStateMachine.AvailableState(this);
+		if (_Timer.isSet)
+		{
+			_Timer.Reset();
+			_Timer.SetTransparency(0); //TODO: fade this!
+		}
+		_state = new BurnerStates.AvailableState(this);
 	}
 	
 	public void Start()
 	{
 		FloatingLabel.DOFade(0, 0);
 		
-		_state = new BurnerStateMachine.AvailableState(this);
+		_state = new BurnerStates.AvailableState(this);
 		_gazeReceiver = GetComponent<GazeReceiver>();
 	}
 
@@ -191,6 +219,9 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 		{
 			FloatingLabel.gameObject.SetActive(false);
 		});
+		
+		
+		Debug.Log("Hide proactive.");
 
 		return tween;
 	}
@@ -223,13 +254,29 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 
 		Transform bestAnchorPoint = _lastBestAnchorPoint;
 
+
+		float userDistanceToBurner = float.MaxValue;
+		
+		if (MLHands.IsStarted)
+		{
+			var distToLeftHand = Vector3.Distance(transform.position, MLHands.Left.Center);
+			var distToRightHand = Vector3.Distance(transform.position, MLHands.Right.Center);
+
+			if (MLHands.Right.IsVisible) userDistanceToBurner = distToRightHand;
+			if (MLHands.Left.IsVisible) userDistanceToBurner = Mathf.Min(userDistanceToBurner, distToLeftHand);
+		}
+		else
+		{
+			//fallback to head if we can't get hands
+			userDistanceToBurner = Vector3.Distance(transform.position, Camera.main.transform.position);
+		}
 		//check if there's a better point besides default
-		if (Vector3.Distance(transform.position, Camera.main.transform.position) < SWITCH_TO_EDGE_DIST)
+		if (userDistanceToBurner < SWITCH_TO_EDGE_DIST)
 		{				
 			_instructionUi.LookAtCamera = true;
 			bestAnchorPoint = instructionsEdgeAnchorPoint;
 		}
-		else if (Vector3.Distance(transform.position, Camera.main.transform.position) > SWITCH_TO_CENTER_DIST)
+		else if (userDistanceToBurner > SWITCH_TO_CENTER_DIST)
 		{
 			_instructionUi.LookAtCamera = true;
 			bestAnchorPoint = instructionsMiddleAnchorPoint;
@@ -255,7 +302,7 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 		Vector3 lookVecFlattened = ring.transform.position - Camera.main.transform.position; 
 		lookVecFlattened.y = ring.transform.position.y;
 
-		Vector3 furthestRingPoint = ring.transform.position + lookVecFlattened.normalized * (ring.GetRingRadius() + 0.01f);
+		Vector3 furthestRingPoint = ring.transform.position + lookVecFlattened.normalized * (ring.GetRingRadius() + 0.02f);
 		furthestRingPoint.y = instructionsEdgeAnchorPoint.transform.position.y;
 
 		return furthestRingPoint;

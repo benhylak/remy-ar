@@ -98,7 +98,7 @@ namespace SpeechRecognitionService
             Debug.Log($"Renewed authentication token: {this.token}");
         }
 
-        private void OnTokenExpiredCallback(object stateInfo) 
+        private void OnTokenExpiredCallback(object stateInfo)
         {
             try
             {
@@ -128,12 +128,12 @@ namespace SpeechRecognitionService
             
             using (UnityWebRequest webRequest = UnityWebRequest.Post(uriBuilder.Uri.AbsoluteUri, ""))
             {
-               webRequest.SetRequestHeader("Ocp-Apim-Subscription-Key", subscriptionKey);
-               Debug.Log("Token Uri: " + uriBuilder.Uri.AbsoluteUri);
+                webRequest.SetRequestHeader("Ocp-Apim-Subscription-Key", subscriptionKey);
+                Debug.Log("Token Uri: " + uriBuilder.Uri.AbsoluteUri);
 
-               await webRequest.SendWebRequest();
+                await webRequest.SendWebRequest();
 
-               return webRequest.downloadHandler.text;
+                return webRequest.downloadHandler.text;
             }
         }
     }

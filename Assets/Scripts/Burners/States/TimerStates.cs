@@ -6,7 +6,7 @@ namespace Burners.States
 {
     public static class TimerStates
     {        
-        public class WaitingForTimerState : BurnerStateMachine.BurnerState
+        public class WaitingForTimerState : BurnerStates.BurnerState
         {
             public WaitingForTimerState(BurnerBehaviour burner, TimeSpan ts) : base(burner)
             {		
@@ -32,11 +32,11 @@ namespace Burners.States
                     return new TimerDoneState(_burnerBehaviour);
                 }
 
-                return null;
+                return this;
             }
         }
     
-        public class TimerDoneState : BurnerStateMachine.BurnerState
+        public class TimerDoneState : BurnerStates.BurnerState
         {
             public TimerDoneState(BurnerBehaviour burner) : base(burner)
             {
@@ -47,7 +47,7 @@ namespace Burners.States
 
             public override State Update()
             {
-                return null;
+                return this;
             
                 //if is dismissed, transition out, return waiting state.
             }

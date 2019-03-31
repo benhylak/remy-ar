@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------
 // %COPYRIGHT_BEGIN%
 //
-// Copyright (c) 2018 Magic Leap, Inc. All Rights Reserved.
+// Copyright (c) 2019 Magic Leap, Inc. All Rights Reserved.
 // Use of this file is governed by the Creator Agreement, located
 // here: https://id.magicleap.com/creator-terms
 //
@@ -13,6 +13,7 @@
 using UnityEngine;
 using UnityEngine.XR.MagicLeap;
 
+
 /// <summary>
 /// This class applies a uniform scale to the parent of the attached camera.
 /// </summary>
@@ -21,11 +22,11 @@ public class WorldScale : MonoBehaviour
 {
     #region Private Variables
     [SerializeField, Tooltip("The scale that should be applied to the camera.")]
-    private float _scale;
+    private float _scale = 0.0f;
 
-    private Camera _camera;
-    private float _originalNearClipDistance;
-    private float _originalFarClipDistance;
+    private Camera _camera = null;
+    private float _originalNearClipDistance = 0.0f;
+    private float _originalFarClipDistance = 0.0f;
     #endregion
 
     #region Public Properties

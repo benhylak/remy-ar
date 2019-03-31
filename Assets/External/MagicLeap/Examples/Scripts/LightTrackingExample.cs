@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------
 // %COPYRIGHT_BEGIN%
 //
-// Copyright (c) 2018 Magic Leap, Inc. All Rights Reserved.
+// Copyright (c) 2019 Magic Leap, Inc. All Rights Reserved.
 // Use of this file is governed by the Creator Agreement, located
 // here: https://id.magicleap.com/creator-terms
 //
@@ -29,25 +29,25 @@ namespace MagicLeap
     {
         #region Private Variables
         [SerializeField, Tooltip("The primary light that is used in the scene.")]
-        private Light _light;
+        private Light _light = null;
 
         [SerializeField, Tooltip("The image (filled) that is used to display the light intensity.")]
-        private Image _lightIntensity;
+        private Image _lightIntensity = null;
 
         [SerializeField, Tooltip("The model animator that will update based on the light intensity.")]
-        private Animator _animator;
+        private Animator _animator = null;
 
         [SerializeField, Tooltip("The cursor used to visualize the location of the plant.")]
-        private Transform _raycastCursor;
+        private Transform _raycastCursor = null;
 
         [SerializeField, Tooltip("The transform of the plant model used in the scene.")]
-        private Transform _plantModel;
+        private Transform _plantModel = null;
 
-        private Color _color;
+        private Color _color = Color.clear;
         private float _normalizedLuminance;
         private float _maxLuminance = 0;
 
-        private PrivilegeRequester _privilegeRequester;
+        private PrivilegeRequester _privilegeRequester = null;
         #endregion
 
         #region Unity Methods

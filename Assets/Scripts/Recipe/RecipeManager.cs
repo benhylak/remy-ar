@@ -24,12 +24,8 @@ public class RecipeManager : Singleton<RecipeManager>
         return _recipeInProgress;
     }
 
-    public bool IsRecipeInProgress => _recipeInProgress != null;
-
     public void EndRecipe()
     {
-        Debug.Log("========RECIPE ENDED========");
-        
         _instructionUi.Hide();
         _instructionUi.transform.parent = this.transform;
         

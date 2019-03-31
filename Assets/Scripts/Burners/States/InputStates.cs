@@ -23,7 +23,7 @@ namespace Burners.States
                 this._burner = burner;
                 //this._burner.ShowProactiveTimer();
     
-                if (lastState is BufferState || lastState is BurnerStateMachine.AvailableState)
+                if (lastState is BufferState || lastState is BurnerStates.AvailableState)
                 {
                     _burner.HiddenToProactive();
                 }
@@ -41,10 +41,12 @@ namespace Burners.States
                 {
                     _burner.HideProactivePrompt();
                     
-                    return new BurnerStateMachine.AvailableState(_burner);
+                    return new BurnerStates.AvailableState(_burner);
                 }
                 else if (RecipeManager.Instance.IsWaitingForBurner())
                 {
+                    _burner.HideProactivePrompt();
+                    
                     var recipe = RecipeManager.Instance.UseBurner(_burner);
            
                     return new RecipeStates.UseForRecipeState(_burner, recipe);
@@ -53,8 +55,8 @@ namespace Burners.States
                 {
                     return new VoiceInputState(_burner);
                 }
-                
-                return null;
+
+                return this;
             }
         }
         
@@ -96,16 +98,12 @@ namespace Burners.States
                 if (BigKahuna.Instance.speechRecognizer.finalized)
                 {
                     MatchCollection matches;
-
-                    var recognizedText = BigKahuna.Instance.speechRecognizer.recognizedText;
-                                     
-                    BigKahuna.Instance.speechRecognizer.recognizedText = "";
-                    BigKahuna.Instance.speechRecognizer.finalized = false;
-                    BigKahuna.Instance.speechRecognizer.Active = false;
     
-                    if (boilRegex.IsMatch(recognizedText))
-                    {                           
-                        return new BurnerStateMachine
+                    if (boilRegex.IsMatch(BigKahuna.Instance.speechRecognizer.recognizedText))
+                    {       
+                        BigKahuna.Instance.speechRecognizer.Active = false;
+                        
+                        return new BurnerStates
                             .BurnerTransitionState(
                                 _burner,
                                 _burner.HideProactivePrompt(),
@@ -113,7 +111,7 @@ namespace Burners.States
                                         () => new BoilStates.BoilDoneTimerState(_burner)),
                                 0.3f);                          
                     }
-                    else if ((matches = timeRegex.Matches(recognizedText)).Count > 0)
+                    else if ((matches = timeRegex.Matches(BigKahuna.Instance.speechRecognizer.recognizedText)).Count > 0)
                     {               
                         TimeSpan ts = new TimeSpan();
                         
@@ -136,16 +134,19 @@ namespace Burners.States
                         
                         BigKahuna.Instance.speechRecognizer.Active = false;
                         
-                        return new BurnerStateMachine
+                        return new BurnerStates
                             .BurnerTransitionState(
                                 _burner,
                                 _burner.HideProactivePrompt(),
                                 () => new TimerStates.WaitingForTimerState(_burner, ts),
                                 0.2f);                                        
                     }
+                    
+                    BigKahuna.Instance.speechRecognizer.recognizedText = "";
+                    BigKahuna.Instance.speechRecognizer.finalized = false;
                 }
-    
-                return null;
+
+                return this;
             }
     
         }    

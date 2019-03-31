@@ -5,6 +5,7 @@ using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
+using UnitySDK.WebSocketSharp;
 
 public class InstructionUI : MonoBehaviour
 {
@@ -30,11 +31,6 @@ public class InstructionUI : MonoBehaviour
 
 	private void Update()
 	{
-		if (Input.anyKeyDown)
-		{
-			Hide(0.3f);	
-		}
-		
 		if (_currentAnchor != null)
 		{
 			Transform bestAnchorPoint = _currentAnchor.GetBestAnchorPoint();
@@ -93,7 +89,7 @@ public class InstructionUI : MonoBehaviour
 
 	private void UpdateStepInstructions(Recipe.RecipeStep step)
 	{
-		if (step.Instruction == "")
+		if (step.Instruction.IsNullOrEmpty())
 		{
 			Hide();
 		}

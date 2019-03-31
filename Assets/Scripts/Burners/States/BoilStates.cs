@@ -6,37 +6,18 @@ namespace Burners.States
 {
     public static class BoilStates
     {
-        public class WaitingForBoilState : BurnerStateMachine.BurnerState
+        public class WaitingForBoilState : BurnerStates.IndeterminateState
         {
-            private Func<BurnerStateMachine.BurnerState> _doneStateBuilder;
-            
-            public WaitingForBoilState(BurnerBehaviour burner, Func<BurnerStateMachine.BurnerState> onDone) : base(burner)
-            {   
-                _burnerBehaviour.ring.gameObject.SetActive(true);
-                _burnerBehaviour.ring.SetMaterialToIndeterminate();
-                _burnerBehaviour.ring.SetAlpha(0);
-                _burnerBehaviour.SetLabel("Waiting to Boil", 0.6f);
-                _burnerBehaviour.ring.Show(0.6f);
-                _doneStateBuilder = onDone;
-            }
-
-            public override State Update()
+            public WaitingForBoilState(BurnerBehaviour burner, Func<BurnerStates.BurnerState> onDone) : base(burner, "Water is Boiling")
             {
-                if (_burnerBehaviour._model.IsBoiling.Value)
-                {
-                    _burnerBehaviour.OnBurnerNotification(
-                        new NotificationManager.Notification("Your Pot is Boiling",
-                            _burnerBehaviour));
-                    
-                    return _doneStateBuilder.Invoke();
-                }
-
-                return null;
+                _burnerBehaviour.SetLabel("Waiting to Boil", 0.6f);
+                _isDone = () => _burnerBehaviour.IsBoiling();
+                _onFinished = onDone;
             }
         }
      
         
-        public class BoilDoneTimerState : BurnerStateMachine.BurnerState
+        public class BoilDoneTimerState : BurnerStates.BurnerState
         {            
             public BoilDoneTimerState(BurnerBehaviour burner) : base(burner)
             {       
@@ -56,10 +37,10 @@ namespace Burners.States
                         //TODO: NOT WORKING
                     });
 
-                    return new BurnerStateMachine.AvailableState(_burnerBehaviour);
+                    return new BurnerStates.AvailableState(_burnerBehaviour);
                 }
 
-                return null;
+                return this;
             }
         }
     }

@@ -2,34 +2,12 @@
 // ---------------------------------------------------------------------
 // %COPYRIGHT_BEGIN%
 //
-// Copyright (c) 2018 Magic Leap, Inc. (COMPANY) All Rights Reserved.
-// Magic Leap, Inc. Confidential and Proprietary
-//
-// NOTICE: All information contained herein is, and remains the property
-// of COMPANY. The intellectual and technical concepts contained herein
-// are proprietary to COMPANY and may be covered by U.S. and Foreign
-// Patents, patents in process, and are protected by trade secstatus or
-// copyright law. Dissemination of this information or reproduction of
-// this material is strictly forbidden unless prior written permission is
-// obtained from COMPANY. Access to the source code contained herein is
-// hereby forbidden to anyone except current COMPANY employees, managers
-// or contractors who have executed Confidentiality and Non-disclosure
-// agreements explicitly covering such access.
-//
-// The copyright notice above does not evidence any actual or intended
-// publication or disclosure of this source code, which includes
-// information that is confidential and/or proprietary, and is a trade
-// secret, of COMPANY. ANY REPRODUCTION, MODIFICATION, DISTRIBUTION,
-// PUBLIC PERFORMANCE, OR PUBLIC DISPLAY OF OR THROUGH USE OF THIS
-// SOURCE CODE WITHOUT THE EXPRESS WRITTEN CONSENT OF COMPANY IS
-// STRICTLY PROHIBITED, AND IN VIOLATION OF APPLICABLE LAWS AND
-// INTERNATIONAL TREATIES. THE RECEIPT OR POSSESSION OF THIS SOURCE
-// CODE AND/OR RELATED INFORMATION DOES NOT CONVEY OR IMPLY ANY RIGHTS
-// TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS, OR TO MANUFACTURE,
-// USE, OR SELL ANYTHING THAT IT MAY DESCRIBE, IN WHOLE OR IN PART.
+// Copyright (c) 2019 Magic Leap, Inc. All Rights Reserved.
+// Use of this file is governed by the Creator Agreement, located
+// here: https://id.magicleap.com/creator-terms
 //
 // %COPYRIGHT_END%
-// --------------------------------------------------------------------
+// ---------------------------------------------------------------------
 // %BANNER_END%
 
 #include <vector>
@@ -392,21 +370,46 @@ MLResult BMSProviderGetMetadata(MLMusicServiceTrackType track, MLMusicServiceMet
         return result;
     }
 
-    if (track != MLMusicServiceTrackType_Current)
+    int indexOffset = 0;
+    if (track == MLMusicServiceTrackType_Current)
     {
-        ML_LOG(Error, "BMSProviderGetMetadata failed. Reason: track was not current.");
-        return MLResult_InvalidParam;
+        // Current Track
+        indexOffset = 0;
     }
-
-    // return the part after '/' to avoid returning full path ie; return a.mp3 rather than /package/resources/a.mp3
-    const size_t lastDelimiter = contextPtr->mediaUri.rfind('/');
-    if (lastDelimiter == std::string::npos)
+    else if (track == MLMusicServiceTrackType_Previous)
     {
-        pMetadata->track_title = contextPtr->mediaUri.c_str();
+        // Previous Track
+        indexOffset = -1;
+    }
+    else if (track == MLMusicServiceTrackType_Next)
+    {
+        // Next Track
+        indexOffset = 1;
     }
     else
     {
-        pMetadata->track_title = &(contextPtr->mediaUri.c_str()[lastDelimiter + 1]);
+        ML_LOG(Error, "BMSProviderGetMetadata failed. Reason: invalid track type.");
+        return MLResult_InvalidParam;
+    }
+
+    // Check that the position + the offset are within the playlist bounds.
+    if (contextPtr->playlist.position + indexOffset >= 0 &&
+        contextPtr->playlist.position + indexOffset < contextPtr->playlist.uris.size())
+    {
+        // return the part after '/' to avoid returning full path ie; return a.mp3 rather than /package/resources/a.mp3
+        const size_t lastDelimiter = contextPtr->playlist.uris[contextPtr->playlist.position + indexOffset].rfind('/');
+        if (lastDelimiter == std::string::npos)
+        {
+            pMetadata->track_title = contextPtr->playlist.uris[contextPtr->playlist.position + indexOffset].c_str();
+        }
+        else
+        {
+            pMetadata->track_title = &(contextPtr->playlist.uris[contextPtr->playlist.position + indexOffset].c_str()[lastDelimiter + 1]);
+        }
+    }
+    else
+    {
+        pMetadata->track_title = u8"\xc2\xabTrack Not Available\xc2\xbb";
     }
 
     pMetadata->album_name = u8"\xc2\xabNot Available In Example\xc2\xbb";

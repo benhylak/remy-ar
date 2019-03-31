@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------
 // %COPYRIGHT_BEGIN%
 //
-// Copyright (c) 2018 Magic Leap, Inc. All Rights Reserved.
+// Copyright (c) 2019 Magic Leap, Inc. All Rights Reserved.
 // Use of this file is governed by the Creator Agreement, located
 // here: https://id.magicleap.com/creator-terms
 //
@@ -38,7 +38,7 @@ namespace UnityEngine.XR.MagicLeap
         #endregion
 
         #region Private Variables
-        [SerializeField, BitMask(typeof(DeviceTypesAllowed)), Tooltip("Bitmask on which devices to allow.")]
+        [SerializeField, MagicLeapBitMask(typeof(DeviceTypesAllowed)), Tooltip("Bitmask on which devices to allow.")]
         private DeviceTypesAllowed _devicesAllowed = (DeviceTypesAllowed)~0;
 
         private List<MLInputController> _allowedConnectedDevices = new List<MLInputController>();
@@ -55,18 +55,29 @@ namespace UnityEngine.XR.MagicLeap
                 return (_allowedConnectedDevices.Count == 0) ? null : _allowedConnectedDevices[0];
             }
         }
+
+        /// <summary>
+        /// Getter for devices allowed bitmask
+        /// </summary>
+        public DeviceTypesAllowed DevicesAllowed
+        {
+            get
+            {
+                return _devicesAllowed;
+            }
+        }
         #endregion
 
         #region Public Events
         /// <summary>
         /// Invoked when a valid controller has connected.
         /// </summary>
-        public Action<byte> OnControllerConnected;
+        public event Action<byte> OnControllerConnected;
 
         /// <summary>
         /// Invoked when an invalid controller has disconnected.
         /// </summary>
-        public Action<byte> OnControllerDisconnected;
+        public event Action<byte> OnControllerDisconnected;
         #endregion
 
         #region Unity Methods
@@ -75,11 +86,22 @@ namespace UnityEngine.XR.MagicLeap
         /// </summary>
         void Awake()
         {
+            if (_devicesAllowed == 0)
+            {
+                Debug.LogErrorFormat("Error: ControllerConnectionHandler._devicesAllowed is invalid, disabling script.");
+                enabled = false;
+                return;
+
+            }
+
+            bool requestCFUID = DevicesAllowed.HasFlag(DeviceTypesAllowed.ControllerLeft) ||
+                DevicesAllowed.HasFlag(DeviceTypesAllowed.ControllerRight);
+
             if (!MLInput.IsStarted)
             {
                 MLInputConfiguration config = new MLInputConfiguration(MLInputConfiguration.DEFAULT_TRIGGER_DOWN_THRESHOLD,
                                                             MLInputConfiguration.DEFAULT_TRIGGER_UP_THRESHOLD,
-                                                            true);
+                                                            requestCFUID);
                 MLResult result = MLInput.Start(config);
                 if (!result.IsOk)
                 {

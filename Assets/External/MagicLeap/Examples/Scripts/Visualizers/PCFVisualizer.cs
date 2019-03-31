@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------
 // %COPYRIGHT_BEGIN%
 //
-// Copyright (c) 2018 Magic Leap, Inc. All Rights Reserved.
+// Copyright (c) 2019 Magic Leap, Inc. All Rights Reserved.
 // Use of this file is governed by the Creator Agreement, located
 // here: https://id.magicleap.com/creator-terms
 //
@@ -25,11 +25,11 @@ namespace MagicLeap
     {
         #region Private Variables
         [SerializeField, Tooltip("Prefab to represent a PCF visually")]
-        private GameObject _prefab;
+        private GameObject _prefab = null;
         private List<GameObject> _pcfObjs = new List<GameObject>();
 
         [SerializeField, Tooltip("UI Text to show PCF Stored Count")]
-        private Text _pcfCountText;
+        private Text _pcfCountText = null;
         private uint _pcfCount = 0;
         const string PCF_COUNT_TEXT_FORMAT = "PCF Count: {0}";
 

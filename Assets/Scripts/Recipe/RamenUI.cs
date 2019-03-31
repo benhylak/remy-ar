@@ -67,8 +67,9 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 		StopListening();
 		
 		var ramenRecipe = new RamenRecipe(this);
+		//RecipeManager.Instance.StartRecipe(ramenRecipe);
+	
 		RecipeManager.Instance.StartRecipe(ramenRecipe);
-
 		inputIsEnabled = false;
 	}
 
@@ -116,7 +117,7 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 			}
 
 			//stand in for working voice recog.
-			if (MLInput.GetController(0).TriggerValue > MLInput.TriggerDownThreshold)
+			if (MLInput.IsStarted && MLInput.GetController(0).TriggerValue > MLInput.TriggerDownThreshold)
 			{
 				MakeRamen();
 			}

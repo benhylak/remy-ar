@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------
 // %COPYRIGHT_BEGIN%
 //
-// Copyright (c) 2018 Magic Leap, Inc. All Rights Reserved.
+// Copyright (c) 2019 Magic Leap, Inc. All Rights Reserved.
 // Use of this file is governed by the Creator Agreement, located
 // here: https://id.magicleap.com/creator-terms
 //
@@ -25,16 +25,16 @@ namespace MagicLeap
     {
         #region Private Variables
         [SerializeField, Tooltip("The reference to the controller connection handler in the scene.")]
-        private ControllerConnectionHandler _controllerConnectionHandler;
+        private ControllerConnectionHandler _controllerConnectionHandler = null;
 
         [SerializeField, Tooltip("Text to display the current distance and world scale.")]
-        private Text _statusLabel;
+        private Text _statusLabel = null;
 
         [SerializeField, Tooltip("The Transform of the visual marker, which is attached to the end of the line.")]
-        private Transform _marker;
+        private Transform _marker = null;
 
         [SerializeField, Tooltip("The world scale scene component attached to the main camera.")]
-        private WorldScale _worldScale;
+        private WorldScale _worldScale = null;
 
         private const float ADJUSTMENT_DISTANCE_METERS = 0.25f;
         private const float MINIMUM_DISTANCE_METERS = 0.25f;

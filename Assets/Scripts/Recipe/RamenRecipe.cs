@@ -3,6 +3,7 @@ using UniRx;
 using BensToolBox.AR.Scripts;
 using BensToolBox;
 using BensToolBox.AR;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,11 +20,14 @@ public class RamenRecipe : Recipe
             new RecipeStep(
                 getAnchor: ()=>ramen,
                 instruction: "Boil <b>2 Cups</b> of water.",
-                nextStepTrigger: HasAssignedBurner
+                nextStepTrigger: HasAssignedBurner,
+                requiresBurner: true
             ),
 
             new RecipeStep(
                 nextStepTrigger: BurnerIsBoiling,
+                waitExplanation: "Waiting to Boil",
+                getAnchor: GetBurner,
                 requiresBurner: true
             ), //in future, can wait for gaze before moving on
 
@@ -31,8 +35,7 @@ public class RamenRecipe : Recipe
                 getAnchor: GetBurner,
                 instruction: "<b>Add noodles</b>",
                 nextStepTrigger: () => Status == NOODLES_ADDED_STATUS,
-                requiresBurner: true,
-                onComplete: () => GetBurner().ring.Hide()
+                requiresBurner: true
             ),
             
             new RecipeStep(
@@ -53,13 +56,7 @@ public class RamenRecipe : Recipe
                 {
                     //delay and then...
                     return true;                 
-                },
-                
-                onComplete: ()=>
-                {
-                    Debug.Log("Done!");
-                    //hide success message
-                }          
+                }    
             )                   
         );
     }
