@@ -23,7 +23,7 @@ namespace Burners.States
                 this._burner = burner;
                 //this._burner.ShowProactiveTimer();
     
-                if (lastState is BufferState || lastState is BurnerStateMachine.AvailableState)
+                if (lastState is BufferState || lastState is BurnerStates.AvailableState)
                 {
                     _burner.HiddenToProactive();
                 }
@@ -41,10 +41,12 @@ namespace Burners.States
                 {
                     _burner.HideProactivePrompt();
                     
-                    return new BurnerStateMachine.AvailableState(_burner);
+                    return new BurnerStates.AvailableState(_burner);
                 }
                 else if (RecipeManager.Instance.IsWaitingForBurner())
                 {
+                    _burner.HideProactivePrompt();
+                    
                     var recipe = RecipeManager.Instance.UseBurner(_burner);
            
                     return new RecipeStates.UseForRecipeState(_burner, recipe);
@@ -53,8 +55,8 @@ namespace Burners.States
                 {
                     return new VoiceInputState(_burner);
                 }
-                
-                return null;
+
+                return this;
             }
         }
         
@@ -101,7 +103,7 @@ namespace Burners.States
                     {       
                         BigKahuna.Instance.speechRecognizer.Active = false;
                         
-                        return new BurnerStateMachine
+                        return new BurnerStates
                             .BurnerTransitionState(
                                 _burner,
                                 _burner.HideProactivePrompt(),
@@ -132,7 +134,7 @@ namespace Burners.States
                         
                         BigKahuna.Instance.speechRecognizer.Active = false;
                         
-                        return new BurnerStateMachine
+                        return new BurnerStates
                             .BurnerTransitionState(
                                 _burner,
                                 _burner.HideProactivePrompt(),
@@ -143,8 +145,8 @@ namespace Burners.States
                     BigKahuna.Instance.speechRecognizer.recognizedText = "";
                     BigKahuna.Instance.speechRecognizer.finalized = false;
                 }
-    
-                return null;
+
+                return this;
             }
     
         }    

@@ -107,12 +107,17 @@ namespace SpeechRecognitionService
 #endif
                 var sending = Task.Run(async () =>
                 {
+                    Debug.Log("Running sending task.");
                     // Create a unique request ID, must be a UUID in "no-dash" format
                     var requestId = Guid.NewGuid().ToString("N");
                     //jobtelemetry = new Telemetry();
                     ArraySegment<byte> buffer = CreateSpeechConfigMessagePayloadBuffer(requestId);
 
-                    if (!IsWebSocketClientOpen(SpeechWebSocketClient)) return;
+                    if (!IsWebSocketClientOpen(SpeechWebSocketClient))
+                    {
+                        Debug.Log("Websocket is closed.");
+                        return;
+                    }
                     Debug.Log("Sending speech.config...");
                     // Send speech.config to Speech Service
                     await SendToWebSocket(SpeechWebSocketClient, buffer, false);
@@ -208,12 +213,19 @@ namespace SpeechRecognitionService
 #endif
                 var sending = Task.Run(async () =>
                 {
+                    Debug.Log("Running send task");
+                    
                     // Create a unique request ID, must be a UUID in "no-dash" format
                     CurrentRequestId = Guid.NewGuid().ToString("N");
+                    
+                    Debug.Log("Made GUID");
                     //jobtelemetry = new Telemetry();
                     ArraySegment<byte> buffer = CreateSpeechConfigMessagePayloadBuffer(CurrentRequestId);
 
-                    if (!IsWebSocketClientOpen(SpeechWebSocketClient)) return;
+                    if (SpeechWebSocketClient == null)
+                    {
+                        Debug.Log("Websocket is closed.");
+                    }
 
                     Debug.Log("Sending speech.config...");
                     // Send speech.config to Speech Service
@@ -234,7 +246,6 @@ namespace SpeechRecognitionService
                     var wavHeader = BuildRiffWAVHeader(0, resolution, channels, rate);
                     await SendAudioPacket(CurrentRequestId, wavHeader);
                     Debug.Log($"First Audio data paket with WAV header sent successfully!");
-
                     Debug.Log($"WebSocket Client is now ready to receive audio packets from the microphone.");
                     state = JobState.ReadyForAudioPackets;
                 });
@@ -409,7 +420,7 @@ namespace SpeechRecognitionService
             // Configuring Speech Service Web Socket client header
             Debug.Log("Connecting to Speech Service via Web Socket.");
             ClientWebSocket websocketClient = new ClientWebSocket();
-            
+
             string connectionId = Guid.NewGuid().ToString("N");
 
             // Make sure to change the region & culture to match your recorded audio file.
@@ -433,7 +444,7 @@ namespace SpeechRecognitionService
                 // Bing Speech endpoint
                 url = $"wss://speech.platform.bing.com/speech/recognition/interactive/cognitiveservices/v1?format=simple&language={lang}";
             }
-            
+
             await websocketClient.ConnectAsync(new Uri(url), new CancellationToken());
             Debug.Log("Web Socket successfully connected.");
 
@@ -526,11 +537,15 @@ namespace SpeechRecognitionService
         /// <returns></returns>
         private ArraySegment<byte> CreateSpeechConfigMessagePayloadBuffer(string requestId)
         {
-            dynamic SpeechConfigPayload = CreateSpeechConfigPayload();
+            Debug.Log("Creating Buffer");
+            
+           // dynamic SpeechConfigPayload = CreateSpeechConfigPayload();
 
             // Convert speech.config payload to JSON
-            var SpeechConfigPayloadJson = JsonConvert.SerializeObject(SpeechConfigPayload, Formatting.None);
+            var SpeechConfigPayloadJson = CreateSpeechConfigPayload();
 
+            Debug.Log(SpeechConfigPayloadJson);
+            
             // Create speech.config message from required headers and JSON payload
             StringBuilder speechMsgBuilder = new StringBuilder();
             speechMsgBuilder.Append("path:speech.config" + lineSeparator);
@@ -543,6 +558,8 @@ namespace SpeechRecognitionService
 
             var encoded = Encoding.UTF8.GetBytes(speechMsgBuilder.ToString());
             var buffer = new ArraySegment<byte>(encoded, 0, encoded.Length);
+            Debug.Log("Done creating buffer");
+            
             return buffer;
         }
 
@@ -561,44 +578,62 @@ namespace SpeechRecognitionService
             var strh = speechMsgBuilder.ToString();
 
             var encoded = Encoding.UTF8.GetBytes(speechMsgBuilder.ToString());
-            var buffer = new ArraySegment<byte>(encoded, 0, encoded.Length);
+            var buffer = new ArraySegment<byte>(encoded, 0, encoded.Length); 
 
             // send it
 
             return true;
         }
-
+        
         /// <summary>
         /// CONFIGURING SPEECH SERVICE
         /// The payload of the speech.config message is a JSON structure
         /// that contains information about the application.
         /// </summary>
         /// <returns></returns>
-        private static dynamic CreateSpeechConfigPayload()
+        private static string CreateSpeechConfigPayload()
         {
-            return new
-            {
-                context = new
-                {
-                    system = new
-                    {
-                        version = "1.0.00000"
-                    },
-                    os = new
-                    {
-                        platform = "Speech Service WebSocket Console App",
-                        name = "Sample",
-                        version = "1.0.00000"
-                    },
-                    device = new
-                    {
-                        manufacturer = "Microsoft",
-                        model = "SpeechSample",
-                        version = "1.0.00000"
-                    }
-                }
-            };
+            return
+            @"
+            {""context"":{
+                ""system"":{""version"":""1.0.00000""},
+                ""os"":{""platform"":""Speech Service WebSocket Console App"",""name"":""Sample"",""version"":""1.0.00000""},
+                ""device"":{""manufacturer"":""Microsoft"",
+                ""model"":""SpeechSample"",""version"":""1.0.00000""}}}";
         }
+        
+
+//        /// <summary>
+//        /// CONFIGURING SPEECH SERVICE
+//        /// The payload of the speech.config message is a JSON structure
+//        /// that contains information about the application.
+//        /// </summary>
+//        /// <returns></returns>
+//        private static dynamic CreateSpeechConfigPayload()
+//        {
+//            return new
+//            {
+//                context = new
+//                {
+//                    system = new
+//                    {
+//                        version = "1.0.00000"
+//                    },
+//                    os = new
+//                    {
+//                        platform = "Speech Service WebSocket Console App",
+//                        name = "Sample",
+//                        version = "1.0.00000"
+//                    },
+//                    device = new
+//                    {
+//                        manufacturer = "Microsoft",
+//                        model = "SpeechSample",
+//                        version = "1.0.00000"
+//                    }
+//                }
+//            };
+//        }
 
         public async Task SendAudioPacket(string requestId, byte[] data)
         {

@@ -371,8 +371,6 @@ public class SpeechManager : MonoBehaviour {
                     StopRecording();
                 }
 
-                //this is where my stuff will go.
-                
                 UpdateUICanvasLabel(result.Result.DisplayText, FontStyle.Normal);
 
                 Debug.Log("* RECOGNITION STATUS: " + result.Result.RecognitionStatus);
@@ -408,11 +406,11 @@ public class SpeechManager : MonoBehaviour {
     /// <param name="data">The audio data is an array of floats ranging from[-1.0f;1.0f]. Here it contains 
     /// audio from AudioClip on the AudioSource, which itself receives data from the microphone.</param>
     /// <param name="channels"></param>
-    void OnAudioFilterRead(float[] data, int channels)
+    async void OnAudioFilterRead(float[] data, int channels)
     {
         try
         {
-            //Debug.Log($"Received audio data of size: {data.Length} - First sample: {data[0]}");
+          //  Debug.Log($"Received audio data of size: {data.Length} - First sample: {data[0]}");
 
             // Debug.Log($"Received audio data: {channels} channel(s), size {data.Length} samples.");
 
@@ -490,8 +488,9 @@ public class SpeechManager : MonoBehaviour {
                     recordingData.AddRange(audiodata);
                     recordingSamples += audiodata.Length;
                 }
-                else // if we're not recording, then we're in recognition mode
+                else if(isRecognizing)// if we're not recording, then we're in recognition mode
                 {
+                    Debug.Log("Send audio packet");
                     recoServiceClient.SendAudioPacket(requestId, audiodata);
                 }
             }
@@ -562,15 +561,17 @@ public class SpeechManager : MonoBehaviour {
 
         UnityDispatcher.InvokeOnAppThread(() =>
         {
+            Debug.Log("Stopped invoke.");
             audiosource.Stop();
+            isRecognizing = false;
+            isRecording = false;
+            
             Microphone.End(null);
             if (isRecording)
             {
                 var audioData = new byte[recordingData.Count];
                 recordingData.CopyTo(audioData);
                 WriteAudioDataToRiffWAVFile(audioData, "recording.wav");
-                isRecording = false;
-                isRecognizing = false;
             }
             Debug.Log($"Microphone stopped recording at frequency {audiosource.clip.frequency}Hz.");
         });

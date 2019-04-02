@@ -5,6 +5,7 @@ using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
+using UnitySDK.WebSocketSharp;
 
 public class InstructionUI : MonoBehaviour
 {
@@ -88,7 +89,7 @@ public class InstructionUI : MonoBehaviour
 
 	private void UpdateStepInstructions(Recipe.RecipeStep step)
 	{
-		if (step.Instruction == "")
+		if (step.Instruction.IsNullOrEmpty())
 		{
 			Hide();
 		}
@@ -115,9 +116,9 @@ public class InstructionUI : MonoBehaviour
 		TweenFade(1, duration, delay);
 	}
 
-	public void Hide(float duration = 0.0f, float delay = 0.0f)
+	public void Hide(float duration = 0.3f, float delay = 0.0f)
 	{
-		if (_hidden) return; //already hdiden
+		//if (_hidden) return; //already hdiden
 		
 		Debug.Log("Hide Instructions");
 		

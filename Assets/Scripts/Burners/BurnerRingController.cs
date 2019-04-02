@@ -41,8 +41,24 @@ public class BurnerRingController : MonoBehaviour
     
     public Tween Hide(float duration = 0.3f)
     {
-        return DOTween.To(GetAlpha, SetAlpha, 0f, duration)
-            .SetEase(Ease.OutSine);
+        Debug.Log("Hide...");
+
+        var hideTween = DOTween.To(GetAlpha, SetAlpha, 0f, duration)
+            .SetEase(Ease.OutSine)
+            .OnComplete(Reset);
+    
+        if (_pulseSequence != null)
+        {
+            Debug.Log("Pulse in progress");
+            hideTween.Pause();
+
+            return StopPulsing().OnComplete(() => hideTween.Play());
+        }
+        else
+        {
+            Debug.Log("No pulse in progress");
+            return hideTween;
+        }
     }
     
     public void SetWaveAmplitude(float amt)
@@ -153,24 +169,23 @@ public class BurnerRingController : MonoBehaviour
 
     public Sequence StopPulsing()
     {
-        _pulseSequence?.Kill(true);
+        Debug.Log("Stop pulsing!");
+
+        _pulseSequence?.Kill(false);
 
         return _pulseSequence;
+    }
+
+    public void Reset()
+    {
+        SetMaterialToDefault();
+        SetColor(RemyColors.WHITE);
+        SetAlpha(0);     
     }
     
     public void StartPulsing(Color main, Color rim)
     {
         var transitionSequence = DOTween.Sequence();
-
-        transitionSequence.Append(
-            Hide(0.5f)
-                .OnComplete(() =>
-                {
-                     SetMaterialToDefault();
-                     SetColor(RemyColors.RED);
-                     SetAlpha(0);                   
-                })
-        );
 
         transitionSequence.Append(
             Show());

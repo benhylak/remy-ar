@@ -34,5 +34,10 @@ public class RamenUIEditor : Editor
             ramenUi.transform.DOMove(moveTo, 0.35f);
             ramenUi.transform.DORotate(lookRot.eulerAngles, 0.35f);
         }
+        
+        if(GUILayout.Button("Hide Instructions"))
+        {
+            RecipeManager.Instance._instructionUi.Hide();
+        }
     }
 }

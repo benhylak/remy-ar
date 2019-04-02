@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------
 // %COPYRIGHT_BEGIN%
 //
-// Copyright (c) 2018 Magic Leap, Inc. All Rights Reserved.
+// Copyright (c) 2019 Magic Leap, Inc. All Rights Reserved.
 // Use of this file is governed by the Creator Agreement, located
 // here: https://id.magicleap.com/creator-terms
 //
@@ -43,47 +43,53 @@ namespace MagicLeap
         private uint _trackHeadPositionMS = 0;
 
         [SerializeField, Tooltip("Play Material")]
-        private Material _playMaterial;
+        private Material _playMaterial = null;
         [SerializeField, Tooltip("Pause Material")]
-        private Material _pauseMaterial;
+        private Material _pauseMaterial = null;
         [SerializeField, Tooltip("Shuffle On Material")]
-        private Material _shuffleOnMaterial;
+        private Material _shuffleOnMaterial = null;
         [SerializeField, Tooltip("Shuffle Off Material")]
-        private Material _shuffleOffMaterial;
+        private Material _shuffleOffMaterial = null;
         [SerializeField, Tooltip("Repeat Off Material")]
-        private Material _repeatOffMaterial;
+        private Material _repeatOffMaterial = null;
         [SerializeField, Tooltip("Repeat On Song Material")]
-        private Material _repeatSongMaterial;
+        private Material _repeatSongMaterial = null;
         [SerializeField, Tooltip("Repeat On Album Material")]
-        private Material _repeatAlbumMaterial;
+        private Material _repeatAlbumMaterial = null;
 
         [SerializeField, Tooltip("PlaybackBar reference.")]
-        private MediaPlayerSlider _playbackBar;
+        private MediaPlayerSlider _playbackBar = null;
 
         [SerializeField, Tooltip("Volume bar reference.")]
-        private MediaPlayerSlider _volumeBar;
+        private MediaPlayerSlider _volumeBar = null;
 
         [SerializeField, Tooltip("Play button reference.")]
-        private MediaPlayerToggle _playButton;
+        private MediaPlayerToggle _playButton = null;
 
         [SerializeField, Tooltip("Next button reference.")]
-        private MediaPlayerButton _nextButton;
+        private MediaPlayerButton _nextButton = null;
 
         [SerializeField, Tooltip("Previous button reference.")]
-        private MediaPlayerButton _prevButton;
+        private MediaPlayerButton _prevButton = null;
         [SerializeField, Tooltip("Shuffle button reference.")]
-        private MediaPlayerToggle _shuffleButton;
+        private MediaPlayerToggle _shuffleButton = null;
         [SerializeField, Tooltip("Repeat button reference.")]
-        private MediaPlayerButton _repeatButton;
+        private MediaPlayerButton _repeatButton = null;
 
         [SerializeField, Tooltip("ElapsedTime reference.")]
-        private TextMesh _elapsedTime;
+        private TextMesh _elapsedTime = null;
 
         [SerializeField, Tooltip("Metadata display reference.")]
-        private TextMesh _metadataDisplay;
+        private TextMesh _metadataDisplay = null;
+
+        [SerializeField, Tooltip("Metadata display for the previous track title.")]
+        private TextMesh _metadataPreviousTrack = null;
+
+        [SerializeField, Tooltip("Metadata display for the next track title.")]
+        private TextMesh _metadataNextTrack = null;
 
         [SerializeField, Tooltip("Status text display reference.")]
-        private TextMesh _statusDisplay;
+        private TextMesh _statusDisplay = null;
         #endregion //Private Variables
 
         #region Unity Methods
@@ -428,9 +434,6 @@ namespace MagicLeap
         {
             if (state == MLMusicServicePlaybackState.Playing)
             {
-                // Sync the UI with the provider
-                MLMusicService.Volume = _volumeBar.Value;
-
                 _playButton.Material = _pauseMaterial;
                 _playButton.State = true;
             }
@@ -486,6 +489,16 @@ namespace MagicLeap
                             "Length: {6}\n",
                             metaData.TrackTitle, metaData.AlbumInfoName, metaData.AlbumInfoUrl, metaData.AlbumInfoCoverUrl,
                             metaData.ArtistInfoName, metaData.ArtistInfoUrl, metaData.Length);
+
+            MLMusicServiceMetadata trackMeta = new MLMusicServiceMetadata();
+
+            // Retrieve the meta information for the previous track.
+            MLMusicService.GetMetadata(MLMusicServiceTrackType.Previous, ref trackMeta);
+            _metadataPreviousTrack.text = string.Format("Previous: {0}", trackMeta.TrackTitle);
+
+            // Retrieve the meta information for the next track.
+            MLMusicService.GetMetadata(MLMusicServiceTrackType.Next, ref trackMeta);
+            _metadataNextTrack.text = string.Format("Next: {0}", trackMeta.TrackTitle);
         }
 
         /// <summary>

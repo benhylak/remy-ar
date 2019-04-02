@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------
 // %COPYRIGHT_BEGIN%
 //
-// Copyright (c) 2018 Magic Leap, Inc. All Rights Reserved.
+// Copyright (c) 2019 Magic Leap, Inc. All Rights Reserved.
 // Use of this file is governed by the Creator Agreement, located
 // here: https://id.magicleap.com/creator-terms
 //
@@ -35,29 +35,29 @@ namespace MagicLeap
 
         #region Private Variables
         [SerializeField, Tooltip("The reference to the controller connection handler in the scene.")]
-        private ControllerConnectionHandler _controllerConnectionHandler;
+        private ControllerConnectionHandler _controllerConnectionHandler = null;
 
         [SerializeField, Tooltip("The audio source that should capture the microphone input.")]
-        private AudioSource _inputAudioSource;
+        private AudioSource _inputAudioSource = null;
 
         [SerializeField, Tooltip("The audio source that should replay the captured audio.")]
-        private AudioSource _playbackAudioSource;
+        private AudioSource _playbackAudioSource = null;
 
         [SerializeField, Tooltip("The main transform of the parrot.")]
-        private Transform _parrotTransform;
+        private Transform _parrotTransform = null;
 
         [SerializeField, Tooltip("The animator used on the parrot.")]
-        private Animator _parrotAnimator;
+        private Animator _parrotAnimator = null;
 
         [SerializeField, Tooltip("The text to display the recording status.")]
-        private Text _statusLabel;
+        private Text _statusLabel = null;
 
         [Space]
         [Header("Delayed Playback")]
         [SerializeField, Range(1, 2), Tooltip("The pitch used for delayed audio playback.")]
         private float _pitch = 1.5f;
 
-        private PrivilegeRequester _privilegeRequester;
+        private PrivilegeRequester _privilegeRequester = null;
 
         private bool _canCapture = false;
         private bool _isCapturing = false;
@@ -86,7 +86,14 @@ namespace MagicLeap
                 Vector3 direction = Camera.main.transform.position - _parrotTransform.position;
                 direction.y = 0;
 
-                return Quaternion.LookRotation(direction);
+                if (direction != Vector3.zero)
+                {
+                    return Quaternion.LookRotation(direction);
+                }
+                else
+                {
+                    return Quaternion.identity;
+                }
             }
         }
         #endregion
@@ -164,7 +171,7 @@ namespace MagicLeap
                     DetectAudio();
                 }
 
-                AnimateParrot((_captureMode == CaptureMode.Realtime)? _inputAudioSource : _playbackAudioSource);
+                AnimateParrot((_captureMode == CaptureMode.Realtime) ? _inputAudioSource : _playbackAudioSource);
             }
         }
 
@@ -187,7 +194,7 @@ namespace MagicLeap
         #region Private Methods
         private void StartCapture()
         {
-            if(_captureMode == CaptureMode.Inactive)
+            if (_captureMode == CaptureMode.Inactive)
             {
                 Debug.LogError("Error: AudioCaptureExample.StartCapture() cannot start with CaptureMode.Inactive.");
                 return;
@@ -200,7 +207,7 @@ namespace MagicLeap
             }
 
             // If no microphone is detected, exit early and log the error.
-            if(string.IsNullOrEmpty(_deviceMicrophone))
+            if (string.IsNullOrEmpty(_deviceMicrophone))
             {
                 Debug.LogError("Error: AudioCaptureExample._deviceMicrophone is not set.");
                 return;
@@ -264,7 +271,7 @@ namespace MagicLeap
         {
             if (!_canCapture)
             {
-                _statusLabel.text = "Status: Requesting Privileges";
+                _statusLabel.text = (_privilegeRequester.State != PrivilegeRequester.PrivilegeState.Failed) ? "Status: Requesting Privileges" : "Status: Privileges Denied";
             }
             else
             {
@@ -310,7 +317,7 @@ namespace MagicLeap
 
         private void AnimateParrot(AudioSource audioSource)
         {
-            if(audioSource.isPlaying)
+            if (audioSource.isPlaying)
             {
                 // Analyze the playback spectrum data to detect spikes in volume.
                 audioSource.GetSpectrumData(_audioSamples, 0, FFTWindow.Rectangular);
@@ -342,7 +349,7 @@ namespace MagicLeap
         private AudioClip CreateAudioClip(AudioClip clip, float start, float stop)
         {
             int length = (int)(clip.frequency * (stop - start));
-            if(length <= 0)
+            if (length <= 0)
             {
                 return null;
             }

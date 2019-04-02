@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------
 // %COPYRIGHT_BEGIN%
 //
-// Copyright (c) 2018 Magic Leap, Inc. All Rights Reserved.
+// Copyright (c) 2019 Magic Leap, Inc. All Rights Reserved.
 // Use of this file is governed by the Creator Agreement, located
 // here: https://id.magicleap.com/creator-terms
 //
@@ -26,20 +26,20 @@ namespace MagicLeap
     public class ContentBindingVisualizer : MonoBehaviour
     {
         #region Private Variables
-        MLPersistentBehavior _persistentBehavior;
+        MLPersistentBehavior _persistentBehavior = null;
 
         [SerializeField, Tooltip("Text to display name")]
-        TextMesh _nameText;
+        TextMesh _nameText = null;
 
         [SerializeField, Tooltip("Highlight Effect")]
-        GameObject _highlightEffect;
+        GameObject _highlightEffect = null;
 
         [SerializeField, Tooltip("Line to PCF")]
-        LineRenderer _lineToPCF;
+        LineRenderer _lineToPCF = null;
 
-        Renderer[] _renderers;
-        Collider _collider;
-        ContentDragController _controllerDrag;
+        Renderer[] _renderers = null;
+        Collider _collider = null;
+        ContentDragController _controllerDrag = null;
         #endregion
 
         #region Public Events

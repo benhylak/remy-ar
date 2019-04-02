@@ -68,14 +68,17 @@ public class Recipe
         return _burner;
     }
 
+    public virtual void FreeResources()
+    {
+        if (GetBurner() != null)
+        {
+            GetBurner().SetStateToDefault();
+        }
+    }
+    
     public bool BurnerIsBoiling()
     {
         return GetBurner().IsBoiling();
-    }
-    
-    public bool BurnerReachedTemperature()
-    {
-        return true;
     }
     
     public bool HasBurner()
@@ -100,7 +103,6 @@ public class Recipe
         _currentStepIndex.Value = 0;
     }
    
-    
     public bool Update()
     {
         if (!RecipeComplete.Value)
@@ -119,30 +121,38 @@ public class Recipe
     public class RecipeStep
     {
         public Func<bool> NextStepTrigger;
-        private Action onUpdate;
-        public Action _onComplete;
         private Action _onEnter;
         public string Instruction;
         public readonly bool RequiresBurner;
-
+        public readonly float? TargetTemperature;
+        public readonly string WaitExplanation; 
+        
         public Func<InstructionsAnchorable> getAnchor;
+        public Action _onComplete;
+        
         private bool _justEntered = true;
         
         public RecipeStep(string instruction = "", 
+            string waitExplanation ="",
             Action onEnter =null, 
-            Action onUpdate = null, 
+            Action onComplete =null, 
             Func<bool> nextStepTrigger =null, 
-            Action onComplete=null, 
             Func<InstructionsAnchorable> getAnchor = null, 
+            float? targetTemp = null,
             bool requiresBurner = false)
         {
             this.Instruction = instruction;
+            
             this._onEnter = onEnter;
             this._onComplete = onComplete;
-            this.onUpdate = onUpdate;
+            
             this.NextStepTrigger = nextStepTrigger;
             this.getAnchor = getAnchor;
+            
             RequiresBurner = requiresBurner;
+            this.TargetTemperature = targetTemp;
+
+            this.WaitExplanation = waitExplanation;
         }
 
         public bool Update()
@@ -151,18 +161,19 @@ public class Recipe
             {
                 _onEnter?.Invoke();
                 _justEntered = false;
+                return false;
             }
             else if (NextStepTrigger())
             {
                 _onComplete?.Invoke();
-                return true;
+                Debug.Log("Done Step");
+                return true;  
             }
             else
             {
-                onUpdate?.Invoke();
+                return false;
             }
-
-            return false;
+            
         }
     }
 }
