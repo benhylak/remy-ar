@@ -4,8 +4,9 @@
 Material:
   serializedVersion: 6
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_Name: glow_Red
   m_Shader: {fileID: 4800000, guid: 8913dc7f8a5c14a088424a7bd2f8cd92, type: 3}
   m_ShaderKeywords: _ALPHAPREMULTIPLY_ON
@@ -66,14 +67,14 @@ Material:
     - _Mode: 3
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _RimPower: 3
+    - _RimPower: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 0
     m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _ColorTint: {r: 1, g: 0.15256348, b: 0, a: 1}
+    - _Color: {r: 1, g: 0, b: 0, a: 0}
+    - _ColorTint: {r: 1, g: 0.15256312, b: 0, a: 0.41960785}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _RimColor: {r: 1, g: 0.62498116, b: 0, a: 1}
+    - _RimColor: {r: 0.8202114, g: 0, b: 1, a: 1}

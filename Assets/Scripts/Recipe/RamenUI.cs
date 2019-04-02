@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using UniRx;
 using UnityEngine.XR.MagicLeap;
 using UnitySDK.WebSocketSharp;
-
-//TODO:
-//create ramen state machine:
-//	none
-// 	voice input
-//  recognized
+using BensToolBox.AR.Scripts;
 
 // none
 public class RamenUI : MonoBehaviour, InstructionsAnchorable
@@ -34,6 +30,8 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 	private Transform _lastBestAnchor;
 
 	private InstructionUI _instructionUi;
+
+	private Camera _mainCamera;
 	
 	// Use this for initialization
 	void Start ()
@@ -42,12 +40,16 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 		ramenLabel.DOFade(0, 0);
 		promptLabel.DOFade(0, 0);
 		microphoneIcon.DOFade(0, 0);
+
+		_mainCamera = Camera.main;
 	}
 
 	void StartListening()
 	{
 		if (BigKahuna.Instance.speechRecognizer.IsInitalized)
 		{
+			BigKahuna.Instance.DisableOtherListeners = true;
+			
 			isListening = true;
 
 			promptLabel.text = "what do you want to do?";
@@ -64,13 +66,13 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 	public void MakeRamen()
 	{
 		Debug.Log("Successful Command: Making Ramen");
-		StopListening();
 		
 		var ramenRecipe = new RamenRecipe(this);
 		//RecipeManager.Instance.StartRecipe(ramenRecipe);
-	
-		RecipeManager.Instance.StartRecipe(ramenRecipe);
+
 		inputIsEnabled = false;
+		
+		this.DelayedInvokeOnMainThread(.3f, () => RecipeManager.Instance.StartRecipe(ramenRecipe));
 	}
 
 	void StopListening()
@@ -83,14 +85,14 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 		microphoneIcon.DOFade(0, 0.25f);
 
 		BigKahuna.Instance.speechRecognizer.recognizedText = ""; //consume text
-
 		BigKahuna.Instance.speechRecognizer.Active = false;
+		BigKahuna.Instance.DisableOtherListeners = false;
 	}
 
 	// Update is called once per frame
 	void Update () {
 
-		if (inputIsEnabled && Vector3.Distance(transform.position, Camera.main.transform.position) < 0.6f)
+		if (inputIsEnabled && Vector3.Distance(transform.position, _mainCamera.transform.position) < 0.6f)
 		{
 			if (!isListening)
 			{
@@ -119,6 +121,7 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 			//stand in for working voice recog.
 			if (MLInput.IsStarted && MLInput.GetController(0).TriggerValue > MLInput.TriggerDownThreshold)
 			{
+				StopListening();
 				MakeRamen();
 			}
 			
@@ -177,12 +180,14 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 	public void AnchorInstructions(InstructionUI instructions)
 	{			
 		_instructionUi = instructions;
+
+		var instructionTransform = instructions.transform;
 		
-		instructions.transform.parent = this.transform;
+		instructionTransform.parent = this.transform;
 		
-		instructions.transform.localScale = instructionsAnchorFlat.localScale;
-		instructions.transform.position = instructionsAnchorFlat.position;
-		instructions.transform.rotation = instructionsAnchorFlat.rotation;
+		instructionTransform.localScale = instructionsAnchorFlat.localScale;
+		instructionTransform.position = instructionsAnchorFlat.position;
+		instructionTransform.rotation = instructionsAnchorFlat.rotation;
 
 		instructions.Show();
 	}
@@ -199,12 +204,12 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 		Transform bestAnchorPoint = _lastBestAnchor;
 
 		//check if there's a better point besides default
-		if (Vector3.Distance(transform.position, Camera.main.transform.position) > SWITCH_TO_BILLBOARD_DIST)
+		if (Vector3.Distance(transform.position, _mainCamera.transform.position) > SWITCH_TO_BILLBOARD_DIST)
 		{				
 			_instructionUi.LookAtCamera = true;		
 			bestAnchorPoint = instructionsAnchorBillboard;
 		}
-		else if (Vector3.Distance(transform.position, Camera.main.transform.position) < SWITCH_TO_FLAT_DIST)
+		else if (Vector3.Distance(transform.position, _mainCamera.transform.position) < SWITCH_TO_FLAT_DIST)
 		{
 			_instructionUi.LookAtCamera = false;
 			bestAnchorPoint = instructionsAnchorFlat;

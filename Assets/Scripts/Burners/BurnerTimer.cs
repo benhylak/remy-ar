@@ -43,32 +43,29 @@ public class BurnerTimer : MonoBehaviour
 
 	private Sequence _timerDoneSequence;
 
+	private Camera _mainCamera;
+
 	// Use this for initialization
 	void Start ()
-	{	
-		//_lineRenderer.SetTransparency(1.2f);
+	{
+		_lineRenderer
+			.material
+			.SetColor("_Color",RemyColors.RED);
+		_lineRenderer.SetTransparency(0);
 		
 		SetPillTransparency(0);
+		
+		_mainCamera = Camera.main;
 	}
 
-	public void SetTimer(TimeSpan timeSpan)
+	public async void SetTimer(TimeSpan timeSpan)
 	{
-		Reset();
+		await Reset();
 
 		_setTime = Time.time;
 		_timerGoal = timeSpan;
 
-
 		Debug.Log("Set timer called");
-//		_circleRenderer.GetComponent<LineRenderer>().materials[0]	
-//			.DOFade(
-//				0.4f,
-//				0.7f)
-//			.SetLoops(-1, LoopType.Yoyo)
-
-//			.SetEase(Ease.InQuad);
-
-		//DOTween.To(GetPillTransparency, SetPillTransparency, 1f, 0.3f);
 	}
 
 	public void SetTransparency(float val)
@@ -113,7 +110,7 @@ public class BurnerTimer : MonoBehaviour
 
 	void UpdatePill()
 	{
-		Vector3 direction = Camera.main.transform.position - _pillLabel.transform.position;
+		Vector3 direction = _mainCamera.transform.position - _pillLabel.transform.position;
 		Quaternion lookRot = Quaternion.LookRotation(direction, Vector3.up);
 		
 		_pillLabel.transform.rotation = Quaternion.Slerp(_pillLabel.transform.rotation, lookRot, 4*Time.deltaTime);
@@ -166,11 +163,11 @@ public class BurnerTimer : MonoBehaviour
 				_lineRenderer
 					.material
 					.DOColor(
-						Color.red, 0.2f)
+						RemyColors.GREEN, 0.2f)
 					.OnUpdate(() =>
 						{
 							_lineRenderer.SetTransparency(0f);
-							_labelText.color = Color.red;
+							_labelText.color = Color.green;
 						}
 					));
 
@@ -225,17 +222,46 @@ public class BurnerTimer : MonoBehaviour
 		yield return _timerDoneSequence.WaitForKill();
 	}
 
+	public IEnumerator WaitForCompletion(Tween tween)
+	{
+		yield return tween.WaitForCompletion();
+	}
+
+	public async Task Show()
+	{
+		await WaitForCompletion(DOTween.To(GetTransparency,
+				SetTransparency,
+				1f,
+				0.65f)
+			.SetEase(Ease.InSine));
+	}
+
+	public async Task Hide()
+	{
+		await WaitForCompletion(DOTween.To(GetTransparency, SetTransparency, 1f, 0.5f).SetEase(Ease.OutSine));
+	}
+
 	public async Task Reset()
 	{
-		_timerDoneSequence.Kill(true);
-
-		await WaitForKill();
+		if (_timerDoneSequence != null && _timerDoneSequence.active)
+		{
+			_timerDoneSequence.Kill(true);
+			await WaitForKill();
+			await Hide();
+		}
 		
+		_lineRenderer
+			.material
+			.SetColor("_Color",
+				RemyColors.RED);
+		
+		_lineRenderer.SetTransparency(0);
+
 		_circleRenderer.SetPercentFilled(0);
 		_timerGoal = TimeSpan.Zero;
 		_progress = 0;
-	}
 	
+	}
 	// Update is called once per frame
 	
 }

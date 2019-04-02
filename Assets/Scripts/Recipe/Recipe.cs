@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
+using UnitySDK.WebSocketSharp;
 
 public class Recipe
 {
@@ -174,6 +175,11 @@ public class Recipe
                 return false;
             }
             
+        }
+
+        public bool IsIndeterminateWait()
+        {
+            return !WaitExplanation.IsNullOrEmpty();
         }
     }
 }

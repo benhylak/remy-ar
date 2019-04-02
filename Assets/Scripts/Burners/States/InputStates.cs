@@ -9,6 +9,7 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Experimental.PlayerLoop;
 
+
 namespace Burners.States
 {
 
@@ -45,13 +46,12 @@ namespace Burners.States
                 }
                 else if (RecipeManager.Instance.IsWaitingForBurner())
                 {
-                    _burner.HideProactivePrompt();
-                    
                     var recipe = RecipeManager.Instance.UseBurner(_burner);
-           
-                    return new RecipeStates.UseForRecipeState(_burner, recipe);
+                    
+                    if(recipe!=null)    
+                        return new RecipeStates.UseForRecipeState(_burner, recipe);
                 }
-                else if (this._burner._gazeReceiver.isLookedAt && _burner._gazeReceiver.currentGazeDuration > 0.25f)
+                else if (!BigKahuna.Instance.speechRecognizer.Active && this._burner._gazeReceiver.isLookedAt && _burner._gazeReceiver.currentGazeDuration > 0.25f)
                 {
                     return new VoiceInputState(_burner);
                 }
@@ -92,15 +92,23 @@ namespace Burners.States
                     BigKahuna.Instance.speechRecognizer.Active = false;
                     return new TimerPromptState(_burner, this);
                 }
+                else if(BigKahuna.Instance.DisableOtherListeners)
+                {
+                    return new TimerPromptState(_burner, this);
+                }
                 
                 _burner.SetInputLevel(BigKahuna.Instance.speechRecognizer.audioLevel);
     
                 if (BigKahuna.Instance.speechRecognizer.finalized)
                 {
+                    Debug.Log("Speech is Finalized. Result: " + BigKahuna.Instance.speechRecognizer.recognizedText);
+                    
                     MatchCollection matches;
     
                     if (boilRegex.IsMatch(BigKahuna.Instance.speechRecognizer.recognizedText))
-                    {       
+                    {      
+                        Debug.Log("Boil match");
+                        
                         BigKahuna.Instance.speechRecognizer.Active = false;
                         
                         return new BurnerStates
@@ -112,7 +120,9 @@ namespace Burners.States
                                 0.3f);                          
                     }
                     else if ((matches = timeRegex.Matches(BigKahuna.Instance.speechRecognizer.recognizedText)).Count > 0)
-                    {               
+                    {           
+                        Debug.Log("time match");
+                        
                         TimeSpan ts = new TimeSpan();
                         
                         foreach (Match m in matches)

@@ -2,7 +2,7 @@
 {
  Properties 
  {
-  _ColorTint("Color Tint", Color) = (1, 1, 1, 1)
+  _Color("Color Tint", Color) = (1, 1, 1, 1)
   _MainTex("Base (RGB)", 2D) = "white" {}
   _BumpMap("Normal Map", 2D) = "bump" {}
   _RimColor("Rim Color", Color) = (1, 1, 1, 1)
@@ -11,10 +11,10 @@
  }
  SubShader {
 
-  Tags { "RenderType"="Transparent" }
+	Tags { "Queue" = "Transparent" "RenderType"="Transparent" }
 
   CGPROGRAM
-  #pragma surface surf Lambert
+  #pragma surface surf Lambert alpha:fade
 
   struct Input {
 
@@ -25,7 +25,7 @@
 
   };
 
-  float4 _ColorTint;
+  float4 _Color;
   sampler2D _MainTex;
   sampler2D _BumpMap;
   float4 _RimColor;
@@ -33,16 +33,13 @@
 
   void surf (Input IN, inout SurfaceOutput o) 
   {
-
-
-   IN.color = _ColorTint;
+   IN.color = _Color;
    o.Albedo = tex2D (_MainTex, IN.uv_MainTex).rgb * IN.color;
    o.Normal = UnpackNormal(tex2D(_BumpMap,IN.uv_BumpMap));
 
-   half rim = 1.0 - saturate(dot(normalize(IN.viewDir), o.Normal));
+   half rim = (1.0 - saturate(dot(normalize(IN.viewDir), o.Normal)));
    o.Emission = _RimColor.rgba * pow(rim, _RimPower);
-
-
+   o.Alpha = _Color.a;
   }
   ENDCG
  } 

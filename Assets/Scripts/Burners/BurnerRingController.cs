@@ -26,17 +26,75 @@ public class BurnerRingController : MonoBehaviour
 
     public Renderer _renderer;
     private Sequence _pulseSequence;
+
+    private Tween _tailTweenOfQueue;
+
+    public bool IsTweenInProgress => _tailTweenOfQueue != null && _tailTweenOfQueue.active;
     
+    public Tween GetTweenInProgress()
+    {
+        return _tailTweenOfQueue;
+    }
+
     public void Start()
     {
+        _renderer = GetComponent<Renderer>();
         voicePrimaryColor = VoiceInputMat.GetColor(PRIMARY_COLOR_VOICE);
         voiceSecondaryColor = VoiceInputMat.GetColor(SECONDARY_COLOR_VOICE);
     }
 
-    public Tween Show(float duration = 0.3f)
+    public Tween AddTweenToQueue(Tween nextTween)
     {
-        return DOTween.To(GetAlpha, SetAlpha, 1f, duration)
-            .SetEase(Ease.InSine);
+   
+        if (IsTweenInProgress)
+        {     
+            nextTween.Pause();
+            
+            var prevCompleteCallback = _tailTweenOfQueue.onComplete;
+            
+            _tailTweenOfQueue.OnComplete(() =>
+            {
+                prevCompleteCallback?.Invoke();
+                nextTween.Play();
+            });
+            
+            Debug.Log("Added tween to queue");
+        }
+        else
+        {
+            Debug.Log("No tweens in queue. Starting...");
+            nextTween.Play();
+        }
+
+        _tailTweenOfQueue = nextTween;
+        return _tailTweenOfQueue;
+    }
+
+    public Tween ShowFancy()
+    {
+        SetRingRadius(0);
+        
+        var tween = DOTween.To(GetRingRadius, SetRingRadius, RING_RADIUS, 1f);
+        return AddTweenToQueue(tween);
+    }
+
+    public Tween HideFancy(float duration = 1f)
+    {
+        var tween = DOTween.To(GetRingRadius, SetRingRadius, 0f, duration)
+            .SetEase(Ease.OutSine);
+
+        return AddTweenToQueue(tween);
+    }
+
+    public Tween Show(float duration = 0.4f)
+    {
+        SetRingRadius(RING_RADIUS);
+        
+        var showTween = DOTween.To(GetAlpha, SetAlpha, 1f, duration)
+            .SetEase(Ease.InSine).OnComplete(() => Debug.Log("Show completed"));
+
+        AddTweenToQueue(showTween);
+        return showTween;
     }
     
     public Tween Hide(float duration = 0.3f)
@@ -50,15 +108,10 @@ public class BurnerRingController : MonoBehaviour
         if (_pulseSequence != null)
         {
             Debug.Log("Pulse in progress");
-            hideTween.Pause();
+            StopPulsing();
+        }
 
-            return StopPulsing().OnComplete(() => hideTween.Play());
-        }
-        else
-        {
-            Debug.Log("No pulse in progress");
-            return hideTween;
-        }
+        return AddTweenToQueue(hideTween);
     }
     
     public void SetWaveAmplitude(float amt)
@@ -138,8 +191,6 @@ public class BurnerRingController : MonoBehaviour
 	
     public void SetRingRadius(float radius)
     {
-        if (_renderer == null) _renderer = GetComponent<Renderer>();
-        
         _renderer.material.SetFloat("_Radius", radius);
     }
 	
@@ -178,36 +229,30 @@ public class BurnerRingController : MonoBehaviour
 
     public void Reset()
     {
+        Debug.LogError("Reset ring");
+        
         SetMaterialToDefault();
         SetColor(RemyColors.WHITE);
-        SetAlpha(0);     
+        SetAlpha(0);      
     }
     
     public void StartPulsing(Color main, Color rim)
-    {
-        var transitionSequence = DOTween.Sequence();
+    {        
+        _pulseSequence = DOTween.Sequence();
+        _pulseSequence.Append(
+            DOTween
+                .To(GetAlpha,
+                    SetAlpha,
+                    0f,
+                    1.5f)
+                .SetEase(Ease.InSine)
+        );
 
-        transitionSequence.Append(
-            Show());
+        _pulseSequence.AppendInterval(0.1f);
+        _pulseSequence.SetLoops(-1, LoopType.Yoyo);
+        _pulseSequence.Pause();
 
-        transitionSequence.OnComplete(() =>
-        {
-            _pulseSequence = DOTween.Sequence();
-
-            _pulseSequence.Append(
-                DOTween
-                    .To(GetAlpha,
-                        SetAlpha,
-                        0f,
-                        1.5f)
-                    .SetEase(Ease.InSine)
-            );
-
-            _pulseSequence.AppendInterval(0.1f);
-
-            _pulseSequence
-                .SetLoops(-1, LoopType.Yoyo)
-                .Play();
-        });
+        AddTweenToQueue(Show().OnPlay(()=>SetColor(main, rim)));
+        AddTweenToQueue(_pulseSequence);
     }
 }

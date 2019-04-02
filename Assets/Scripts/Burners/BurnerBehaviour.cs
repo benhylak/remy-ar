@@ -22,6 +22,8 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 	public GameObject burnerMesh;
 	public BurnerRingController ring;
 
+	public BurnerOnVisualizer BurnerOnVisualizer;
+	
 	public Text FloatingLabel;
 	
 	private bool IsLabelVisible = false;	
@@ -40,19 +42,29 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 	
 	private InstructionUI _instructionUi;
 
-	private readonly float SWITCH_TO_EDGE_DIST = 0.3f;
-	private readonly float SWITCH_TO_CENTER_DIST = 0.5f;
+	private readonly float SWITCH_TO_EDGE_DIST = 0.35f;
+	private readonly float SWITCH_TO_CENTER_DIST = 0.55f;
+
+	private Tween _labelTween;
+	private bool _labelIsHidden = true;
 
 	public float? targetTemperature = null;
+	private Camera _mainCamera;
 
+	public void Start()
+	{
+		FloatingLabel.gameObject.SetActive(true);
+		HideLabel();
+		
+		_state = new BurnerStates.AvailableState(this);
+		_gazeReceiver = GetComponent<GazeReceiver>();
+		_mainCamera = Camera.main;
+		
+	}
+	
 	public bool IsBoiling()
 	{
 		return _model.IsBoiling.Value;
-	}
-
-	public void ClearTargetTemp()
-	{
-		targetTemperature = null;
 	}
 
 	public void RaiseBurnerNotification(string text) //urgency level
@@ -77,18 +89,12 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 		if (_Timer.isSet)
 		{
 			_Timer.Reset();
-			_Timer.SetTransparency(0); //TODO: fade this!
+			_Timer.Hide();
 		}
 		_state = new BurnerStates.AvailableState(this);
 	}
 	
-	public void Start()
-	{
-		FloatingLabel.DOFade(0, 0);
-		
-		_state = new BurnerStates.AvailableState(this);
-		_gazeReceiver = GetComponent<GazeReceiver>();
-	}
+
 
 	public void SetTimer(TimeSpan ts)
 	{  
@@ -102,7 +108,7 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 		if (FloatingLabel.isActiveAndEnabled)
 		{
 			FloatingLabel.transform.rotation =
-				Quaternion.LookRotation(FloatingLabel.transform.position - Camera.main.transform.position);
+				Quaternion.LookRotation(FloatingLabel.transform.position - _mainCamera.transform.position);
 		}
 
 		var resultState = _state.Update();
@@ -115,22 +121,27 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 	// if pot removed = false, dismiss the state
 	public void SetLabel(string text, float duration = 0.35f)
 	{
-		if (FloatingLabel.gameObject.activeInHierarchy)
+		Debug.Log("Set Label to: " + text);
+		_labelTween?.Kill();
+		
+		if (_labelIsHidden)
 		{
-			FloatingLabel
-				.DOFade(0, duration)
-				.SetEase(Ease.OutSine)
-				.OnComplete(() =>
-				{
-					FloatingLabel.text = text;
-					FloatingLabel.DOFade(1, duration).SetEase(Ease.InSine);
-				});
+			Debug.Log("Label is already hidden...");
+			
+			FloatingLabel.text = text;
+			_labelTween = FloatingLabel.DOFade(1, duration).OnComplete(() => _labelIsHidden = false);
 		}
 		else
 		{
-			FloatingLabel.gameObject.SetActive(true);
-			FloatingLabel.text = text;
-			FloatingLabel.DOFade(1, duration);
+			_labelTween = HideLabel();
+			
+			_labelTween
+				.OnComplete(() =>
+				{
+					FloatingLabel.text = text;
+					_labelTween = FloatingLabel.DOFade(1, duration).SetEase(Ease.InSine)
+						.OnComplete(() => _labelIsHidden = false);
+				});
 		}
 	}
 
@@ -138,13 +149,17 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 
 	public Tween HideLabel(float duration = 0.3f)
 	{
-		return FloatingLabel
-			.DOFade(0, duration)
-			.SetEase(Ease.OutSine)
-			.OnComplete(() =>
-			{
-				FloatingLabel.gameObject.SetActive(false);
-			});
+		Debug.Log("Hide called");
+		
+		_labelTween?.Kill();
+
+		_labelTween =
+			FloatingLabel
+				.DOFade(0, duration)
+				.SetEase(Ease.OutSine)
+				.OnComplete(() => _labelIsHidden = true);
+
+		return _labelTween;
 	}
 	
 	public void ShowInputPrompt()
@@ -169,8 +184,7 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 	public void HiddenToProactive()
 	{
 		ring.gameObject.SetActive(true);
-		ring.SetRingRadius(0);
-		DOTween.To(ring.GetRingRadius, ring.SetRingRadius, ring.RING_RADIUS, 1f);
+		ring.ShowFancy();
 				
 		FloatingLabel.gameObject.SetActive(true);
 		FloatingLabel.DOFade(1, 1.5f).SetEase(Ease.InCubic);					
@@ -208,22 +222,9 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 
 	public Tween HideProactivePrompt()
 	{
-		float duration = 1f;
-		
-		FloatingLabel.DOFade(0, duration);
+		HideLabel();
 
-		var tween = DOTween.To(ring.GetRingRadius, ring.SetRingRadius, 0f, duration)
-			.SetEase(Ease.OutSine);
-			
-		tween.OnComplete(() =>
-		{
-			FloatingLabel.gameObject.SetActive(false);
-		});
-		
-		
-		Debug.Log("Hide proactive.");
-
-		return tween;
+		return ring.HideFancy();
 	}
 	
 	#endregion
@@ -268,7 +269,7 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 		else
 		{
 			//fallback to head if we can't get hands
-			userDistanceToBurner = Vector3.Distance(transform.position, Camera.main.transform.position);
+			userDistanceToBurner = Vector3.Distance(transform.position, _mainCamera.transform.position);
 		}
 		//check if there's a better point besides default
 		if (userDistanceToBurner < SWITCH_TO_EDGE_DIST)
@@ -299,7 +300,7 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 
 	private Vector3 GetEdgeAnchorPosition()
 	{
-		Vector3 lookVecFlattened = ring.transform.position - Camera.main.transform.position; 
+		Vector3 lookVecFlattened = ring.transform.position - _mainCamera.transform.position; 
 		lookVecFlattened.y = ring.transform.position.y;
 
 		Vector3 furthestRingPoint = ring.transform.position + lookVecFlattened.normalized * (ring.GetRingRadius() + 0.02f);

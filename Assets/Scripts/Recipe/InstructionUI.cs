@@ -24,9 +24,13 @@ public class InstructionUI : MonoBehaviour
 	private bool _hidden = false;
 
 	public bool LookAtCamera = false;
+
+	private Camera _mainCamera;
+
 	public void Start()
 	{
 		Hide();
+		_mainCamera = Camera.main;
 	}
 
 	private void Update()
@@ -40,7 +44,7 @@ public class InstructionUI : MonoBehaviour
 			if (LookAtCamera)
 			{
 				targetRot =
-					Quaternion.LookRotation(transform.position - Camera.main.transform.position,
+					Quaternion.LookRotation(transform.position - _mainCamera.transform.position,
 						Vector3.up);
 			}
 			else
@@ -106,7 +110,7 @@ public class InstructionUI : MonoBehaviour
 		}
 	}
 
-	public void Show(float duration = 0.3f, float delay = 0.0f)
+	public void Show(float duration = 0.4f, float delay = 0.0f)
 	{
 		if (!_hidden) return; //already shown
 		
@@ -116,7 +120,7 @@ public class InstructionUI : MonoBehaviour
 		TweenFade(1, duration, delay);
 	}
 
-	public void Hide(float duration = 0.3f, float delay = 0.0f)
+	public void Hide(float duration = 0.4f, float delay = 0.0f)
 	{
 		//if (_hidden) return; //already hdiden
 		
