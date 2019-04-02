@@ -2,8 +2,7 @@
 
 Shader "Ring/indeterminate" {
 	Properties {
-		_PrimaryColor ("Color", Color) = (1,1,1,1)
-		_SecondaryColor ("Color", Color) = (1,1,1,1)
+		_Color("Color", Color) = (1,1,1,1)
 		_RimColor("Rim Color", Color) = (1, 1, 1, 1)
         _RimPower("Rim Power", Range(0.1, 6.0)) = 3.0
         _Radius("Radius", Range(0.0, 1.0)) = 0.2
@@ -26,8 +25,9 @@ Shader "Ring/indeterminate" {
 			float3 viewDir;
 		};
 
-		fixed4 _PrimaryColor;
-		fixed4 _SecondaryColor;
+		fixed4 _Color;
+		fixed4 _RimColor;
+		
 		float _RimPower;
 		float _Radius;
 		float _Alpha;
@@ -68,7 +68,7 @@ Shader "Ring/indeterminate" {
 
 		    //o.Albedo = lerp(_PrimaryColor, _SecondaryColor, sqrt(amt)*amt);
 		    
-		    o.Albedo = _SecondaryColor;
+		    o.Albedo = _Color;
 		    			
 			//Calculate Alpha
 			float3 camLookVect = IN.worldPos - _WorldSpaceCameraPos;
@@ -83,7 +83,7 @@ Shader "Ring/indeterminate" {
 			
 			//calculate rim power
 			half rim = 1.0 - saturate(dot(normalize(IN.viewDir), o.Normal));
-            o.Emission = o.Albedo * pow(rim, _RimPower);
+            o.Emission = _RimColor.rgba * pow(rim, _RimPower);
 		}
 		ENDCG
 	}

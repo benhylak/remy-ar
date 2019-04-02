@@ -30,12 +30,14 @@ public class PhysicalNotification : NotificationBehaviour
 	private float rotationSpeed;
 
 	private float MAX_ROTATION_SPEED = 45f;
-	
+
+	private Camera mainCamera;
 	
 	// Use this for initialization
 	void Start ()
 	{
 		_spotEndScale = spotImage.transform.localScale;
+		mainCamera = Camera.main;
 		
 		base.Start();
 	}
@@ -51,7 +53,7 @@ public class PhysicalNotification : NotificationBehaviour
 	{
 		labelImage.transform.rotation = Quaternion.Slerp(
 			labelImage.transform.rotation,
-			Quaternion.LookRotation(labelImage.transform.position-Camera.main.transform.position, Vector3.up),
+			Quaternion.LookRotation(labelImage.transform.position-mainCamera.transform.position, Vector3.up),
 			Time.deltaTime);
 
 	//	rotationSpeed = Mathf.Lerp(rotationSpeed, MAX_ROTATION_SPEED, 3*Time.deltaTime);

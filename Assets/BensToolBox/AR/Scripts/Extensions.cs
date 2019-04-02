@@ -1,12 +1,18 @@
 using System;
+using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 
 namespace BensToolBox.AR.Scripts
 {
     public static class Extensions
     {
+        public static IEnumerator WaitForKill(this Sequence seq)
+        {
+            yield return seq.WaitForElapsedLoops(1);
+        }
         //waits and then runs on complete *on the main thread*
-        public static async void DelayedInvoke(this object obj, float delaySeconds, Action onComplete) 
+        public static async void DelayedInvokeOnMainThread(this object obj, float delaySeconds, Action onComplete) 
         { 
             await new WaitForSeconds(delaySeconds);
             await new WaitForUpdate();

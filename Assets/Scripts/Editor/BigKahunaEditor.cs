@@ -37,5 +37,12 @@ public class BigKahunaEditor : Editor
         {
             kahuna.alternateSpeechManager.StartSpeechRecognitionFromMicrophone();
         }
+        
+        if (GUILayout.Button("Reset World"))
+        {
+            kahuna.ResetWorld();
+        }
+
+        
     }
 }

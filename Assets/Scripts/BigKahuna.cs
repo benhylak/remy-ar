@@ -8,15 +8,17 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.XR.MagicLeap;
 using System.Linq;
+using BensToolBox.AR.Scripts;
 using DG.Tweening;
+using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
-public class BigKahuna: Singleton<BigKahuna>
+public class BigKahuna: MonoBehaviour
 {
     //TODO: make singleton
     //also make singleton streamer
-    
-    public DatabaseManager _db;
+
+    public static BigKahuna Instance;
     public List<BurnerBehaviour> _burnerBehaviours;
     private State _timerState;
     public GameObject Stove;
@@ -27,9 +29,14 @@ public class BigKahuna: Singleton<BigKahuna>
     public MeshRenderer raycastVisualizer;
 
     public SpeechManager alternateSpeechManager;
+
+    public ControllerGestureObserver ControllerGestureObserver;
+    public bool DisableOtherListeners;
     
     public void Start()
     {
+        Instance = this;
+        
         DatabaseManager.Instance.getBurners()
             .ObserveAdd()
             .Subscribe(burnerData => 
@@ -59,16 +66,14 @@ public class BigKahuna: Singleton<BigKahuna>
             {
                 RecipeManager.Instance.EndRecipe();
             }
-
-            ;
+         
         }; //toggle setup mode.
 
         MLInput.OnTriggerDown += (_, __) =>
         {
-           // alternateSpeechManager.StartSpeechRecognitionFromMicrophone();
-         //   _burnerBehaviours.ForEach(x => x.IsLookedAt = true);
+            ResetWorld();
         };
-        
+
         MLInput.OnTriggerUp += (_, __) =>
         {
            // _burnerBehaviours.ForEach(x => x.IsLookedAt = false);
@@ -83,6 +88,11 @@ public class BigKahuna: Singleton<BigKahuna>
         _debugObjects = GameObject.FindGameObjectsWithTag("Debug");
     }
 
+    public void ResetWorld()
+    {
+        SceneManager.LoadScene (SceneManager.GetActiveScene ().buildIndex);    
+    }
+    
     public void Update()
     {
         if (_timerState != null)
@@ -101,13 +111,8 @@ public class BigKahuna: Singleton<BigKahuna>
             debugObj.SetActive(isSetup);
         }
 
-        Stove.GetComponent<ImageTrackerLerper>().TrackingEnabled = false;
-        
-        if (isSetup)
-        {
-            raycastVisualizer.material.DOFade(1, 0.3f);
-        }
-        else raycastVisualizer.material.DOFade(0, 0.3f);
-        
+        Stove.GetComponent<ImageTrackerLerper>().IsTrackingEnabled = isSetup;
+
+        raycastVisualizer.enabled = isSetup;
     }
 }

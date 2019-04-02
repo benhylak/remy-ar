@@ -25,8 +25,9 @@ using IBM.Watson.DeveloperCloud.DataTypes;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine.UI;
+using BensToolBox.AR.Scripts;
 
-public class SpeechRecognizer : MonoBehaviour
+public class SpeechRecognizer : BensToolBox.Singleton<SpeechRecognizer>
 {
     #region PLEASE SET THESE VARIABLES IN THE INSPECTOR
     [Space(10)]
@@ -56,7 +57,6 @@ public class SpeechRecognizer : MonoBehaviour
     [SerializeField]
     private string _recognizeModel;
     #endregion
-
 
     private int _recordingRoutine = 0;
     private string _microphoneID = null;

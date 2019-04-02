@@ -14,14 +14,7 @@ namespace Burners.States
                 burner._Timer.SetTimer(ts);
                 burner._Timer.SetTransparency(0);
 
-                Task.Delay(900).ContinueWith(_ =>
-                    {
-                        DOTween.To(burner._Timer.GetTransparency, 
-                                burner._Timer.SetTransparency,
-                                1f, 
-                                1.4f)
-                            .SetEase(Ease.InSine);
-                    }
+                Task.Delay(300).ContinueWith(_ => { _burnerBehaviour._Timer.Show(); }
                 );
             }
 

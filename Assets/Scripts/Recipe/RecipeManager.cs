@@ -18,9 +18,11 @@ public class RecipeManager : Singleton<RecipeManager>
         _instructionUi.SetRecipe(recipe);
     }
 
-    public Recipe UseBurner(BurnerBehaviour _burner)
+    public Recipe UseBurner(BurnerBehaviour burner)
     {
-        _recipeInProgress._burner = _burner;
+        if (_recipeInProgress._burner != null) return null;
+        
+        _recipeInProgress._burner = burner;
         return _recipeInProgress;
     }
 

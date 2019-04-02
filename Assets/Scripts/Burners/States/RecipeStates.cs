@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using UniRx;
 using UnityEngine;
@@ -12,6 +13,7 @@ namespace Burners.States
             private Recipe _recipe;
             private Recipe.RecipeStep _currentStep;
             private State _subState; //has it's own lil states it manages. isn't that cute?
+            private bool _lastStepWasIndeterminate;
             
             public UseForRecipeState(BurnerBehaviour _burner, Recipe recipe) : base(_burner)
             {
@@ -26,22 +28,16 @@ namespace Burners.States
                 
                 if (_currentStep != _recipe.CurrentStep.Value)
                 {
+                    var lastStep = _currentStep;
                     _currentStep = _recipe.CurrentStep.Value;
              
                     if (_currentStep.RequiresBurner)
                     {
-                        if (_currentStep.TargetTemperature != null)
-                        {
-                            _burnerBehaviour.targetTemperature = _currentStep.TargetTemperature;
-                        }
+                        UpdateTargetTemperature(_currentStep.TargetTemperature);   
 
-                        var anchor = _currentStep.getAnchor.Invoke();
-                        Debug.Log($"anchor: {anchor}");
-
-                        if(anchor!=null && anchor == (InstructionsAnchorable)_burnerBehaviour)
+                        if(_currentStep.getAnchor?.Invoke() == (InstructionsAnchorable)_burnerBehaviour)
                         {
-                            Debug.Log("Waiting State");
-                            _subState = new WaitingState(_burnerBehaviour, _currentStep);
+                            _subState = new WaitingState(_burnerBehaviour, _currentStep, lastStep?.IsIndeterminateWait()==true);
                         }
                     }
                     else
@@ -54,6 +50,14 @@ namespace Burners.States
 
                 return this;
             }
+
+            private void UpdateTargetTemperature(float? targetTemp)
+            {
+                if (targetTemp != null)
+                {
+                    _burnerBehaviour.targetTemperature = targetTemp;
+                }
+            }
         }
 
         public class WaitingState : BurnerStates.BurnerState
@@ -61,35 +65,44 @@ namespace Burners.States
           //  public bool _done;
           private Recipe.RecipeStep _recipeStep;
           
-            public WaitingState(BurnerBehaviour burner, Recipe.RecipeStep step) : base(burner)
+            public WaitingState(BurnerBehaviour burner, Recipe.RecipeStep step, bool lastStepWasIndeterminate) : base(burner)
             {
                 _recipeStep = step;
-                
-                _burnerBehaviour.ring.Show(0.6f);
-                
-                if (!_recipeStep.WaitExplanation.IsNullOrEmpty())
+               
+                if (_recipeStep.IsIndeterminateWait()) //indeterminate wait (red swirling circles)
                 {
-                    _burnerBehaviour.ring.gameObject.SetActive(true);
-                    _burnerBehaviour.ring.SetMaterialToIndeterminate();
-                    _burnerBehaviour.ring.SetColor(RemyColors.RED);
-                    _burnerBehaviour.ring.SetAlpha(0);
-                    _burnerBehaviour.ring.Show(0.6f);
-
-                    //_burnerBehaviour.ring.SetAlpha(0);
+                    IndeterminateMode();
                     _burnerBehaviour.SetLabel(_recipeStep.WaitExplanation, 0.5f);
                     
                     Debug.Log("Indeterminate Wait");
+                } 
+                else if (lastStepWasIndeterminate) //pulse green
+                {
+                     _burnerBehaviour.ring.StartPulsing(RemyColors.GREEN, RemyColors.GREEN_RIM);
                 }
-                
-          
+                else // standard white ring
+                {
+                    _burnerBehaviour.ring.Show(0.6f);
+                }
+            }
+
+            public void IndeterminateMode()
+            {
+                _burnerBehaviour.ring.gameObject.SetActive(true);
+                _burnerBehaviour.ring.SetMaterialToIndeterminate();
+                _burnerBehaviour.ring.SetColor(RemyColors.RED);
+                _burnerBehaviour.ring.SetAlpha(0);
+                _burnerBehaviour.ring.Show(0.6f);
             }
 
             public override State Update()
             {
                 if (_recipeStep.NextStepTrigger.Invoke())
                 {
-                    Debug.LogError("Done!");
-                 //   _burnerBehaviour.ring.Hide();
+                    Debug.LogError("Done Waiting");
+                    _burnerBehaviour.HideLabel();
+                    _burnerBehaviour.ring.Hide();
+                    
                     return null;
                 }
 //                if (_burnerBehaviour._gazeReceiver.isLookedAt &&
