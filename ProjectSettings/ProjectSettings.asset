@@ -141,7 +141,7 @@ PlayerSettings:
       depthBufferSharingEnabled: 1
     lumin:
       depthFormat: 0
-      frameTiming: 2
+      frameTiming: 1
       enableGLCache: 0
       glCacheMaxBlobSize: 524288
       glCacheMaxFileSize: 8388608

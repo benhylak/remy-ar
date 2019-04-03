@@ -21,9 +21,12 @@ public class ImageTrackerLerper : MonoBehaviour
 	[NonSerialized] public bool IsTrackingEnabled = true;
 
 	public bool CompensateForDistance = true;
-	public bool AllowClipping = false;
+	public bool PreventClipping = false;
 	public float lastActiveTime;
 	public float adjustedLerpSpeed;
+	
+	//to select multisided objects, or even just multiple trackers for same thing, take an array of imageTrackers and find
+	//the one that is most directly facing -- which we know will yield better recog results.
 	
 	void Start()
 	{
@@ -41,18 +44,18 @@ public class ImageTrackerLerper : MonoBehaviour
 		
 		if (CompensateForDistance)
 		{ 
-			//from 0.7m -> 2.5m, adjust from 100% to 30% of max lerp speed
-			adjustedLerpSpeed = lerpSpeed * Mathf.Lerp(1f, 0.2f,
-				                    Mathf.InverseLerp(0.5f, 1.2f,
+			//from 0.5m -> 2.5m, adjust from 100% to 30% of max lerp speed
+			adjustedLerpSpeed = lerpSpeed * Mathf.Lerp(1f, 0.14f,
+				                    Mathf.InverseLerp(0.4f, 1f,
 				                  trackerDistToCamera));
 		}
 		
-		if (!AllowClipping && trackerDistToCamera < _mainCamera.nearClipPlane)
+		if (PreventClipping && trackerDistToCamera < _mainCamera.nearClipPlane + .03f)
 		{
 			var hereToCameraVec = _mainCamera.transform.position - imageTracker.transform.position;
 			var distToCamera = hereToCameraVec.magnitude;
 
-			float adjustDist = distToCamera - _mainCamera.nearClipPlane;
+			float adjustDist = distToCamera - (_mainCamera.nearClipPlane + .03f);
 			trackerPosition += hereToCameraVec.normalized * adjustDist;
 		}	
 			

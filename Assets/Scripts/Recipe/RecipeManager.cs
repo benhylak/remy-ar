@@ -32,6 +32,7 @@ public class RecipeManager : Singleton<RecipeManager>
         _instructionUi.transform.parent = this.transform;
         
         _recipeInProgress.FreeResources();
+        _recipeInProgress = null;
     }
     public bool IsWaitingForBurner()
     {

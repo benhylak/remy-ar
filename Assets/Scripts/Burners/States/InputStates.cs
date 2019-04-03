@@ -86,7 +86,7 @@ namespace Burners.States
             }
             
             public override State Update()
-            {                    
+            {             
                 if (_burner._gazeReceiver.timeSinceLastGaze > _timeOut)
                 {
                     BigKahuna.Instance.speechRecognizer.Active = false;
@@ -110,6 +110,8 @@ namespace Burners.States
                         Debug.Log("Boil match");
                         
                         BigKahuna.Instance.speechRecognizer.Active = false;
+                        BigKahuna.Instance.speechRecognizer.recognizedText = "";
+                        BigKahuna.Instance.speechRecognizer.finalized = false;
                         
                         return new BurnerStates
                             .BurnerTransitionState(
@@ -142,6 +144,7 @@ namespace Burners.States
                         
                         Debug.Log(ts.ToString());
                         
+                        BigKahuna.Instance.speechRecognizer.ClearResults();
                         BigKahuna.Instance.speechRecognizer.Active = false;
                         
                         return new BurnerStates
@@ -151,9 +154,10 @@ namespace Burners.States
                                 () => new TimerStates.WaitingForTimerState(_burner, ts),
                                 0.2f);                                        
                     }
-                    
-                    BigKahuna.Instance.speechRecognizer.recognizedText = "";
-                    BigKahuna.Instance.speechRecognizer.finalized = false;
+                    else
+                    {
+                        BigKahuna.Instance.speechRecognizer.ClearResults();
+                    }
                 }
 
                 return this;

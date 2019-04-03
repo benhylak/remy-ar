@@ -33,17 +33,18 @@ public class DatabaseManager : Singleton<DatabaseManager>
     void Update()
     {
         if (burnerUpdateFinished && Time.time - LAST_UPDATE_TIME > DATABASE_UPDATE_DELAY)
-        {               
+        {  
+            burnerUpdateFinished = false;
             UpdateBurners();
             LAST_UPDATE_TIME = Time.time;
         }
     }
 
     async void UpdateBurners()
-    {
-        burnerUpdateFinished = false;
-        
+    {   
         DataSnapshot snapshot = await _firebase.Child("Stove").Child("burners").GetValue();
+        
+        await new WaitForBackgroundThread();
             
         if (snapshot != null)
         {
@@ -71,6 +72,8 @@ public class DatabaseManager : Singleton<DatabaseManager>
         {
             Debug.Log("Snapshot == null");
         }
+
+        await new WaitForUpdate();
         
         burnerUpdateFinished = true;
     }

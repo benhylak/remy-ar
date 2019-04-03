@@ -28,9 +28,6 @@ public class BigKahuna: MonoBehaviour
     private NotificationManager _notificationManager;
     public MeshRenderer raycastVisualizer;
 
-    public SpeechManager alternateSpeechManager;
-
-    public ControllerGestureObserver ControllerGestureObserver;
     public bool DisableOtherListeners;
     
     public void Start()

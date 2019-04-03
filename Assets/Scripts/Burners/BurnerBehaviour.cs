@@ -91,6 +91,7 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 			_Timer.Reset();
 			_Timer.Hide();
 		}
+		
 		_state = new BurnerStates.AvailableState(this);
 	}
 	

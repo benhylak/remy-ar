@@ -37,7 +37,7 @@ namespace BensToolBox.AR.Scripts
             Ray ray;
             // Virtual Raycast
             RaycastHit result;
-            float maxDist = 20f;
+            float maxDist = 5f;
             
             # if UNITY_EDITOR
             
@@ -48,14 +48,10 @@ namespace BensToolBox.AR.Scripts
                 
             # endif
             
-            if (Physics.Raycast(ray, out result, maxDist))
+            if (Physics.Raycast(ray, out result, maxDist) && result.collider.gameObject.CompareTag("gaze"))
             {
                 var gazeReceiver = result.collider.gameObject.GetComponent<GazeReceiver>();
-    
-                if (gazeReceiver != null)
-                {
-                    gazeReceiver.OnLook();
-                }
+                gazeReceiver?.OnLook();
             }
         }
     }

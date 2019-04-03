@@ -10,8 +10,8 @@ using UnityEngine.UI;
 public class PancakeRecipe : Recipe
 {
     private readonly string PANCAKE_FLIPPED = "PANCAKE_FLIPPED";
+    private readonly string PANCAKE_READY_TO_FLIP = "PANCAKE_READY_TO_FLIP";
     private readonly string PANCAKE_POURED = "PANCAKE_POURED";
-    private readonly string PANCAKE_READY = "PANCAKE_READY";
     
     private readonly float PAN_PREHEAT_TEMP = 60;
     
@@ -46,7 +46,7 @@ public class PancakeRecipe : Recipe
 
             new RecipeStep(
                 waitExplanation: "Cooking...",
-                nextStepTrigger: () => Status == PANCAKE_READY,
+                nextStepTrigger: () => Status == PANCAKE_READY_TO_FLIP,
                 requiresBurner: true,
                 onComplete: () =>
                 {

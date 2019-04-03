@@ -232,13 +232,13 @@ public class BurnerTimer : MonoBehaviour
 		await WaitForCompletion(DOTween.To(GetTransparency,
 				SetTransparency,
 				1f,
-				0.65f)
+				0.5f)
 			.SetEase(Ease.InSine));
 	}
 
 	public async Task Hide()
 	{
-		await WaitForCompletion(DOTween.To(GetTransparency, SetTransparency, 1f, 0.5f).SetEase(Ease.OutSine));
+		await WaitForCompletion(DOTween.To(GetTransparency, SetTransparency, 0f, 0.3f).SetEase(Ease.OutSine));
 	}
 
 	public async Task Reset()
@@ -247,8 +247,9 @@ public class BurnerTimer : MonoBehaviour
 		{
 			_timerDoneSequence.Kill(true);
 			await WaitForKill();
-			await Hide();
 		}
+		
+		await Hide();
 		
 		_lineRenderer
 			.material

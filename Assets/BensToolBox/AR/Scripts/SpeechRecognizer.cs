@@ -75,6 +75,11 @@ public class SpeechRecognizer : BensToolBox.Singleton<SpeechRecognizer>
 
     private SpeechToText _service;
 
+    public void ClearResults()
+    {
+        this.recognizedText = "";
+        this.finalized = false;
+    }
     void Start()
     {
         LogSystem.InstallDefaultReactors();
