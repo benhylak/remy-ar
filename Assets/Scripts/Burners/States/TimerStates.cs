@@ -14,8 +14,7 @@ namespace Burners.States
                 burner._Timer.SetTimer(ts);
                 burner._Timer.SetTransparency(0);
 
-                Task.Delay(300).ContinueWith(_ => { _burnerBehaviour._Timer.Show(); }
-                );
+                Task.Delay(300).ContinueWith(_ => { _burnerBehaviour._Timer.Show(); });
             }
 
             public override State Update()
@@ -40,8 +39,8 @@ namespace Burners.States
 
             public override State Update()
             {
-                return this;
-            
+                return null;
+
                 //if is dismissed, transition out, return waiting state.
             }
         }   

@@ -50,12 +50,12 @@ public class ImageTrackerLerper : MonoBehaviour
 				                  trackerDistToCamera));
 		}
 		
-		if (PreventClipping && trackerDistToCamera < _mainCamera.nearClipPlane + .03f)
+		if (PreventClipping && trackerDistToCamera < _mainCamera.nearClipPlane + .015f)
 		{
 			var hereToCameraVec = _mainCamera.transform.position - imageTracker.transform.position;
 			var distToCamera = hereToCameraVec.magnitude;
 
-			float adjustDist = distToCamera - (_mainCamera.nearClipPlane + .03f);
+			float adjustDist = distToCamera - (_mainCamera.nearClipPlane + .015f);
 			trackerPosition += hereToCameraVec.normalized * adjustDist;
 		}	
 			

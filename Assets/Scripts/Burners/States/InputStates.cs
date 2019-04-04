@@ -47,11 +47,14 @@ namespace Burners.States
                 else if (RecipeManager.Instance.IsWaitingForBurner())
                 {
                     var recipe = RecipeManager.Instance.UseBurner(_burner);
-                    
-                    if(recipe!=null)    
+
+                    if (recipe != null)
+                    {
+                        _burner.HideProactivePrompt();
                         return new RecipeStates.UseForRecipeState(_burner, recipe);
+                    }          
                 }
-                else if (!BigKahuna.Instance.speechRecognizer.Active && this._burner._gazeReceiver.isLookedAt && _burner._gazeReceiver.currentGazeDuration > 0.25f)
+                else if (!BigKahuna.Instance.speechRecognizer.Active && this._burner._gazeReceiver.isLookedAt && _burner._gazeReceiver.currentGazeDuration > 0.4f)
                 {
                     return new VoiceInputState(_burner);
                 }
@@ -65,7 +68,7 @@ namespace Burners.States
             public BurnerBehaviour _burner;
     
             public float _lastLookedAt;
-            public float _timeOut = 1.8f;
+            public float _timeOut = 0.7f;
             
             private static Regex timeRegex = new Regex(@"(?<minutes>\d+(?=\sminutes))|(?<seconds>\d+(?=\sseconds))",
                 RegexOptions.Compiled | RegexOptions.IgnoreCase);

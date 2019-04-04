@@ -47,7 +47,7 @@ public class DatabaseManager : Singleton<DatabaseManager>
         await new WaitForBackgroundThread();
             
         if (snapshot != null)
-        {
+        {       
             foreach (string key in snapshot.Keys)
             {
                 var dict = snapshot.GetValueForKey<IDictionary<string, object>>(key);

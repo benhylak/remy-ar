@@ -38,18 +38,9 @@ public class BigKahunaEditor : Editor
             kahuna._burnerBehaviours.ForEach(x => x._Timer.Reset());
         }
 
-        
-          
-        if (GUILayout.Button("End Recipe"))
-        {
-            RecipeManager.Instance.EndRecipe();
-        }
-        
         if (GUILayout.Button("Reset World"))
         {
             kahuna.ResetWorld();
-        }
-
-        
+        }      
     }
 }

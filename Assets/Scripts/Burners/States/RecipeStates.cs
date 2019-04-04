@@ -15,10 +15,12 @@ namespace Burners.States
             private State _subState; //has it's own lil states it manages. isn't that cute?
             private bool _lastStepWasIndeterminate;
             
-            public UseForRecipeState(BurnerBehaviour _burner, Recipe recipe) : base(_burner)
+            public UseForRecipeState(BurnerBehaviour burner, Recipe recipe) : base(burner)
             {
                 _recipe = recipe;
                 _burnerBehaviour._model.RecipeInProgress = _recipe;
+                
+                Debug.Log("State change: Using for Recipe");
             }
 
             public override State Update()
@@ -30,33 +32,31 @@ namespace Burners.States
                 {
                     var lastStep = _currentStep;
                     _currentStep = _recipe.CurrentStep.Value;
-             
+
                     if (_currentStep.RequiresBurner)
                     {
-                        UpdateTargetTemperature(_currentStep.TargetTemperature);   
-
-                        if(_currentStep.getAnchor?.Invoke() == (InstructionsAnchorable)_burnerBehaviour)
+                        if (!_currentStep.NextStepTrigger.Invoke()
+                            && _currentStep.getAnchor?.Invoke() == (InstructionsAnchorable) _burnerBehaviour)
                         {
-                            _subState = new WaitingState(_burnerBehaviour, _currentStep, lastStep?.IsIndeterminateWait()==true);
+                            if (_currentStep.Timer != default(TimeSpan))
+                            {
+                                _subState = new TimerStates.WaitingForTimerState(_burnerBehaviour, _currentStep.Timer);
+                            }
+                            else
+                            {
+                                _subState = new WaitingState(_burnerBehaviour, _currentStep,
+                                    lastStep?.IsIndeterminateWait() == true);
+                            }                    
                         }
-                    }
+                    }         
                     else
-                    {
-                        _burnerBehaviour.targetTemperature = null;
+                    {            
                         _recipe._burner = null;
                         _burnerBehaviour._model.RecipeInProgress = null;
                     }
                 }
 
                 return this;
-            }
-
-            private void UpdateTargetTemperature(float? targetTemp)
-            {
-                if (targetTemp != null)
-                {
-                    _burnerBehaviour.targetTemperature = targetTemp;
-                }
             }
         }
 
@@ -89,10 +89,14 @@ namespace Burners.States
             public void IndeterminateMode()
             {
                 _burnerBehaviour.ring.gameObject.SetActive(true);
-                _burnerBehaviour.ring.SetMaterialToIndeterminate();
-                _burnerBehaviour.ring.SetColor(RemyColors.RED);
-                _burnerBehaviour.ring.SetAlpha(0);
-                _burnerBehaviour.ring.Show(0.6f);
+                _burnerBehaviour.ring.Show(0.4f)
+                    .OnPlay(() =>
+                    {
+                        _burnerBehaviour.ring.SetRingRadius(_burnerBehaviour.ring.RING_RADIUS);
+                        _burnerBehaviour.ring.SetMaterialToIndeterminate();
+                        _burnerBehaviour.ring.SetColor(RemyColors.RED);
+                        _burnerBehaviour.ring.SetAlpha(0);
+                    });
             }
 
             public override State Update()

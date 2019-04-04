@@ -66,8 +66,6 @@ Shader "Ring/indeterminate" {
 
             float amt = angleDist/PI;
 
-		    //o.Albedo = lerp(_PrimaryColor, _SecondaryColor, sqrt(amt)*amt);
-		    
 		    o.Albedo = _Color;
 		    			
 			//Calculate Alpha

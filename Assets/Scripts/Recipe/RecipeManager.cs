@@ -7,9 +7,11 @@ using UnityEngine;
 
 public class RecipeManager : Singleton<RecipeManager>
 {
-    private Recipe _recipeInProgress;
+    private Recipe _recipeInProgress = null;
     private bool _waitingForBurner;
     public InstructionUI _instructionUi;
+    
+    public bool IsRecipeInProgress => _recipeInProgress != null;
     
     public void StartRecipe(Recipe recipe)
     {
@@ -42,7 +44,10 @@ public class RecipeManager : Singleton<RecipeManager>
     
     private void Update()
     {
-        if(_recipeInProgress != null)
-            _recipeInProgress.Update();
+        if (_recipeInProgress != null)
+        {
+            var isComplete = _recipeInProgress.Update();
+            if(isComplete) EndRecipe();
+        }
     }
 }

@@ -27,9 +27,10 @@ public class BigKahuna: MonoBehaviour
     public IEnumerable<GameObject> _debugObjects;
     private NotificationManager _notificationManager;
     public MeshRenderer raycastVisualizer;
+    public RamenUI ramenUI;
 
     public bool DisableOtherListeners;
-    
+ 
     public void Start()
     {
         Instance = this;

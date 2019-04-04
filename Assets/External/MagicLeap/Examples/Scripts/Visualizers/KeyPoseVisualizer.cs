@@ -33,6 +33,8 @@ namespace MagicLeap
         private bool _trackRightHand = true;
 
         private SpriteRenderer _spriteRenderer = null;
+
+        
         #endregion
 
         #region Unity Methods

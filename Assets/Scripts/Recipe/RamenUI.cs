@@ -31,6 +31,7 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 
 	private InstructionUI _instructionUi;
 
+	private MLImageTrackerBehavior _imageTarget;
 	private Camera _mainCamera;
 	
 	// Use this for initialization
@@ -41,6 +42,7 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 		promptLabel.DOFade(0, 0);
 		microphoneIcon.DOFade(0, 0);
 
+		_imageTarget = GetComponent<ImageTrackerLerper>().imageTracker;
 		_mainCamera = Camera.main;
 	}
 
@@ -54,10 +56,10 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 
 			promptLabel.text = "what do you want to do?";
 
-			ring.GetComponent<Renderer>().material.DOFade(1, 0.25f);
-			ramenLabel.DOFade(1, 0.25f);
-			promptLabel.DOFade(1, 0.25f);
-			microphoneIcon.DOFade(1, 0.25f);
+			ring.GetComponent<Renderer>().material.DOFade(1, 0.35f);
+			ramenLabel.DOFade(1, 0.35f);
+			promptLabel.DOFade(1, 0.35f);
+			microphoneIcon.DOFade(1, 0.35f);
 
 			BigKahuna.Instance.speechRecognizer.Active = true;
 		}
@@ -92,7 +94,7 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 	// Update is called once per frame
 	void Update () {
 
-		if (inputIsEnabled && Vector3.Distance(transform.position, _mainCamera.transform.position) < 0.6f)
+		if (inputIsEnabled && MLImageTracker.IsStarted && _imageTarget.TrackingStatus == MLImageTargetTrackingStatus.Tracked && Vector3.Distance(transform.position, _mainCamera.transform.position) < 0.6f)
 		{
 			if (!isListening)
 			{
@@ -117,17 +119,9 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 			{
 				promptLabel.text = recognizedText;
 			}
-
-			//stand in for working voice recog.
-			if (MLInput.IsStarted && MLInput.GetController(0).TriggerValue > MLInput.TriggerDownThreshold)
-			{
-				StopListening();
-				MakeRamen();
-			}
 			
 			if (BigKahuna.Instance.speechRecognizer.finalized)
-			{
-			
+			{	
 				if (recognizedText.Contains("make") ||
 				    recognizedText.Contains("take") ||
 				    recognizedText.Contains("cook") ||

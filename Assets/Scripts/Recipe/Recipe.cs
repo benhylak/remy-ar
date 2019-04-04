@@ -119,14 +119,19 @@ public class Recipe
         return RecipeComplete.Value;
     }
     
+    public bool IsTimerDone()
+    {
+        return GetBurner().IsTimerDone();
+    }
+    
     public class RecipeStep
     {
         public Func<bool> NextStepTrigger;
         private Action _onEnter;
         public string Instruction;
         public readonly bool RequiresBurner;
-        public readonly float? TargetTemperature;
-        public readonly string WaitExplanation; 
+        public readonly string WaitExplanation;
+        public TimeSpan Timer;
         
         public Func<InstructionsAnchorable> getAnchor;
         public Action _onComplete;
@@ -139,11 +144,12 @@ public class Recipe
             Action onComplete =null, 
             Func<bool> nextStepTrigger =null, 
             Func<InstructionsAnchorable> getAnchor = null, 
-            float? targetTemp = null,
+            TimeSpan timer = default(TimeSpan),
             bool requiresBurner = false)
         {
             this.Instruction = instruction;
-            
+
+            this.Timer = timer;
             this._onEnter = onEnter;
             this._onComplete = onComplete;
             
@@ -151,30 +157,25 @@ public class Recipe
             this.getAnchor = getAnchor;
             
             RequiresBurner = requiresBurner;
-            this.TargetTemperature = targetTemp;
-
             this.WaitExplanation = waitExplanation;
         }
 
         public bool Update()
         {
-            if (_justEntered)
-            {
-                _onEnter?.Invoke();
-                _justEntered = false;
-                return false;
-            }
-            else if (NextStepTrigger())
+            if (NextStepTrigger())
             {
                 _onComplete?.Invoke();
                 Debug.Log("Done Step");
                 return true;  
             }
-            else
+            else if (_justEntered)
             {
+                _onEnter?.Invoke();
+                _justEntered = false;
                 return false;
             }
-            
+
+            return false;
         }
 
         public bool IsIndeterminateWait()

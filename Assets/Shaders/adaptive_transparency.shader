@@ -4,8 +4,6 @@ Shader "Custom/adaptive_transparency" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
-		_Glossiness ("Smoothness", Range(0,1)) = 0.5
-		_Metallic ("Metallic", Range(0,1)) = 0.0
 		_RimColor("Rim Color", Color) = (1, 1, 1, 1)
         _RimPower("Rim Power", Range(1.0, 6.0)) = 3.0
         _Radius("Radius", Range(0.0, 6.0)) = 0.2
@@ -31,8 +29,7 @@ Shader "Custom/adaptive_transparency" {
 			float3 viewDir;
 		};
 
-		half _Glossiness;
-		half _Metallic;
+
 		fixed4 _Color;
 		float4 _RimColor;
         float _RimPower;
@@ -46,11 +43,6 @@ Shader "Custom/adaptive_transparency" {
 			// put more per-instance properties here
 		UNITY_INSTANCING_BUFFER_END(Props)
 
-    //    void vert (inout appdata_full v, out Input o) {
-     //       UNITY_INITIALIZE_OUTPUT(Input,o);
-       //     o.objPos = v.vertex;
-        //} 
-        
 		void surf (Input IN, inout SurfaceOutput o) {
 			// Albedo comes from a texture tinted by color
 			fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
@@ -72,11 +64,6 @@ Shader "Custom/adaptive_transparency" {
 			
 			half rim = 1.0 - saturate(dot(normalize(IN.viewDir), o.Normal));
             o.Emission = _RimColor.rgba * pow(rim, _RimPower);
-   
-			//o.Metallic = _Metallic;
-			//o.Smoothness = _Glossiness;
-			//o.Alpha = c.a;
-
 		}
 
 		ENDCG

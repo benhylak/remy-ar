@@ -65,6 +65,8 @@ public class SpeechRecognizer : BensToolBox.Singleton<SpeechRecognizer>
     private int _recordingHZ = 22050;
     public bool finalized;
 
+    public object HighestPriorityListener;
+        
     public bool IsInitalized
     {
         get { return _service != null; }
