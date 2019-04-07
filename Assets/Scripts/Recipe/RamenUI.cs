@@ -18,6 +18,7 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 	public Text promptLabel;
 	public SpriteRenderer microphoneIcon;
 
+	public Transform headAnchorPoint;
 	public Transform instructionsAnchorFlat;
 	public Transform instructionsAnchorBillboard;
 	
@@ -27,12 +28,15 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 	private readonly float SWITCH_TO_BILLBOARD_DIST = 0.65f;
 	private readonly float SWITCH_TO_FLAT_DIST = 0.5f;
 
+	public SpriteRenderer outline;
+	
 	private Transform _lastBestAnchor;
 
 	private InstructionUI _instructionUi;
-
-	private MLImageTrackerBehavior _imageTarget;
+	private ImageTrackerLerper _imageTracker;
 	private Camera _mainCamera;
+
+	public bool headTrackingEnabled = true;
 	
 	// Use this for initialization
 	void Start ()
@@ -42,7 +46,8 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 		promptLabel.DOFade(0, 0);
 		microphoneIcon.DOFade(0, 0);
 
-		_imageTarget = GetComponent<ImageTrackerLerper>().imageTracker;
+		_imageTracker = GetComponent<ImageTrackerLerper>();
+		
 		_mainCamera = Camera.main;
 	}
 
@@ -60,6 +65,7 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 			ramenLabel.DOFade(1, 0.35f);
 			promptLabel.DOFade(1, 0.35f);
 			microphoneIcon.DOFade(1, 0.35f);
+			outline.DOFade(1, 0.35f);
 
 			BigKahuna.Instance.speechRecognizer.Active = true;
 		}
@@ -85,6 +91,7 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 		ramenLabel.DOFade(0, 0.25f);
 		promptLabel.DOFade(0, 0.25f);
 		microphoneIcon.DOFade(0, 0.25f);
+		outline.DOFade(0, 0.25f);
 
 		BigKahuna.Instance.speechRecognizer.recognizedText = ""; //consume text
 		BigKahuna.Instance.speechRecognizer.Active = false;
@@ -94,7 +101,7 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 	// Update is called once per frame
 	void Update () {
 
-		if (inputIsEnabled && MLImageTracker.IsStarted && _imageTarget.TrackingStatus == MLImageTargetTrackingStatus.Tracked && Vector3.Distance(transform.position, _mainCamera.transform.position) < 0.6f)
+		if (inputIsEnabled && _imageTracker.IsTrackingActive() && Vector3.Distance(transform.position, _mainCamera.transform.position) < 0.6f)
 		{
 			if (!isListening)
 			{
@@ -148,7 +155,7 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 							.OnComplete(() =>
 							{
 								promptLabel.DOColor(new Color(255, 255, 255, 0), 0);
-								promptLabel.text = "what do you want to do?";
+								promptLabel.text = "say an action like 'make' or 'buy more'";
 							})
 					);
 
@@ -176,18 +183,24 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 		_instructionUi = instructions;
 
 		var instructionTransform = instructions.transform;
-		
-		instructionTransform.parent = this.transform;
-		
-		instructionTransform.localScale = instructionsAnchorFlat.localScale;
-		instructionTransform.position = instructionsAnchorFlat.position;
-		instructionTransform.rotation = instructionsAnchorFlat.rotation;
+
+		var bestAnchor = GetBestAnchorPoint();
+
+		instructionTransform.parent = bestAnchor;
+
+		instructionTransform.localScale = bestAnchor.localScale;
+		instructionTransform.position = bestAnchor.position;
+		instructionTransform.rotation = bestAnchor.rotation;
 
 		instructions.Show();
 	}
 
-	public Transform GetBestAnchorPoint()
+	public bool IsFullyVisible()
 	{
+		return ramenLabel.rectTransform.IsFullyVisibleFrom(_mainCamera);
+	}
+	public Transform GetBestAnchorPoint()
+	{		
 		//if there hasn't been a best anchor yet, set it to default
 		if (_lastBestAnchor == null)
 		{
@@ -196,8 +209,12 @@ public class RamenUI : MonoBehaviour, InstructionsAnchorable
 		}
 
 		Transform bestAnchorPoint = _lastBestAnchor;
-
-		//check if there's a better point besides default
+		
+//		if (headTrackingEnabled && (!IsFullyVisible() || !_imageTracker.IsTrackingActive()))
+//		{
+//			bestAnchorPoint = headAnchorPoint;
+//			_instructionUi.LookAtCamera = false;
+//		}else
 		if (Vector3.Distance(transform.position, _mainCamera.transform.position) > SWITCH_TO_BILLBOARD_DIST)
 		{				
 			_instructionUi.LookAtCamera = true;		

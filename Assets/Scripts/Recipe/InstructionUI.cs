@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using BensToolBox.AR.Scripts;
 using DG.Tweening;
 using TMPro;
 using UniRx;
@@ -65,6 +66,8 @@ public class InstructionUI : MonoBehaviour
 			transform.localScale = Vector3.Lerp(transform.localScale, bestAnchorPoint.localScale, lerpAmt);
 		}
 	}
+
+
 
 	public Quaternion GetLookAtCameraRotation()
 	{

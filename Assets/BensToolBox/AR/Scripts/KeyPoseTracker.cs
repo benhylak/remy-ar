@@ -31,8 +31,8 @@ namespace BensToolBox.AR.Scripts
         public float handVelocity;
         //private Vector3 lastRawHandPos;
         private float lastVelocityCheck;
-        private static readonly float VELOCITY_CHECK_INTERVAL = 0.05f;
-        private static readonly float MAXIMUM_STATIONARY_VELOCITY = 0.35f;
+        private static readonly float VELOCITY_CHECK_INTERVAL = 0.07f;
+        private static readonly float MAXIMUM_STATIONARY_VELOCITY = 0.375f;
 
         private float _startedStationaryTime;
         public float lastStationaryTime;

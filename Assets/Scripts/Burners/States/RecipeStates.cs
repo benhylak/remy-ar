@@ -107,6 +107,9 @@ namespace Burners.States
                     _burnerBehaviour.HideLabel();
                     _burnerBehaviour.ring.Hide();
                     
+                    if(_recipeStep.IsIndeterminateWait())
+                        _burnerBehaviour.PlayDoneWaitingSound();
+                    
                     return null;
                 }
 //                if (_burnerBehaviour._gazeReceiver.isLookedAt &&

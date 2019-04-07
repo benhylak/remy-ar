@@ -44,10 +44,10 @@ public class RamenRecipe : Recipe
                 nextStepTrigger: () => Status == NOODLES_ADDED_STATUS,
                 requiresBurner: true
             ),
-
+ 
             new RecipeStep(
                 getAnchor: GetBurner,
-                timer: new TimeSpan(0, 1, 0),
+                timer: new TimeSpan(0, 1, 30),
                 nextStepTrigger: IsTimerDone,
                 onComplete: () => { GetBurner()._Timer.Reset(disableAfter: true); },
                 requiresBurner: true
@@ -55,8 +55,19 @@ public class RamenRecipe : Recipe
 
             new RecipeStep(
                 getAnchor: GetBurner,
+                instruction: "Turn Off Burner",
+                nextStepTrigger: () => !GetBurner()._model.IsOn.Value,
+                requiresBurner: true
+            ),   
+
+            new RecipeStep(
+                getAnchor: GetBurner,
                 instruction: "Remove Pot",
-                nextStepTrigger: () => GetBurner()._model.IsPotDetected.Value,
+                nextStepTrigger: () =>
+                {
+                    Debug.Log("Pot Detected: " + GetBurner()._model.IsPotDetected.Value);
+                    return !GetBurner()._model.IsPotDetected.Value;
+                },
                 requiresBurner: true
             )         
         );

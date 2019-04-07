@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 using System.Timers;
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.Experimental.PlayerLoop;
+using UnitySDK.WebSocketSharp;
+
 
 
 namespace Burners.States
 {
-
 	public static class InputStates
-{  
+    {  
         public class TimerPromptState : State
         {
             public BurnerBehaviour _burner;
@@ -70,6 +70,8 @@ namespace Burners.States
             public float _lastLookedAt;
             public float _timeOut = 0.7f;
             
+            private static readonly string DEFAULT_PROMPT_TEXT = "for example, you can say 'boil' or 'two minutes'";
+            
             private static Regex timeRegex = new Regex(@"(?<minutes>\d+(?=\sminutes))|(?<seconds>\d+(?=\sseconds))",
                 RegexOptions.Compiled | RegexOptions.IgnoreCase);
             
@@ -83,38 +85,68 @@ namespace Burners.States
             {
                 this._burner = burner;
                 Debug.Log("Voice input state");
+
+                _burner.voicePromptText.text = "for example, you can say 'boil' or 'two minutes'";
                 
                 BigKahuna.Instance.speechRecognizer.Active = true;
                 _burner.ShowInputPrompt();
+                _burner.voicePromptText.DOKill();
+                _burner.voicePromptText.DOFade(1f, 0.3f).SetEase(Ease.InSine);
+            }
+
+            private void ResetPromptText(bool hide= true)
+            {
+                if (hide)
+                {
+                    _burner.voicePromptText.DOKill();
+                    _burner.voicePromptText.DOFade(0f, 0.3f).SetEase(Ease.InSine);
+                }
+           
+                _burner.voicePromptText.text = DEFAULT_PROMPT_TEXT; 
             }
             
             public override State Update()
             {             
                 if (_burner._gazeReceiver.timeSinceLastGaze > _timeOut)
-                {
+                {                    
+                    ResetPromptText();
                     BigKahuna.Instance.speechRecognizer.Active = false;
                     return new TimerPromptState(_burner, this);
                 }
                 else if(BigKahuna.Instance.DisableOtherListeners)
-                {
+                {                                      
+                    ResetPromptText();
                     return new TimerPromptState(_burner, this);
                 }
+
+                var recognizedText = BigKahuna.Instance.speechRecognizer.recognizedText;
                 
+                if (!recognizedText.IsNullOrEmpty())
+                {
+                    _burner.voicePromptText.text = recognizedText;
+                }
+              
                 _burner.SetInputLevel(BigKahuna.Instance.speechRecognizer.audioLevel);
     
                 if (BigKahuna.Instance.speechRecognizer.finalized)
                 {
                     Debug.Log("Speech is Finalized. Result: " + BigKahuna.Instance.speechRecognizer.recognizedText);
-                    
+
+                    recognizedText = recognizedText.Replace("two", "2");
+                    recognizedText = recognizedText.Replace("one", "1");
+                    recognizedText = recognizedText.Replace("three", "3");
+                    recognizedText = recognizedText.Replace("four", "4");
+                     
                     MatchCollection matches;
     
-                    if (boilRegex.IsMatch(BigKahuna.Instance.speechRecognizer.recognizedText))
+                    if (boilRegex.IsMatch(recognizedText))
                     {      
                         Debug.Log("Boil match");
                         
                         BigKahuna.Instance.speechRecognizer.Active = false;
-                        BigKahuna.Instance.speechRecognizer.recognizedText = "";
-                        BigKahuna.Instance.speechRecognizer.finalized = false;
+                        BigKahuna.Instance.speechRecognizer.ClearResults();
+                        
+                        ResetPromptText();
                         
                         return new BurnerStates
                             .BurnerTransitionState(
@@ -124,7 +156,7 @@ namespace Burners.States
                                         () => new BoilStates.BoilDoneTimerState(_burner)),
                                 0.3f);                          
                     }
-                    else if ((matches = timeRegex.Matches(BigKahuna.Instance.speechRecognizer.recognizedText)).Count > 0)
+                    else if ((matches = timeRegex.Matches(recognizedText)).Count > 0)
                     {           
                         Debug.Log("time match");
                         
@@ -138,10 +170,19 @@ namespace Burners.States
     
                             Group minutes = groups["minutes"];            
                             Group seconds = groups["seconds"];
-                        
-                            var minutesVal = minutes.Success ? int.Parse(minutes.Value) : 0;       
-                            var secondsVal = seconds.Success ? int.Parse(seconds.Value) : 0;
-                            
+
+                            var minutesVal = 0;
+                            var secondsVal = 0;
+
+                            if (minutes.Success)
+                            {
+                                int.TryParse(minutes.Value, out minutesVal);
+                            }
+                            else if (seconds.Success)
+                            {
+                                int.TryParse(seconds.Value, out secondsVal);
+                            }
+                                                 
                             ts = ts.Add(new TimeSpan(0, minutesVal, secondsVal));
                         }
                         
@@ -149,6 +190,8 @@ namespace Burners.States
                         
                         BigKahuna.Instance.speechRecognizer.ClearResults();
                         BigKahuna.Instance.speechRecognizer.Active = false;
+                        
+                        ResetPromptText();
                         
                         return new BurnerStates
                             .BurnerTransitionState(
@@ -158,7 +201,35 @@ namespace Burners.States
                                 0.2f);                                        
                     }
                     else
-                    {
+                    {                 	
+                        var seq = DOTween.Sequence();
+
+                        seq.Append(
+                            _burner.voicePromptText
+                                .DOColor(new Color(255f, 0, 0, 80f), 0.2f));
+
+                        seq.Append(
+                            _burner.voicePromptText.DOFade(0, 0.3f)
+                                .SetDelay(.35f)
+                                .OnComplete(() =>
+                                {
+                                    _burner.voicePromptText.DOColor(new Color(255, 255, 255, 0), 0);
+                                    _burner.voicePromptText.text = "sorry, i didn't get that";
+                                })
+                        );
+                        
+                        seq.Append(
+                            _burner.voicePromptText.DOFade(1, 0.3f));
+                        
+                        seq.Append(
+                            _burner.voicePromptText.DOFade(0, 0.2f)
+                                .SetDelay(0.8f)
+                                .OnComplete(() => { _burner.voicePromptText.text = DEFAULT_PROMPT_TEXT; })
+                        );
+
+                        seq.Append(
+                            _burner.voicePromptText.DOFade(1, 0.3f));
+                          
                         BigKahuna.Instance.speechRecognizer.ClearResults();
                     }
                 }

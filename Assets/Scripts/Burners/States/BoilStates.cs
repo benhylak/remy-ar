@@ -23,6 +23,7 @@ namespace Burners.States
             {       
                 _burnerBehaviour.ring.StartPulsing(RemyColors.RED, RemyColors.RED_RIM);
                 _burnerBehaviour.SetLabel("Done");
+                _burnerBehaviour.PlayDoneWaitingSound();
             }
 
             public override State Update()

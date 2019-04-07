@@ -29,11 +29,17 @@ public class BigKahuna: MonoBehaviour
     public MeshRenderer raycastVisualizer;
     public RamenUI ramenUI;
 
+    public PushButtonBehavior pushButton;
+    
+    public bool UsePushButton = false;
+
     public bool DisableOtherListeners;
  
     public void Start()
     {
         Instance = this;
+
+        raycastVisualizer.enabled = false;
         
         DatabaseManager.Instance.getBurners()
             .ObserveAdd()
@@ -53,7 +59,30 @@ public class BigKahuna: MonoBehaviour
 //                    _timerState = SetTimerStateMachine.GetInitialState();
 //                }
 //            );
-     
+
+        MLInput.OnControllerTouchpadGestureEnd += (id, gesture) =>
+        {
+            if (gesture.Type == MLInputControllerTouchpadGestureType.ForceTapDown)
+            {
+                raycastVisualizer.enabled = !raycastVisualizer.enabled;
+            }
+            else if (gesture.Type == MLInputControllerTouchpadGestureType.LongHold)
+            {
+                UsePushButton = !UsePushButton;
+
+                if (UsePushButton)
+                {
+                    pushButton.gameObject.SetActive(true);
+                    ramenUI.inputIsEnabled = false;
+                }
+                else
+                {
+                    ramenUI.inputIsEnabled = true;
+                    pushButton.gameObject.SetActive(false);
+                }
+            }
+        };
+        
         MLInput.OnControllerButtonDown += (b, button) =>
         {
             if (button == MLInputControllerButton.Bumper)
@@ -62,14 +91,15 @@ public class BigKahuna: MonoBehaviour
             }
             else if (button == MLInputControllerButton.HomeTap)
             {
-                RecipeManager.Instance.EndRecipe();
+                ResetBurners();
+                RecipeManager.Instance.ClearRecipe();
             }
          
         }; //toggle setup mode.
 
         MLInput.OnTriggerDown += (_, __) =>
         {
-            ResetWorld();
+            ramenUI.headTrackingEnabled = !ramenUI.headTrackingEnabled;
         };
 
         MLInput.OnTriggerUp += (_, __) =>
@@ -86,6 +116,14 @@ public class BigKahuna: MonoBehaviour
         _debugObjects = GameObject.FindGameObjectsWithTag("Debug");
     }
 
+    public void ResetBurners()
+    {
+        foreach (var burner in _burnerBehaviours)
+        {
+            burner.SetStateToDefault();
+        }
+    }
+    
     public void ResetWorld()
     {
         SceneManager.LoadScene (SceneManager.GetActiveScene ().buildIndex);    
@@ -103,6 +141,8 @@ public class BigKahuna: MonoBehaviour
     public void ToggleSetup()
     {       
         isSetup = !isSetup;
+
+        if (!isSetup) raycastVisualizer.enabled = false;
         
         foreach (var debugObj in _debugObjects)
         {
@@ -110,7 +150,5 @@ public class BigKahuna: MonoBehaviour
         }
 
         Stove.GetComponent<ImageTrackerLerper>().IsTrackingEnabled = isSetup;
-
-        raycastVisualizer.enabled = isSetup;
     }
 }

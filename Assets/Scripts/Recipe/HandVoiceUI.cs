@@ -89,6 +89,7 @@ public class HandVoiceUI : MonoBehaviour
 	{
 		mainLabel.text = "Listening...";
 		promptLabel.text = "what do you want to make?";
+		_inputState = VoiceUIState.WHAT;
 	}
 
 	public void MakePancakes()
@@ -170,12 +171,12 @@ public class HandVoiceUI : MonoBehaviour
 			if (isListening && (!_keyPoseTracker.KeyposeActive || 
 			                    BigKahuna.Instance.ramenUI.isListening || 
 			                    RecipeManager.Instance.IsRecipeInProgress || 
-			                Time.time - _keyPoseTracker.lastStationaryTime > 0.3))
+			                Time.time - _keyPoseTracker.lastStationaryTime > 0.7f))
 			{
 				StopListening();			
 				_lastStateChange = Time.time;
 			}
-			else if (_keyPoseTracker.KeyposeActive && !isListening && _keyPoseTracker.HasBeenStationaryForSeconds > 0.45f)
+			else if (_keyPoseTracker.KeyposeActive && !isListening && _keyPoseTracker.HasBeenStationaryForSeconds > 0.4f)
 			{ 
 				StartListening();			
 				_lastStateChange = Time.time;
@@ -209,7 +210,9 @@ public class HandVoiceUI : MonoBehaviour
 					//ask "How many?"
 					//trigger make ramen instruction
 				}
-				else if (_inputState == VoiceUIState.HOW_MANY && recognizedText.Any(char.IsDigit))
+				else if (_inputState == VoiceUIState.HOW_MANY && (recognizedText.Any(char.IsDigit) || recognizedText.Contains("two")||
+				                                                  recognizedText.Contains("to") || recognizedText.Contains("too") ||
+				                                                  recognizedText.Contains("one") || recognizedText.Contains("three")))
 				{
 					MakePancakes(); //would someday pass in the number
 				}

@@ -17,8 +17,6 @@ public class Recipe
 
     public BurnerBehaviour _burner;
 
-    public readonly IReadOnlyReactiveProperty<bool> RecipeComplete;
-
     public readonly string Name;
 
     private string _status = "";
@@ -35,6 +33,8 @@ public class Recipe
     {
         return _recipeSteps.Count;
     }
+
+    public bool IsOnLastStep => StepsLeftCount.Value == 0;
     
     public Recipe(string name)
     {
@@ -53,15 +53,8 @@ public class Recipe
         
         StepsLeftCount = _currentStepIndex
             .Where(i => _recipeSteps.Count > 0 && i < _recipeSteps.Count)
-            .Select(stepIndex =>
-            {
-                return _recipeSteps.Count - (stepIndex + 1);
-            })
+            .Select(stepIndex => _recipeSteps.Count - (stepIndex + 1))
             .ToReactiveProperty();
-        
-        RecipeComplete = StepsLeftCount
-                .Select(stepsLeft => stepsLeft == 0)
-                .ToReactiveProperty();
     }
 
     public BurnerBehaviour GetBurner()
@@ -106,17 +99,19 @@ public class Recipe
    
     public bool Update()
     {
-        if (!RecipeComplete.Value)
+        bool stepIsFinished = CurrentStep.Value.Update();
+        bool recipeIsComplete = false;
+        
+        if (stepIsFinished && IsOnLastStep)
         {
-            bool stepIsFinished = CurrentStep.Value.Update();
-
-            if (stepIsFinished)
-            {
-                _currentStepIndex.Value++;
-            }
+            recipeIsComplete = true;
+        }
+        else if (stepIsFinished)
+        {
+            _currentStepIndex.Value++;
         }
 
-        return RecipeComplete.Value;
+        return recipeIsComplete;
     }
     
     public bool IsTimerDone()

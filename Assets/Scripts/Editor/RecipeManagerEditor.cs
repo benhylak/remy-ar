@@ -16,9 +16,14 @@ public class RecipeManagerEditor : Editor
             recipeManager.StartRecipe(new PancakeRecipe());
         }
    
+        if(GUILayout.Button("Make Ramen"))
+        {
+            recipeManager.StartRecipe(new RamenRecipe(BigKahuna.Instance.ramenUI));
+        }
+        
         if (GUILayout.Button("End Recipe"))
         {
-            recipeManager.EndRecipe();
+            recipeManager.ClearRecipe();
         }
   
     }
