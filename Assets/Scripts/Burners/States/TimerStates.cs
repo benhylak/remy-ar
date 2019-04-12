@@ -14,8 +14,7 @@ namespace Burners.States
                 burner._Timer.SetTimer(ts);
                 burner._Timer.SetTransparency(0);
 
-                Task.Delay(300).ContinueWith(_ => { _burnerBehaviour._Timer.Show(); }
-                );
+                Task.Delay(300).ContinueWith(_ => { _burnerBehaviour._Timer.Show(); });
             }
 
             public override State Update()
@@ -33,6 +32,7 @@ namespace Burners.States
         {
             public TimerDoneState(BurnerBehaviour burner) : base(burner)
             {
+                _burnerBehaviour.PlayDoneWaitingSound();
                 _burnerBehaviour.OnBurnerNotification(
                     new NotificationManager.Notification("Your Timer is Done",
                         _burnerBehaviour));
@@ -40,8 +40,20 @@ namespace Burners.States
 
             public override State Update()
             {
-                return this;
-            
+                if (RecipeManager.Instance.IsRecipeInProgress)
+                {
+                    return null;
+                }
+                else if (!_burnerBehaviour._model.IsPotDetected.Value)
+                {
+                    _burnerBehaviour._Timer.Reset();
+                    return new BurnerStates.AvailableState(_burnerBehaviour);
+                }
+                else
+                {
+                    return this;
+                }
+                
                 //if is dismissed, transition out, return waiting state.
             }
         }   

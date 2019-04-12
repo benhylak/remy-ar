@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 using static NotificationManager;
@@ -9,13 +10,15 @@ public abstract class NotificationBehaviour : MonoBehaviour
     public bool isDismissed;
     protected GazeReceiver _gazeReceiver;
     protected State _state;
+    public AudioClip _notifSound;
+    
 
 //    public NotificationBehaviour(Notification n)
 //    {
 //        this._notificationModel = n;
 //    }
 
-    public abstract void Launch(int delay = 1000);
+    public abstract Task Launch(int delay = 1000);
     
 
     protected void Start()

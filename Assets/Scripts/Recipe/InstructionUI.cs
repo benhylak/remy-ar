@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using BensToolBox.AR.Scripts;
 using DG.Tweening;
 using TMPro;
 using UniRx;
@@ -44,8 +45,7 @@ public class InstructionUI : MonoBehaviour
 			if (LookAtCamera)
 			{
 				targetRot =
-					Quaternion.LookRotation(transform.position - _mainCamera.transform.position,
-						Vector3.up);
+					GetLookAtCameraRotation();
 			}
 			else
 			{
@@ -67,6 +67,14 @@ public class InstructionUI : MonoBehaviour
 		}
 	}
 
+
+
+	public Quaternion GetLookAtCameraRotation()
+	{
+		return Quaternion.LookRotation(transform.position - _mainCamera.transform.position,
+			Vector3.up);
+	}
+	
 	public void SetRecipe(Recipe recipe)
 	{
 		_beingMade.text = recipe.Name;
@@ -93,6 +101,8 @@ public class InstructionUI : MonoBehaviour
 
 	private void UpdateStepInstructions(Recipe.RecipeStep step)
 	{
+		if (step.NextStepTrigger.Invoke()) return; // don't bother running if the step is already done
+		
 		if (step.Instruction.IsNullOrEmpty())
 		{
 			Hide();

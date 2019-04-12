@@ -45,7 +45,6 @@ public class BurnerRingController : MonoBehaviour
 
     public Tween AddTweenToQueue(Tween nextTween)
     {
-   
         if (IsTweenInProgress)
         {     
             nextTween.Pause();
@@ -87,14 +86,18 @@ public class BurnerRingController : MonoBehaviour
     }
 
     public Tween Show(float duration = 0.4f)
-    {
-        SetRingRadius(RING_RADIUS);
-        
-        var showTween = DOTween.To(GetAlpha, SetAlpha, 1f, duration)
-            .SetEase(Ease.InSine).OnComplete(() => Debug.Log("Show completed"));
+    {   
+        SetAlpha(0);
 
-        AddTweenToQueue(showTween);
-        return showTween;
+        var seq = DOTween.Sequence();
+        seq.Append(
+            DOTween.To(GetRingRadius, SetRingRadius, RING_RADIUS, 0));
+        
+        seq.Append(DOTween.To(GetAlpha, SetAlpha, 1f, duration)
+            .SetEase(Ease.InSine)
+            .OnComplete(() => Debug.Log("Show completed")));
+
+        return AddTweenToQueue(seq);
     }
     
     public Tween Hide(float duration = 0.3f)

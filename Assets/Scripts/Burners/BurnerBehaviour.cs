@@ -31,6 +31,8 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 
 	private bool isMonitorBoiling;
 
+	public Text voicePromptText;
+	
 	public NotificationManager.NotificationEventHandler OnBurnerNotification;
 
 	public State _state;
@@ -45,23 +47,39 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 	private readonly float SWITCH_TO_EDGE_DIST = 0.35f;
 	private readonly float SWITCH_TO_CENTER_DIST = 0.55f;
 
+	public AudioClip doneWaitingSound;
+
+	private AudioSource _audioSource;
+
 	private Tween _labelTween;
 	private bool _labelIsHidden = true;
 
-	public float? targetTemperature = null;
 	private Camera _mainCamera;
 
+	public bool IsTimerDone()
+	{
+		return _Timer.isComplete;
+	}
+	
 	public void Start()
 	{
 		FloatingLabel.gameObject.SetActive(true);
 		HideLabel();
 		
+		voicePromptText.DOFade(0f, 0.0f).SetEase(Ease.InSine);
+	
+		_audioSource = GetComponent<AudioSource>();
 		_state = new BurnerStates.AvailableState(this);
 		_gazeReceiver = GetComponent<GazeReceiver>();
 		_mainCamera = Camera.main;
-		
 	}
-	
+
+	public void PlayDoneWaitingSound()
+	{
+		_audioSource.clip = doneWaitingSound;
+		_audioSource.Play();
+	}
+
 	public bool IsBoiling()
 	{
 		return _model.IsBoiling.Value;
@@ -71,31 +89,20 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 	{
 		OnBurnerNotification(new NotificationManager.Notification(text, this));
 	}
-
-	public bool HasReachedTargetTemp()
-	{
-		if (targetTemperature.HasValue)
-		{
-			return _model.Temperature.Value > targetTemperature.Value;
-		}
-		else
-		{
-			throw new Exception("HasReachedTargetTemp called, but burner is not targeting a temp.");
-		}
-	}
-
+	
 	public void SetStateToDefault()
 	{
 		if (_Timer.isSet)
 		{
-			_Timer.Reset();
-			_Timer.Hide();
+			_Timer.Reset(true);
 		}
+
+		ring.Hide();
+		FloatingLabel.DOFade(0, 0);
+
 		_state = new BurnerStates.AvailableState(this);
 	}
 	
-
-
 	public void SetTimer(TimeSpan ts)
 	{  
 		_state = new TimerStates.WaitingForTimerState(this, ts);
@@ -186,8 +193,8 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 		ring.gameObject.SetActive(true);
 		ring.ShowFancy();
 				
-		FloatingLabel.gameObject.SetActive(true);
-		FloatingLabel.DOFade(1, 1.5f).SetEase(Ease.InCubic);					
+		FloatingLabel.gameObject.SetActive(true);		
+		SetLabel("Set a Timer", 1.5f);		
 						
 		Debug.Log("Proactive Timer Activated");
 	}
@@ -238,7 +245,7 @@ public class BurnerBehaviour : MonoBehaviour, InstructionsAnchorable
 		instructions.transform.parent = this.transform;
 		instructions.transform.localScale = anchorPoint.localScale;
 		instructions.transform.position = anchorPoint.position;
-		instructions.transform.rotation = anchorPoint.rotation;
+		instructions.transform.rotation = instructions.GetLookAtCameraRotation();
 
 		instructions.Show(delay:0.35f);
 	

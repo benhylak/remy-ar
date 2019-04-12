@@ -34,7 +34,7 @@ public class PhysicalNotification : NotificationBehaviour
 	private Camera mainCamera;
 	
 	// Use this for initialization
-	void Start ()
+	public virtual void Start ()
 	{
 		_spotEndScale = spotImage.transform.localScale;
 		mainCamera = Camera.main;
@@ -43,7 +43,7 @@ public class PhysicalNotification : NotificationBehaviour
 	}
 	
 	// Update is called once per frame
-	void Update ()
+	public virtual void Update ()
 	{
 		if (_state != null)
 			_state = _state.Update() ?? _state;
@@ -61,11 +61,13 @@ public class PhysicalNotification : NotificationBehaviour
 	//	meshParent.transform.rotation *= Quaternion.Euler(Vector3.up * rotationSpeed* Time.deltaTime);
 	}
 	
-	public override async void Launch(int delay = 1000)
+	public override async Task Launch(int delay = 1000)
 	{	spotImage.DOFade(0, 0);
 		labelImage.DOFade(0, 0);
 		spotImage.transform.localScale = 0.1f * _spotEndScale;
 		meshParent.transform.SetLocalPosY(_raisedYVal);
+
+		mesh.enabled = true;
 		
 		foreach (var mat in mesh.materials)
 		{
@@ -151,14 +153,16 @@ public class PhysicalNotification : NotificationBehaviour
 			meshParent.transform.DOLocalMoveY(_raisedYVal, 0.9f)
 				.SetEase(Ease.OutCubic));	
 	}
-    
+
 	public override Tween Hide()
 	{
 		spotImage.DOFade(0, 0.3f);
 		labelImage.DOFade(0, 0.3f);
 		spotImage.transform.DOScale(0.1f * _spotEndScale.x, 0.3f);
+		mesh.enabled = false;
+
 //		meshParent.transform.SetLocalPosY(_raisedYVal);
 
-		return null;
+		return labelImage.DOFade(0, 0.3f);
 	}
 }

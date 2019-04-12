@@ -13,6 +13,8 @@ public class PushButtonBehavior : MonoBehaviour
 	public GameObject button;
 
 	public GameObject buttonBase;
+
+	public float lastPress = 0;
 	
 	// Use this for initialization
 	void Start () {
@@ -29,10 +31,21 @@ public class PushButtonBehavior : MonoBehaviour
 		}
 		if (button.transform.localPosition.y <= PRESSED_Y)
 		{
-			isPressed = true;
-
+			if (!isPressed && Time.time - lastPress > 2f)
+			{
+				isPressed = true;
+				lastPress = Time.time;
+				OnPress();
+			}
+			
 			button.transform.SetLocalPosY(PRESSED_Y);
 		}
 		else isPressed = false;
+	}
+
+	void OnPress()
+	{
+		var recipe = new RamenRecipe(BigKahuna.Instance.ramenUI);
+		RecipeManager.Instance.StartRecipe(recipe);
 	}
 }

@@ -96,7 +96,7 @@ public class BurnerTimer : MonoBehaviour
 	{
 		pillTransparency = val;
 		
-		foreach (var r in _pillLabel.GetComponentsInChildren<MeshRenderer>(true))
+		foreach (var r in _pillLabel.GetComponentsInChildren<Renderer>(true))
 		{
 			r.material.SetTransparency(val);
 		}
@@ -232,23 +232,25 @@ public class BurnerTimer : MonoBehaviour
 		await WaitForCompletion(DOTween.To(GetTransparency,
 				SetTransparency,
 				1f,
-				0.65f)
+				0.5f)
 			.SetEase(Ease.InSine));
 	}
 
 	public async Task Hide()
 	{
-		await WaitForCompletion(DOTween.To(GetTransparency, SetTransparency, 1f, 0.5f).SetEase(Ease.OutSine));
+		await WaitForCompletion(DOTween.To(GetTransparency, SetTransparency, 0f, 0.3f).SetEase(Ease.OutSine));
 	}
 
-	public async Task Reset()
+	public async Task Reset(bool disableAfter = false)
 	{
 		if (_timerDoneSequence != null && _timerDoneSequence.active)
 		{
-			_timerDoneSequence.Kill(true);
-			await WaitForKill();
-			await Hide();
+			_timerDoneSequence.Kill(false);
 		}
+		
+		await Hide();
+		
+		Debug.Log("Reset timer");
 		
 		_lineRenderer
 			.material
@@ -260,7 +262,11 @@ public class BurnerTimer : MonoBehaviour
 		_circleRenderer.SetPercentFilled(0);
 		_timerGoal = TimeSpan.Zero;
 		_progress = 0;
-	
+
+		if (disableAfter)
+		{
+			this.gameObject.SetActive(false);
+		}
 	}
 	// Update is called once per frame
 	

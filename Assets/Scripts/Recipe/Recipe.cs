@@ -17,8 +17,6 @@ public class Recipe
 
     public BurnerBehaviour _burner;
 
-    public readonly IReadOnlyReactiveProperty<bool> RecipeComplete;
-
     public readonly string Name;
 
     private string _status = "";
@@ -35,6 +33,8 @@ public class Recipe
     {
         return _recipeSteps.Count;
     }
+
+    public bool IsOnLastStep => StepsLeftCount.Value == 0;
     
     public Recipe(string name)
     {
@@ -53,15 +53,8 @@ public class Recipe
         
         StepsLeftCount = _currentStepIndex
             .Where(i => _recipeSteps.Count > 0 && i < _recipeSteps.Count)
-            .Select(stepIndex =>
-            {
-                return _recipeSteps.Count - (stepIndex + 1);
-            })
+            .Select(stepIndex => _recipeSteps.Count - (stepIndex + 1))
             .ToReactiveProperty();
-        
-        RecipeComplete = StepsLeftCount
-                .Select(stepsLeft => stepsLeft == 0)
-                .ToReactiveProperty();
     }
 
     public BurnerBehaviour GetBurner()
@@ -106,17 +99,24 @@ public class Recipe
    
     public bool Update()
     {
-        if (!RecipeComplete.Value)
+        bool stepIsFinished = CurrentStep.Value.Update();
+        bool recipeIsComplete = false;
+        
+        if (stepIsFinished && IsOnLastStep)
         {
-            bool stepIsFinished = CurrentStep.Value.Update();
-
-            if (stepIsFinished)
-            {
-                _currentStepIndex.Value++;
-            }
+            recipeIsComplete = true;
+        }
+        else if (stepIsFinished)
+        {
+            _currentStepIndex.Value++;
         }
 
-        return RecipeComplete.Value;
+        return recipeIsComplete;
+    }
+    
+    public bool IsTimerDone()
+    {
+        return GetBurner().IsTimerDone();
     }
     
     public class RecipeStep
@@ -125,8 +125,8 @@ public class Recipe
         private Action _onEnter;
         public string Instruction;
         public readonly bool RequiresBurner;
-        public readonly float? TargetTemperature;
-        public readonly string WaitExplanation; 
+        public readonly string WaitExplanation;
+        public TimeSpan Timer;
         
         public Func<InstructionsAnchorable> getAnchor;
         public Action _onComplete;
@@ -139,11 +139,12 @@ public class Recipe
             Action onComplete =null, 
             Func<bool> nextStepTrigger =null, 
             Func<InstructionsAnchorable> getAnchor = null, 
-            float? targetTemp = null,
+            TimeSpan timer = default(TimeSpan),
             bool requiresBurner = false)
         {
             this.Instruction = instruction;
-            
+
+            this.Timer = timer;
             this._onEnter = onEnter;
             this._onComplete = onComplete;
             
@@ -151,30 +152,25 @@ public class Recipe
             this.getAnchor = getAnchor;
             
             RequiresBurner = requiresBurner;
-            this.TargetTemperature = targetTemp;
-
             this.WaitExplanation = waitExplanation;
         }
 
         public bool Update()
         {
-            if (_justEntered)
-            {
-                _onEnter?.Invoke();
-                _justEntered = false;
-                return false;
-            }
-            else if (NextStepTrigger())
+            if (NextStepTrigger())
             {
                 _onComplete?.Invoke();
                 Debug.Log("Done Step");
                 return true;  
             }
-            else
+            else if (_justEntered)
             {
+                _onEnter?.Invoke();
+                _justEntered = false;
                 return false;
             }
-            
+
+            return false;
         }
 
         public bool IsIndeterminateWait()

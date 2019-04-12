@@ -15,12 +15,19 @@ public class RamenRecipe : Recipe
     public RamenRecipe(RamenUI ramen) : base("Ramen")
     {
         _ramen = ramen;
-        
+
         SetRecipeSteps(
             new RecipeStep(
-                getAnchor: ()=>ramen,
+                getAnchor: () => ramen,
                 instruction: "Boil <b>2 Cups</b> of water.",
                 nextStepTrigger: HasAssignedBurner,
+                requiresBurner: true
+            ),
+
+            new RecipeStep(
+                getAnchor: GetBurner,
+                instruction: "Turn On Burner",
+                nextStepTrigger: () => GetBurner()._model.IsOn.Value,
                 requiresBurner: true
             ),
 
@@ -37,27 +44,32 @@ public class RamenRecipe : Recipe
                 nextStepTrigger: () => Status == NOODLES_ADDED_STATUS,
                 requiresBurner: true
             ),
-            
+ 
             new RecipeStep(
-                onEnter:() =>
-                {
-                    GetBurner().SetTimer(new TimeSpan(0, 5, 0));
-                },
-                nextStepTrigger: () => !GetBurner()._model.IsPotDetected.Value,
+                getAnchor: GetBurner,
+                timer: new TimeSpan(0, 1, 30),
+                nextStepTrigger: IsTimerDone,
+                onComplete: () => { GetBurner()._Timer.Reset(disableAfter: true); },
                 requiresBurner: true
             ),
-            
+
             new RecipeStep(
-                requiresBurner: false,
-                
-                onEnter: null,
-                
+                getAnchor: GetBurner,
+                instruction: "Turn Off Burner",
+                nextStepTrigger: () => !GetBurner()._model.IsOn.Value,
+                requiresBurner: true
+            ),   
+
+            new RecipeStep(
+                getAnchor: GetBurner,
+                instruction: "Remove Pot",
                 nextStepTrigger: () =>
                 {
-                    //delay and then...
-                    return true;                 
-                }    
-            )                   
+                    Debug.Log("Pot Detected: " + GetBurner()._model.IsPotDetected.Value);
+                    return !GetBurner()._model.IsPotDetected.Value;
+                },
+                requiresBurner: true
+            )         
         );
     }
 

@@ -33,16 +33,14 @@ public class BigKahunaEditor : Editor
             kahuna.speechRecognizer.finalized = true;
         }
         
-        if (GUILayout.Button("Test Streaming Voice"))
+        if (GUILayout.Button("Clear All Timers"))
         {
-            kahuna.alternateSpeechManager.StartSpeechRecognitionFromMicrophone();
+            kahuna._burnerBehaviours.ForEach(x => x._Timer.Reset());
         }
-        
+
         if (GUILayout.Button("Reset World"))
         {
             kahuna.ResetWorld();
-        }
-
-        
+        }      
     }
 }

@@ -46,7 +46,6 @@ public class Burner
         IsOn = new ReactiveProperty<bool>();
         IsPotDetected = new ReactiveProperty<bool>();
         IsBoiling = new ReactiveProperty<bool>();
-        Temperature = new ReactiveProperty<double>();
     }
     
     public ReactiveProperty<bool> IsOn { get; private set; }
@@ -54,7 +53,7 @@ public class Burner
     public ReactiveProperty<bool> IsPotDetected { get; private set; }
     
     public ReactiveProperty<bool> IsBoiling { get; private set; }
-    public ReactiveProperty<double> Temperature { get; private set; }
+    public float Temperature { get; private set; }
     
     public BurnerPosition Position;
 
@@ -62,13 +61,16 @@ public class Burner
 
     public override string ToString()
     {
-        return string.Format("Position: {0} On: {1} Temp: {2}", Position, IsOn.Value,Temperature.Value);
+        return string.Format("Position: {0} On: {1} Temp: {2}", Position, IsOn.Value,Temperature);
     }
 
     public void MapFromDict(IDictionary<string, object> source)
     {
+        //something is broken!!!
+        Temperature = Convert.ToSingle(source["temp"]);
+        
         foreach (var item in source)
-        {
+        {                        
             switch (item.Key)
             {
                 case "on":
@@ -84,7 +86,7 @@ public class Burner
                     break;
                 
                 case "temp":
-                    Temperature.Value = Convert.ToDouble(item.Value);
+                    //Temperature.Value = Convert.ToDouble(item.Value);
                     break;
                 
                 case "name":
@@ -117,10 +119,9 @@ public class Burner
                     }
                     
                     break;
-
                 
                 default:
-                    //Debug.Log("Could not map key: " + item.Key);
+                    Debug.Log("Could not map key: " + item.Key);
                     break;
                     
             }
