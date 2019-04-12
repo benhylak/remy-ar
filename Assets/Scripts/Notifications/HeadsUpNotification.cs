@@ -11,12 +11,9 @@ public class HeadsUpNotification : NotificationBehaviour
     private static readonly float START_X = 0.68f;
     private static readonly float MID_X = 0.4f;
   
-
     public Text label;
-
-
-    
-    public override async void Launch(int delay = 1000)
+ 
+    public override async Task Launch(int delay = 1000)
     {
         transform.SetLocalPosX(START_X);
         label.DOFade(1, 0);
@@ -29,6 +26,11 @@ public class HeadsUpNotification : NotificationBehaviour
     {
         transform.SetLocalPosX(START_X);
         base.Start();
+    }
+
+    public void SetText(string text)
+    {
+        label.text = text;
     }
 
     public override void ShowToDiminish()

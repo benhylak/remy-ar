@@ -8,11 +8,15 @@ using SimpleFirebaseUnity;
 using SimpleFirebaseUnity.MiniJSON;
 using UniRx;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.XR.MagicLeap;
 
 public class NotificationTestManager : MonoBehaviour
 {
-    public string EXPERIMENT_NAME = "AlphaTest";
+    public string EXPERIMENT_NAME = "NotifTest1";
+
+    public string TIMER_DONE = "TIMER_DONE";
+    public string BURNER_ON = "BURNER_ON";
     
     public enum NotificationType
     {
@@ -20,7 +24,6 @@ public class NotificationTestManager : MonoBehaviour
         HeadsUp,
         Hugger
     }
-    
     public class Experiment
     {
         public DateTime experiment_start = DateTime.Now;
@@ -30,7 +33,8 @@ public class NotificationTestManager : MonoBehaviour
         public delegate void ExperimentUpdateHandler(Experiment e);
 
         public int notificationType = -1;
-
+        public string currentMessageType;
+        
         [JsonIgnore] public Firebase Endpoint;      
         [JsonIgnore] public ExperimentUpdateHandler OnExperimentUpdated;
         
@@ -40,7 +44,8 @@ public class NotificationTestManager : MonoBehaviour
             {
                 gazes[notifType] = new List<Gaze>();
             }
-            
+
+            g.messageType = currentMessageType;
             gazes[notifType].Add(g);
 
             Endpoint.SetValue(JsonConvert.SerializeObject(this), true);
@@ -59,6 +64,7 @@ public class NotificationTestManager : MonoBehaviour
     {
         public float duration;
         public DateTime gaze_start;
+        public string messageType;
         
         public Gaze(float duration)
         {
@@ -74,27 +80,39 @@ public class NotificationTestManager : MonoBehaviour
     [SerializeField]
     private HeadsUpNotification headsUpNotification;
 
-    [SerializeField]
-    private PhysicalNotification physicalNotification;
+    [FormerlySerializedAs("physicalNotification")] [SerializeField]
+    public PhysicalNotification timerDonePhysicalNotif;
+    public PhysicalNotification burnerOnPhysicalNotif;
+
 
     private float triggerDownStartTime = -1;
     private float startExperimentTriggerDownThreshold = 0.5f;
 
+    public NotificationBehaviour _lastNotification;
+    public string _lastMessageType;
+    public NotificationType _lastNotifType;
+    
     private Firebase _firebase;
 
     private Experiment _experiment;
 
     private bool _ready = true;
+
+    private bool _hidden = false;
     
     
     public void Start()
-    {
-                  
+    {                
+        _firebase = Firebase
+            .CreateNew(Secrets.FIREBASE_URL, Secrets.FIREBASE_CREDENTIAL)
+            .Child("Experiments")
+            .Child(EXPERIMENT_NAME);
+        
         var gestureObserver = gameObject.AddComponent<ControllerGestureObserver>();
 
         gestureObserver.OnLongTriggerDown().Subscribe(_ =>
         {
-            if (physicalNotification.GetComponent<MoveWithControllerBehaviour>().isMoving)
+            if (timerDonePhysicalNotif.GetComponent<MoveWithControllerBehaviour>().isMoving)
             {
                 return;
             }
@@ -102,7 +120,7 @@ public class NotificationTestManager : MonoBehaviour
             if (_experiment == null)
             {
                 headsUpNotification.Hide();
-                physicalNotification.Hide()
+                timerDonePhysicalNotif.Hide()
                     .OnComplete(StartExperiment);
            
                 Debug.LogWarning("Starting Experiment");
@@ -113,11 +131,14 @@ public class NotificationTestManager : MonoBehaviour
                 _experiment = null;
                 
                 headsUpNotification.HideToShow();
-                physicalNotification.HideToShow();
+                timerDonePhysicalNotif.HideToShow();
                 
                 Debug.LogWarning("Ended Experiment");               
             }
         });
+
+        _lastNotification = timerDonePhysicalNotif;
+        burnerOnPhysicalNotif.Hide();
 
         //var seq = DOTween.Sequence();  
         
@@ -125,23 +146,19 @@ public class NotificationTestManager : MonoBehaviour
         {
             if (button == MLInputControllerButton.Bumper)
             {
-                if (_experiment == null)
+                if (_hidden)
                 {
-                    physicalNotification.Launch();
+                    _hidden = false;
+                    burnerOnPhysicalNotif.Launch();
+                    timerDonePhysicalNotif.Launch();
                     headsUpNotification.Launch();
                 }
-                else if(_experiment.notificationType > -1)
+                else
                 {
-                    switch ((NotificationType)_experiment.notificationType)
-                    {
-                        case NotificationType.Physical:
-                            physicalNotification.Launch(2000);
-                            break;
-                        
-                        case NotificationType.HeadsUp:
-                            headsUpNotification.Launch(2000);
-                            break;
-                    }
+                    _hidden = true;
+                    timerDonePhysicalNotif.Hide();
+                    burnerOnPhysicalNotif.Hide();
+                    headsUpNotification.Hide();
                 }
             }
             else if (button == MLInputControllerButton.HomeTap)
@@ -152,19 +169,13 @@ public class NotificationTestManager : MonoBehaviour
 
         headsUpNotification.gameObject.GetComponent<GazeReceiver>().OnGazeExit.Subscribe(duration =>
         {
-            if(_experiment!=null)
-                _experiment.AddGaze(NotificationType.HeadsUp, new Gaze(duration));
-                Debug.Log(JsonConvert.SerializeObject(_experiment));
-                  
+            _experiment?.AddGaze(NotificationType.HeadsUp, new Gaze(duration));
+         //   Debug.Log(JsonConvert.SerializeObject(_experiment));                  
             //Debug.LogError("Gaze Exit: Lasted " + duration + " seconds.");
         });
         
-        _firebase = Firebase
-            .CreateNew(Secrets.FIREBASE_URL, Secrets.FIREBASE_CREDENTIAL)
-            .Child("Experiments")
-            .Child(EXPERIMENT_NAME);
-        
-        MLInput.OnTriggerDown += (b, f) => { headsUpNotification.Launch(); };
+
+        //MLInput.OnTriggerDown += (b, f) => { headsUpNotification.Launch(); };
     }
 
     public void OnExperimentPushed(Firebase f, DataSnapshot s)
@@ -187,23 +198,48 @@ public class NotificationTestManager : MonoBehaviour
         _firebase.Push(JsonConvert.SerializeObject(_experiment), true);
     }
 
-    public void ChangeNotificationType(NotificationType notifType)
+    public void ChangeNotificationType(NotificationType notifType, string messageType)
     {
-        Debug.LogWarning("Changing notificaiton type to: " + notifType);
+        Debug.LogWarning($"Changing notification type to: {notifType} {messageType}");
+        
         switch (notifType)
         {
             case NotificationType.HeadsUp:
-                physicalNotification.Hide()
+                headsUpNotification.SetText(messageType == BURNER_ON ? "Burner Left On" : "Timer Done");
+                Debug.Log("Heads up");
+                
+                _lastNotification.Hide()
                     .OnComplete(() => headsUpNotification.Launch());
+
+                _lastNotification = headsUpNotification;
                 
                 break;
                 
             case NotificationType.Physical:
-                headsUpNotification.Hide()
-                    .OnComplete(() => physicalNotification.Launch());
+                _lastNotification.Hide()
+                    .OnComplete(() =>
+                    {
+                        Debug.Log("Physical ;)");   
+                        
+                        var chosenNotif = messageType == BURNER_ON ? burnerOnPhysicalNotif : timerDonePhysicalNotif;
+                        chosenNotif.Launch();
+
+                        var sound = chosenNotif._notifSound;
+                        
+                        if (sound != null)
+                        {
+                            GetComponent<AudioSource>().clip = sound;
+                            GetComponent<AudioSource>().PlayDelayed(0.3f);
+                        }
+                        
+                        _lastNotification = chosenNotif;
+                    });
                 
                 break;
-        } 
+        }
+
+        _lastNotifType = notifType;
+        _lastMessageType = messageType;
     }
 
     private void Update()
@@ -213,31 +249,46 @@ public class NotificationTestManager : MonoBehaviour
 
     private async void FetchNotificationType()
     {
-        if (_ready && _experiment != null && _experiment.Endpoint != null)
+        if (_ready)
         {
             _ready = false; 
             
-            DataSnapshot s = await _experiment.Endpoint.Child("notificationType").GetValue();
-
+            DataSnapshot notifType = await _firebase.Child("notifType").GetValue();
+                
             int value = -1;
             
             try
             {
-                value = Convert.ToInt32(s.RawValue);
+                value = Convert.ToInt32(notifType.RawValue);
             }
             catch (Exception e)
             {
+                Debug.Log(e);
                 Console.WriteLine(e);
                 _ready = true;
                 return;
             }
-                       
-            if (value > 0 && Enum.IsDefined(typeof(NotificationType), value))
+
+            if (value < 0)
             {
-                if (_experiment != null && _experiment.notificationType != value)
+                burnerOnPhysicalNotif.Hide();
+                headsUpNotification.Hide();
+                timerDonePhysicalNotif.Hide();
+            }
+            else if (Enum.IsDefined(typeof(NotificationType), value))
+            {
+                string messageType = (string)(await _firebase.Child("messageType").GetValue()).RawValue;    
+                
+                if (_experiment != null)
                 {
                     _experiment.notificationType = value;
-                    ChangeNotificationType((NotificationType)value);
+                    _experiment.currentMessageType = messageType;
+                }
+
+                if (_lastNotifType != (NotificationType)value || _lastMessageType != messageType)
+                {
+                    Debug.Log("Change notification!");   
+                    ChangeNotificationType((NotificationType)value, messageType);
                 }
             }
 

@@ -5,10 +5,13 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/main.unity
     guid: f276f9047e23b4f32848e29c7b1c12c7
   - enabled: 0
     path: Assets/External/MagicLeap/Examples/Scenes/Placement.unity
     guid: 5c1e1e5921209a54999bd6a01c411b14
+  - enabled: 1
+    path: Assets/Scenes/notifications.unity
+    guid: 6ae1ebc78e76d4865b0692924e8f4609
   m_configObjects: {}
